@@ -1082,34 +1082,6 @@ export default function StreamHub() {
           fontSize:11, letterSpacing:4, color:"#fff",
           boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
         }}>SEARCH · FIND · ENJOY</div>
-
-        {/* Mobile side tagline — left edge */}
-        <div style={{
-          position:"fixed", left:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(calc(-50% + 14px)) rotate(-90deg)",
-        }}>
-          <div style={{
-            background:"linear-gradient(90deg,#7C3AED,#F5C518)",
-            padding:"5px 20px", borderRadius:"0 0 8px 8px",
-            fontFamily:"var(--font-head)", fontWeight:800,
-            fontSize:9, letterSpacing:3, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 16px rgba(124,58,237,.5)",
-          }}>SEARCH · FIND · ENJOY</div>
-        </div>
-
-        {/* Mobile side tagline — right edge */}
-        <div style={{
-          position:"fixed", right:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(calc(50% - 14px)) rotate(90deg)",
-        }}>
-          <div style={{
-            background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
-            padding:"5px 20px", borderRadius:"0 0 8px 8px",
-            fontFamily:"var(--font-head)", fontWeight:800,
-            fontSize:9, letterSpacing:3, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 16px rgba(255,107,157,.5)",
-          }}>SEARCH · FIND · ENJOY</div>
-        </div>
       </div>
 
       {/* Modals */}
@@ -1273,7 +1245,7 @@ export default function StreamHub() {
             {/* Big decorative tagline */}
             <div style={{
               fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:"clamp(36px,5vw,68px)",
+              fontSize:"clamp(24px,3vw,42px)",
               letterSpacing:"-.01em", marginBottom:10,
               background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#FF6B9D,#F5C518)",
               backgroundSize:"300% auto",
@@ -1333,10 +1305,10 @@ export default function StreamHub() {
           </div>
         </div>
 
-        {/* Left side tagline banner - hugs left edge */}
-        <div style={{
+        {/* Left side tagline banner - desktop only, fully visible */}
+        <div className="desktop-only" style={{
           position:"fixed", left:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(-50%) rotate(-90deg)",
+          transform:"translateY(-50%) translateX(calc(-50% + 40px)) rotate(-90deg)",
           transformOrigin:"center center",
         }}>
           <div style={{
@@ -1348,10 +1320,10 @@ export default function StreamHub() {
           }}>SEARCH · FIND · ENJOY</div>
         </div>
 
-        {/* Right side tagline banner - hugs right edge */}
-        <div style={{
+        {/* Right side tagline banner - desktop only, fully visible */}
+        <div className="desktop-only" style={{
           position:"fixed", right:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(50%) rotate(90deg)",
+          transform:"translateY(-50%) translateX(calc(50% - 40px)) rotate(90deg)",
           transformOrigin:"center center",
         }}>
           <div style={{
