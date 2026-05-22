@@ -42,6 +42,16 @@ const GlobalStyles = () => {
       input, textarea, select { font-family: var(--font-body); }
       button { cursor: pointer; font-family: var(--font-body); }
       a { color: inherit; text-decoration: none; }
+
+      /* ── MOBILE ── */
+      .mobile-only { display: none; }
+      .desktop-only { display: flex; }
+      @keyframes slideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
+      @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+      @media (max-width: 768px) {
+        .mobile-only  { display: flex; }
+        .desktop-only { display: none !important; }
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -506,9 +516,23 @@ function UpgradeModal({ onClose, onComplete }) {
   const formatCard = v => v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
   const formatExpiry = v => { const d = v.replace(/\D/g,"").slice(0,4); return d.length > 2 ? d.slice(0,2)+"/"+d.slice(2) : d; };
   const inp = { background:"rgba(255,255,255,.06)", border:"1px solid var(--border)", borderRadius:10, color:"var(--text)", padding:"11px 14px", width:"100%", fontSize:14, outline:"none", fontFamily:"var(--font-body)" };
-  const handlePay = () => {
+  const handlePay = async () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("success"); }, 2000);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Something went wrong');
+      }
+    } catch (err) {
+      setLoading(false);
+      alert('Payment error: ' + err.message + '\n\nMake sure your Stripe keys are set in Vercel.');
+    }
   };
   return (
     <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.85)", zIndex:1100, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(8px)", animation:"fadeIn .2s" }}>
@@ -856,8 +880,241 @@ function ProfileModal({ onClose, userSubs, tier, watchlist, reviews, userRatings
   );
 }
 
+// ─── USE IS MOBILE ────────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return isMobile;
+}
+
+// ─── MOBILE BOTTOM NAV ────────────────────────────────────────────────────────
+function MobileBottomNav({ view, setView, watchlist, onProfile }) {
+  const tabs = [
+    { id:"home",      icon:"🎬", label:"Home" },
+    { id:"discover",  icon:"🔥", label:"Discover" },
+    { id:"watchlist", icon:"♥",  label:"Watchlist" },
+    { id:"profile",   icon:"👤", label:"Profile" },
+  ];
+  return (
+    <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:200, background:"rgba(7,7,14,.97)", borderTop:"1px solid var(--border)", display:"flex", backdropFilter:"blur(20px)", paddingBottom:"env(safe-area-inset-bottom)" }}>
+      {tabs.map(t => {
+        const active = t.id === "profile" ? false : view === t.id;
+        const count = t.id === "watchlist" && watchlist.length > 0 ? watchlist.length : 0;
+        return (
+          <button key={t.id} onClick={() => t.id === "profile" ? onProfile() : setView(t.id)}
+            style={{ flex:1, background:"none", border:"none", padding:"10px 0 8px", display:"flex", flexDirection:"column", alignItems:"center", gap:3, color: active ? "var(--gold)" : "var(--muted)", transition:"color .2s", position:"relative" }}>
+            <span style={{ fontSize:20, lineHeight:1 }}>{t.icon}</span>
+            <span style={{ fontSize:10, fontWeight:700, fontFamily:"var(--font-head)" }}>{t.label}</span>
+            {count > 0 && <span style={{ position:"absolute", top:6, left:"50%", marginLeft:4, background:"var(--gold)", color:"#000", borderRadius:99, minWidth:16, height:16, fontSize:9, fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 4px" }}>{count}</span>}
+            {active && <span style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:28, height:2, background:"var(--gold)", borderRadius:99 }} />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MOBILE HEADER ────────────────────────────────────────────────────────────
+function MobileHeader({ tier, onUpgrade, search, setSearch }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  return (
+    <div style={{ position:"sticky", top:0, zIndex:100, background:"rgba(7,7,14,.95)", backdropFilter:"blur(20px)", borderBottom:"1px solid var(--border)" }}>
+      <div style={{ display:"flex", alignItems:"center", padding:"0 14px", height:56, gap:10 }}>
+        <Logo size={24} />
+        <div style={{ flex:1 }} />
+        <button onClick={() => setSearchOpen(s => !s)} style={{ background:"rgba(255,255,255,.07)", border:"none", borderRadius:10, width:36, height:36, fontSize:16, color:"var(--text)", display:"flex", alignItems:"center", justifyContent:"center" }}>🔍</button>
+        {tier === "premium"
+          ? <span style={{ background:"var(--gold)", color:"#000", fontSize:9, fontWeight:800, padding:"3px 8px", borderRadius:99, fontFamily:"var(--font-head)" }}>✦ PRO</span>
+          : <button onClick={onUpgrade} style={{ background:"var(--gold)", border:"none", borderRadius:9, color:"#000", padding:"7px 12px", fontFamily:"var(--font-head)", fontWeight:800, fontSize:12 }}>Upgrade ✦</button>
+        }
+      </div>
+      {searchOpen && (
+        <div style={{ padding:"0 14px 12px", animation:"slideDown .2s ease" }}>
+          <input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, anime, sports…"
+            style={{ width:"100%", background:"rgba(255,255,255,.08)", border:"1px solid var(--border)", borderRadius:12, color:"var(--text)", padding:"10px 16px", fontSize:15, outline:"none" }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MOBILE SERVICE CHIPS ─────────────────────────────────────────────────────
+function MobileServiceChips({ userSubs, filterPlat, setFilterPlat }) {
+  return (
+    <div style={{ overflowX:"auto", padding:"12px 14px", display:"flex", gap:8, scrollbarWidth:"none" }}>
+      <button onClick={() => setFilterPlat(null)} style={{ background: !filterPlat ? "var(--gold)" : "rgba(255,255,255,.06)", border:`1px solid ${!filterPlat ? "var(--gold)" : "var(--border)"}`, borderRadius:99, color: !filterPlat ? "#000" : "var(--muted)", padding:"6px 16px", fontSize:12, fontWeight:700, whiteSpace:"nowrap", fontFamily:"var(--font-head)" }}>All</button>
+      {SERVICES.map(s => {
+        const active = filterPlat === s.id;
+        const isSub = userSubs.includes(s.id);
+        return (
+          <button key={s.id} onClick={() => setFilterPlat(active ? null : s.id)} style={{ background: active ? `${s.color}30` : "rgba(255,255,255,.04)", border:`1px solid ${active ? s.color : "rgba(255,255,255,.08)"}`, borderRadius:99, color: active ? "#fff" : isSub ? "var(--text)" : "var(--muted)", padding:"6px 14px", fontSize:12, fontWeight:600, whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6, opacity: isSub ? 1 : 0.6 }}>
+            <span style={{ background: active ? s.color : "rgba(255,255,255,.1)", borderRadius:4, width:16, height:16, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:800, color:"#fff" }}>{s.logo}</span>
+            {s.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MOBILE CATEGORY TABS ─────────────────────────────────────────────────────
+function MobileCategoryTabs({ category, setCategory }) {
+  return (
+    <div style={{ overflowX:"auto", padding:"0 14px 12px", display:"flex", gap:8, scrollbarWidth:"none" }}>
+      {CATEGORY_TABS.map(tab => {
+        const active = category === tab.id;
+        return (
+          <button key={tab.id} onClick={() => setCategory(tab.id)} style={{ background: active ? `${tab.color}18` : "rgba(255,255,255,.04)", border:`1px solid ${active ? `${tab.color}55` : "var(--border)"}`, borderRadius:20, color: active ? tab.color : "var(--muted)", padding:"7px 14px", fontSize:12, fontWeight:700, fontFamily:"var(--font-head)", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+            <span>{tab.icon}</span> {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── MOBILE DEALS SHEET ───────────────────────────────────────────────────────
+function MobileDealsSheet({ userSubs, tier, onClose }) {
+  const unsubbed = SERVICES.filter(s => !userSubs.includes(s.id) && s.deal);
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.7)", zIndex:300, display:"flex", alignItems:"flex-end" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ width:"100%", background:"var(--surface)", borderRadius:"20px 20px 0 0", padding:"20px 16px 40px", maxHeight:"80vh", overflowY:"auto", animation:"slideUp .3s cubic-bezier(.22,1,.36,1)" }}>
+        <div style={{ width:36, height:4, background:"rgba(255,255,255,.15)", borderRadius:99, margin:"0 auto 20px" }} />
+        <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:18, marginBottom:16 }}>🔥 Current Deals</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          {unsubbed.length === 0
+            ? <div style={{ color:"var(--muted)", textAlign:"center", padding:"24px 0" }}>You're subscribed to all services!</div>
+            : unsubbed.map(s => (
+              <div key={s.id} style={{ background:"rgba(245,197,24,.06)", border:"1px solid rgba(245,197,24,.2)", borderRadius:14, padding:16, display:"flex", alignItems:"center", gap:14 }}>
+                <span style={{ background:s.color, borderRadius:10, width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"#fff", flexShrink:0 }}>{s.logo}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontWeight:700, fontSize:15 }}>{s.name}</div>
+                  <div style={{ fontSize:13, color:"var(--gold)", fontWeight:600 }}>{s.deal}</div>
+                </div>
+                <button style={{ background:"var(--gold)", border:"none", borderRadius:10, color:"#000", padding:"8px 14px", fontWeight:800, fontSize:12, flexShrink:0 }}>Get →</button>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MOBILE AI PANEL ──────────────────────────────────────────────────────────
+function MobileAIBanner({ tier, watchlist, onUpgrade }) {
+  const [open, setOpen] = useState(false);
+  const [recs, setRecs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const getAI = async () => {
+    if (tier !== "premium") return onUpgrade();
+    setLoading(true);
+    try {
+      const wlMovies = MOVIES.filter(m => watchlist.includes(m.id));
+      const prompt = `Recommend 3 streaming titles for someone who likes: ${wlMovies.map(m=>m.title).join(", ")||"popular titles"}. Return ONLY JSON: {"recs":[{"title":"...","year":2024,"reason":"short reason","platform":"netflix"}]}. Platform: netflix|disney|max|hulu|prime|apple|peacock|paramount|crunchyroll|espnplus|dazn|fubo.`;
+      const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]}) });
+      const data = await res.json();
+      const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
+      const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setRecs(parsed.recs||[]);
+    } catch { setRecs([{title:"Severance",year:2023,reason:"Mind-bending thriller",platform:"apple"},{title:"The Bear",year:2023,reason:"Intense drama",platform:"hulu"},{title:"Andor",year:2022,reason:"Best Star Wars in years",platform:"disney"}]); }
+    setLoading(false); setOpen(true);
+  };
+  return (
+    <div style={{ margin:"0 14px 14px", background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(6,182,212,.08))", border:"1px solid rgba(124,58,237,.3)", borderRadius:14, overflow:"hidden" }}>
+      <div style={{ padding:"12px 14px", display:"flex", alignItems:"center", gap:10 }}>
+        <span style={{ fontSize:18 }}>✨</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"var(--font-head)", fontWeight:700, fontSize:14 }}>AI Picks</div>
+          <div style={{ fontSize:11, color:"var(--muted)" }}>{tier==="premium" ? "Personalized for you" : "Premium feature"}</div>
+        </div>
+        <button onClick={getAI} disabled={loading} style={{ background:tier==="premium"?"var(--purple)":"var(--gold)", border:"none", borderRadius:9, color:tier==="premium"?"#fff":"#000", padding:"7px 14px", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:5 }}>
+          {loading ? <span style={{ display:"inline-block", width:12, height:12, border:"2px solid currentColor", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 1s linear infinite" }} /> : "✦"}
+          {tier!=="premium" ? "Unlock" : "Get Picks"}
+        </button>
+      </div>
+      {open && recs.length > 0 && (
+        <div style={{ borderTop:"1px solid rgba(124,58,237,.2)", padding:"10px 14px 14px", display:"flex", flexDirection:"column", gap:8 }}>
+          {recs.map((r,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:`linear-gradient(135deg,${GR[i][0]},${GR[i][1]})`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-head)", fontWeight:800, fontSize:11 }}>{r.title.slice(0,2)}</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontFamily:"var(--font-head)", fontWeight:700, fontSize:12 }}>{r.title} <span style={{ color:"var(--muted)", fontWeight:400 }}>({r.year})</span></div>
+                <div style={{ fontSize:11, color:"var(--muted)" }}>{r.reason}</div>
+              </div>
+              <ServiceBadge platformId={r.platform} small />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MOBILE LAYOUT ────────────────────────────────────────────────────────────
+function MobileLayout({ view, setView, category, setCategory, search, setSearch, filtered, ratings, watchlist, userRatings, userSubs, filterPlat, setFilterPlat, tier, onUpgrade, onSelect, onToggleWatchlist, showToast, reviews, myVotes, onProfile }) {
+  const [showDeals, setShowDeals] = useState(false);
+  const unsubDeals = SERVICES.filter(s => !userSubs.includes(s.id) && s.deal).length;
+
+  const sectionTitle = { home:"🎬 All Titles", discover:"🔥 Top Rated", watchlist:"♥ Watchlist" }[view];
+
+  return (
+    <div style={{ minHeight:"100vh", background:"var(--bg)", paddingBottom:80 }}>
+      <MobileHeader tier={tier} onUpgrade={onUpgrade} search={search} setSearch={setSearch} />
+
+      {/* Service chips */}
+      <MobileServiceChips userSubs={userSubs} filterPlat={filterPlat} setFilterPlat={setFilterPlat} />
+
+      {/* Category tabs */}
+      <MobileCategoryTabs category={category} setCategory={setCategory} />
+
+      {/* AI Banner */}
+      <MobileAIBanner tier={tier} watchlist={watchlist} onUpgrade={onUpgrade} />
+
+      {/* Section header */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 14px 12px" }}>
+        <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:17 }}>
+          {sectionTitle}
+          <span style={{ fontWeight:400, fontSize:13, color:"var(--muted)", marginLeft:8 }}>{filtered.length}</span>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          {unsubDeals > 0 && (
+            <button onClick={() => setShowDeals(true)} style={{ background:"rgba(245,197,24,.12)", border:"1px solid rgba(245,197,24,.3)", borderRadius:10, color:"var(--gold)", padding:"6px 12px", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", gap:5 }}>
+              🔥 Deals <span style={{ background:"var(--gold)", color:"#000", borderRadius:99, width:16, height:16, fontSize:9, fontWeight:800, display:"inline-flex", alignItems:"center", justifyContent:"center" }}>{unsubDeals}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Movie Grid */}
+      {filtered.length === 0 ? (
+        <div style={{ textAlign:"center", color:"var(--muted)", padding:"60px 20px", fontSize:15 }}>
+          {view==="watchlist" ? "Your watchlist is empty. Tap ♡ on any title!" : "No titles found."}
+        </div>
+      ) : (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10, padding:"0 14px" }}>
+          {filtered.map(m => (
+            <MovieCard key={m.id} movie={m} ratings={ratings} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={onSelect} onToggleWatchlist={onToggleWatchlist} />
+          ))}
+        </div>
+      )}
+
+      {/* Bottom Nav */}
+      <MobileBottomNav view={view} setView={setView} watchlist={watchlist} onProfile={onProfile} />
+
+      {/* Deals Sheet */}
+      {showDeals && <MobileDealsSheet userSubs={userSubs} tier={tier} onClose={() => setShowDeals(false)} />}
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
+  const isMobile = useIsMobile();
   const [view, setView] = useState("home"); // home | watchlist | discover
   const [category, setCategory] = useState("all");
   const [userSubs, setUserSubs] = useState(["netflix","disney","max"]);
@@ -936,22 +1193,48 @@ export default function StreamHub() {
   const subscribed = SERVICES.filter(s => userSubs.includes(s.id));
   const unsubscribed = SERVICES.filter(s => !userSubs.includes(s.id));
 
+  // ── MOBILE RENDER ──
+  if (isMobile) return (
+    <>
+      <GlobalStyles />
+      <MobileLayout
+        view={view} setView={setView}
+        category={category} setCategory={setCategory}
+        search={search} setSearch={setSearch}
+        filtered={filtered}
+        ratings={ratings} watchlist={watchlist}
+        userRatings={userRatings} userSubs={userSubs}
+        filterPlat={filterPlat} setFilterPlat={setFilterPlat}
+        tier={tier} onUpgrade={() => setShowUpgrade(true)}
+        onSelect={setSelectedMovie}
+        onToggleWatchlist={toggleWatchlist}
+        showToast={showToast}
+        reviews={reviews} myVotes={myVotes}
+        onProfile={() => setShowProfile(true)}
+      />
+      {selectedMovie && <MovieModal movie={selectedMovie} ratings={ratings} reviews={reviews} userRatings={userRatings} watchlist={watchlist} myVotes={myVotes} onClose={() => setSelectedMovie(null)} onRate={handleRate} onAddReview={handleAddReview} onEditReview={handleEditReview} onDeleteReview={handleDeleteReview} onVote={handleVote} onToggleWatchlist={toggleWatchlist} />}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} onComplete={() => setTier("premium")} />}
+      {showSetup && <SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={() => setShowSetup(false)} isFirst={true} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} userSubs={userSubs} tier={tier} watchlist={watchlist} reviews={reviews} userRatings={userRatings} onEditSubs={() => { setShowProfile(false); setShowSetup(true); }} onUpgrade={() => setShowUpgrade(true)} showToast={showToast} />}
+      {toast && <Toast msg={toast} onDone={() => setToast(null)} />}
+    </>
+  );
+
   return (
     <>
       <GlobalStyles />
       <div style={{ minHeight:"100vh", background:"var(--bg)", fontFamily:"var(--font-body)" }}>
 
         {/* ── HEADER ── */}
-        <header style={{ position:"sticky", top:0, zIndex:100, background:"rgba(7,7,14,.85)", backdropFilter:"blur(16px)", borderBottom:"1px solid var(--border)", padding:"0 24px", height:64, display:"flex", alignItems:"center", gap:16 }}>
+        <header className="header-inner" style={{ position:"sticky", top:0, zIndex:100, background:"rgba(7,7,14,.85)", backdropFilter:"blur(16px)", borderBottom:"1px solid var(--border)", padding:"0 24px", height:64, display:"flex", alignItems:"center", gap:16 }}>
           <Logo size={28} />
-          {/* Nav */}
-          <nav style={{ display:"flex", gap:4, marginLeft:16 }}>
+          <nav className="header-nav" style={{ display:"flex", gap:4, marginLeft:16 }}>
             {[["home","Home"],["discover","Discover"],["watchlist","Watchlist"]].map(([v,l]) => (
               <button key={v} onClick={()=>setView(v)} style={{ background: view===v ? "rgba(245,197,24,.12)" : "none", border:"none", color: view===v ? "var(--gold)" : "var(--muted)", fontFamily:"var(--font-head)", fontWeight:600, fontSize:14, padding:"6px 14px", borderRadius:9, transition:"all .2s" }}>{l}{v==="watchlist" && watchlist.length > 0 && <span style={{ marginLeft:6, background:"var(--gold)", color:"#000", borderRadius:99, width:18, height:18, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800 }}>{watchlist.length}</span>}</button>
             ))}
           </nav>
           {/* Search */}
-          <div style={{ flex:1, maxWidth:360, position:"relative" }}>
+          <div className="header-search" style={{ flex:1, maxWidth:360, position:"relative" }}>
             <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"var(--muted)", fontSize:15 }}>🔍</span>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, anime, sports…" style={{ width:"100%", background:"rgba(255,255,255,.06)", border:"1px solid var(--border)", borderRadius:11, color:"var(--text)", padding:"9px 14px 9px 36px", fontSize:14, outline:"none" }} />
           </div>
@@ -968,10 +1251,10 @@ export default function StreamHub() {
           </div>
         </header>
 
-        <div style={{ display:"flex", padding:"20px 24px", gap:20, maxWidth:1440, margin:"0 auto" }}>
+        <div className="layout-wrap" style={{ display:"flex", padding:"20px 24px", gap:20, maxWidth:1440, margin:"0 auto" }}>
 
           {/* ── LEFT SIDEBAR ── */}
-          <aside style={{ width:168, flexShrink:0 }}>
+          <aside className="sidebar-left" style={{ width:168, flexShrink:0 }}>
             {/* Subscribed */}
             <div style={{ marginBottom:20 }}>
               <div style={{ fontSize:10, fontWeight:700, color:"var(--muted)", letterSpacing:1.2, marginBottom:10, fontFamily:"var(--font-head)" }}>MY SERVICES</div>
@@ -1003,12 +1286,14 @@ export default function StreamHub() {
           </aside>
 
           {/* ── MAIN ── */}
-          <main style={{ flex:1, minWidth:0 }}>
+          <main className="main-content" style={{ flex:1, minWidth:0 }}>
             {/* AI Panel */}
+            <div className="ai-panel">
             <AIRecsPanel tier={tier} watchlist={watchlist} onUpgrade={()=>setShowUpgrade(true)} />
+            </div>
 
             {/* ── CATEGORY TABS ── */}
-            <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
+            <div className="cat-tabs" style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
               {CATEGORY_TABS.map(tab => {
                 const active = category === tab.id;
                 const count = tab.id === "all" ? MOVIES.length : MOVIES.filter(m => m.category === tab.id).length;
@@ -1029,7 +1314,7 @@ export default function StreamHub() {
             </div>
 
             {/* Section header */}
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+            <div className="section-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
               <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:18 }}>
                 {view==="home" && "🎬 All Titles"}
                 {view==="discover" && "🔥 Top Rated"}
@@ -1048,7 +1333,7 @@ export default function StreamHub() {
                 {view==="watchlist" ? "Your watchlist is empty. Click ♡ on any title to add it!" : "No titles found. Try a different search or filter."}
               </div>
             ) : (
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:14 }}>
+              <div className="movie-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))", gap:14 }}>
                 {filtered.map(m => (
                   <MovieCard
                     key={m.id}
@@ -1066,7 +1351,7 @@ export default function StreamHub() {
           </main>
 
           {/* ── RIGHT SIDEBAR ── */}
-          <aside style={{ width:220, flexShrink:0 }}>
+          <aside className="sidebar-right" style={{ width:220, flexShrink:0 }}>
             {/* Deals */}
             <div style={{ marginBottom:20 }}>
               <div style={{ fontSize:10, fontWeight:700, color:"var(--gold)", letterSpacing:1.2, marginBottom:12, fontFamily:"var(--font-head)" }}>🔥 DEALS</div>
