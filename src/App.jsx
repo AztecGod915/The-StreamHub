@@ -56,6 +56,14 @@ const GlobalStyles = () => {
       @keyframes slideUp  { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
       @keyframes slideDown{ from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
       @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+      @keyframes logoPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(245,197,24,0))} 50%{filter:drop-shadow(0 0 14px rgba(245,197,24,0.7))} }
+      @keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+      @keyframes flameDance { 0%,100%{transform:scale(1) rotate(-8deg)} 25%{transform:scale(1.3) rotate(8deg)} 50%{transform:scale(0.9) rotate(-5deg)} 75%{transform:scale(1.2) rotate(6deg)} }
+      @keyframes swordSwing { 0%,100%{transform:rotate(-20deg) scale(1)} 50%{transform:rotate(20deg) scale(1.1)} }
+      @keyframes tvFlicker { 0%,88%,92%,100%{opacity:1} 90%{opacity:0.4} }
+      @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+      @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+      @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
       .fadeUp { animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
       .fadeIn { animation:fadeIn .25s ease both; }
       .skeleton { background:linear-gradient(90deg,#1a1a2e 25%,#252540 50%,#1a1a2e 75%); background-size:400px 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
@@ -93,11 +101,11 @@ const SERVICES = [
 ];
 
 const CATEGORY_TABS = [
-  { id:"trending", label:"Trending",   icon:"🔥", color:"var(--gold)" },
-  { id:"movies",   label:"Movies",     icon:"🎬", color:"var(--cyan)" },
-  { id:"tv",       label:"TV Shows",   icon:"📺", color:"var(--purple)" },
-  { id:"anime",    label:"Anime",      icon:"⚔️",  color:"var(--anime)" },
-  { id:"search",   label:"Search",     icon:"🔍", color:"var(--gold)" },
+  { id:"trending", label:"Trending",  icon:"🔥", color:"#F5C518", anim:"flameDance" },
+  { id:"movies",   label:"Movies",    icon:"🎬", color:"var(--cyan)", anim:null },
+  { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA", anim:"tvFlicker" },
+  { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
+  { id:"search",   label:"Search",    icon:"🔍", color:"var(--gold)", anim:null },
 ];
 
 const GR = [
@@ -111,15 +119,24 @@ const GR = [
 function Logo({ size=32 }) {
   return (
     <div style={{display:"flex",alignItems:"center",gap:10}}>
-      <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-        <rect width="40" height="40" rx="10" fill="#F5C518"/>
-        <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
-        <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
-        <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
-        <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
-      </svg>
-      <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.6,letterSpacing:"-.02em"}}>
-        <span style={{color:"#fff"}}>Stream</span><span style={{color:"#F5C518"}}>Hub</span>
+      <div style={{animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",display:"flex"}}>
+        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="#F5C518"/>
+          <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
+          <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
+          <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
+          <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
+        </svg>
+      </div>
+      <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em",lineHeight:1}}>
+        <span style={{color:"#fff"}}>Stream</span>
+        <span style={{
+          background:"linear-gradient(90deg,#F5C518,#f59e0b,#F5C518)",
+          backgroundSize:"200% auto",
+          WebkitBackgroundClip:"text",
+          WebkitTextFillColor:"transparent",
+          animation:"gradientShift 2s linear infinite",
+        }}>Hub</span>
       </span>
     </div>
   );
@@ -692,18 +709,24 @@ function useIsMobile() {
 }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile }) {
-  const tabs=[{id:"trending",icon:"🔥",label:"Trending"},{id:"movies",icon:"🎬",label:"Movies"},{id:"tv",icon:"📺",label:"TV"},{id:"watchlist",icon:"♥",label:"Watchlist"},{id:"profile_tab",icon:"👤",label:"Profile"}];
+  const tabs=[
+    {id:"trending", icon:"🔥", label:"Trending"},
+    {id:"movies",   icon:"🎬", label:"Movies"},
+    {id:"tv",       icon:"📺", label:"TV"},
+    {id:"watchlist",icon:"♥",  label:"Watchlist"},
+    {id:"profile_tab",icon:"●",label:"Profile"},
+  ];
   return (
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.97)",borderTop:"1px solid var(--border)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
         const active=t.id==="profile_tab"?false:view===t.id;
         const count=t.id==="watchlist"&&watchlist.length>0?watchlist.length:0;
         return <button key={t.id} onClick={()=>t.id==="profile_tab"?onProfile():setView(t.id)}
-          style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?"var(--gold)":"var(--muted)",position:"relative"}}>
-          <span style={{fontSize:18,lineHeight:1}}>{t.icon}</span>
-          <span style={{fontSize:9,fontWeight:700,fontFamily:"var(--font-head)"}}>{t.label}</span>
-          {count>0&&<span style={{position:"absolute",top:6,left:"50%",marginLeft:4,background:"var(--gold)",color:"#000",borderRadius:99,minWidth:16,height:16,fontSize:9,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px"}}>{count}</span>}
-          {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2,background:"var(--gold)",borderRadius:99}}/>}
+          style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?"var(--gold)":"rgba(240,240,250,.35)",position:"relative",transition:"color .2s"}}>
+          <span style={{fontSize:t.id==="profile_tab"?20:20,lineHeight:1,filter:active?"drop-shadow(0 0 8px rgba(245,197,24,.8))":"none",transition:"filter .2s",animation:active&&t.id==="trending"?"flameDance 1.5s ease-in-out infinite":"none"}}>{t.icon}</span>
+          <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3}}>{t.label}</span>
+          {count>0&&<span style={{position:"absolute",top:6,left:"50%",marginLeft:6,background:"var(--gold)",color:"#000",borderRadius:99,minWidth:16,height:16,fontSize:9,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px"}}>{count}</span>}
+          {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:32,height:2.5,background:"var(--gold)",borderRadius:99,boxShadow:"0 0 8px var(--gold)"}}/>}
         </button>;
       })}
     </div>
@@ -910,9 +933,9 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:80}}>
         {/* Mobile Header */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid var(--border)"}}>
-          <div style={{display:"flex",alignItems:"center",padding:"0 14px",height:56,gap:10}}>
-            <Logo size={22} />
+        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)"}}>
+          <div style={{display:"flex",alignItems:"center",padding:"0 14px",height:62,gap:10}}>
+            <Logo size={26} />
             <div style={{flex:1,position:"relative"}}>
               <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--muted)",fontSize:14}}>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search any movie, show…"
@@ -924,11 +947,31 @@ export default function StreamHub() {
             }
             <AvatarButton />
           </div>
-          {/* Category tabs */}
+          {/* Animated Category tabs */}
           <div style={{overflowX:"auto",padding:"0 14px 10px",display:"flex",gap:8,scrollbarWidth:"none"}}>
-            {CATEGORY_TABS.map(tab=>{
+            {CATEGORY_TABS.filter(t=>t.id!=="search").map(tab=>{
               const active=view===tab.id;
-              return <button key={tab.id} onClick={()=>{setView(tab.id);setSearch("");}} style={{background:active?`${tab.color}18`:"rgba(255,255,255,.04)",border:`1px solid ${active?`${tab.color}55`:"var(--border)"}`,borderRadius:20,color:active?tab.color:"var(--muted)",padding:"6px 14px",fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}><span>{tab.icon}</span>{tab.label}</button>;
+              return (
+                <button key={tab.id} onClick={()=>{setView(tab.id);setSearch("");}}
+                  style={{
+                    background: active ? `${tab.color}20` : "rgba(255,255,255,.04)",
+                    border: `1.5px solid ${active ? tab.color : "rgba(255,255,255,.08)"}`,
+                    borderRadius:20, color: active ? tab.color : "var(--muted)",
+                    padding:"7px 16px", fontSize:12, fontWeight:800,
+                    fontFamily:"var(--font-head)", whiteSpace:"nowrap",
+                    display:"flex", alignItems:"center", gap:6,
+                    boxShadow: active ? `0 0 16px ${tab.color}40` : "none",
+                    transition:"all .25s cubic-bezier(.22,1,.36,1)",
+                  }}>
+                  <span style={{
+                    display:"inline-block",
+                    animation: active && tab.anim ? `${tab.anim} 1.5s ease-in-out infinite` : "none",
+                    fontSize:14,
+                  }}>{tab.icon}</span>
+                  {tab.label}
+                  {active && <span style={{width:6,height:6,borderRadius:"50%",background:tab.color,animation:"pulse 1.5s infinite"}} />}
+                </button>
+              );
             })}
           </div>
           {/* Service filter chips */}
@@ -1021,11 +1064,22 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)"}}>
         {/* Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.88)",backdropFilter:"blur(16px)",borderBottom:"1px solid var(--border)",padding:"0 24px",height:64,display:"flex",alignItems:"center",gap:16}}>
-          <Logo size={28} />
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.92)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.1)",padding:"0 24px",height:68,display:"flex",alignItems:"center",gap:16}}>
+          <Logo size={34} />
           <nav style={{display:"flex",gap:4,marginLeft:16}}>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
-              <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}} style={{background:view===t.id?`${t.color}15`:"none",border:"none",color:view===t.id?t.color:"var(--muted)",fontFamily:"var(--font-head)",fontWeight:600,fontSize:14,padding:"6px 14px",borderRadius:9,transition:"all .2s"}}>{t.icon} {t.label}</button>
+              <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
+                style={{
+                  background:view===t.id?`${t.color}15`:"none", border:"none",
+                  color:view===t.id?t.color:"var(--muted)",
+                  fontFamily:"var(--font-head)", fontWeight:700, fontSize:14,
+                  padding:"6px 14px", borderRadius:9, transition:"all .2s",
+                  display:"flex", alignItems:"center", gap:6,
+                  boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",
+                }}>
+                <span style={{display:"inline-block",animation:view===t.id&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
+                {t.label}
+              </button>
             ))}
           </nav>
           <div style={{flex:1,maxWidth:400,position:"relative"}}>
