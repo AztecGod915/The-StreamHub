@@ -51,18 +51,18 @@ const GlobalStyles = () => {
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const SERVICES = [
-  { id: "netflix",     name: "Netflix",     color: "#E50914", logo: "N",  subscribed: true,  deal: null },
-  { id: "disney",      name: "Disney+",     color: "#0063E5", logo: "D+", subscribed: true,  deal: null },
-  { id: "max",         name: "Max",         color: "#002BE7", logo: "M",  subscribed: true,  deal: null },
-  { id: "hulu",        name: "Hulu",        color: "#1CE783", logo: "H",  subscribed: false, deal: "2 months free" },
-  { id: "apple",       name: "Apple TV+",   color: "#555",    logo: "A",  subscribed: false, deal: "$2.99/mo first year" },
-  { id: "prime",       name: "Prime",       color: "#00A8E1", logo: "P",  subscribed: false, deal: null },
-  { id: "peacock",     name: "Peacock",     color: "#E81C2E", logo: "Pk", subscribed: false, deal: "50% off annual" },
-  { id: "paramount",   name: "Paramount+",  color: "#0064FF", logo: "P+", subscribed: false, deal: "30-day trial" },
-  { id: "crunchyroll", name: "Crunchyroll", color: "#F47521", logo: "CR", subscribed: false, deal: "14-day free trial" },
-  { id: "espnplus",    name: "ESPN+",       color: "#E31837", logo: "E+", subscribed: false, deal: null },
-  { id: "dazn",        name: "DAZN",        color: "#C8A900", logo: "DZ", subscribed: false, deal: "First month $1.99" },
-  { id: "fubo",        name: "Fubo",        color: "#FF6B00", logo: "F",  subscribed: false, deal: "7-day free trial" },
+  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  subscribed:true,  deal:null,                  url:"https://www.netflix.com/search?q=" },
+  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", subscribed:true,  deal:null,                  url:"https://www.disneyplus.com/search/" },
+  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  subscribed:true,  deal:null,                  url:"https://www.max.com/search?q=" },
+  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  subscribed:false, deal:"2 months free",       url:"https://www.hulu.com/search?q=" },
+  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  subscribed:false, deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=" },
+  { id:"prime",       name:"Prime",       color:"#00A8E1", logo:"P",  subscribed:false, deal:null,                  url:"https://www.amazon.com/s?k=" },
+  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", subscribed:false, deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=" },
+  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", subscribed:false, deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=" },
+  { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", subscribed:false, deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=" },
+  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", subscribed:false, deal:null,                  url:"https://www.espn.com/espnplus/player/" },
+  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", subscribed:false, deal:"First month $1.99",   url:"https://www.dazn.com/search?q=" },
+  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  subscribed:false, deal:"7-day free trial",    url:"https://www.fubo.tv/welcome" },
 ];
 
 const GR = [
@@ -230,13 +230,12 @@ function CategoryChip({ cat }) {
       border:`1px solid ${color}44`, whiteSpace:"nowrap" }}>{label}</span>
   );
 }
-function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleWatchlist }) {
+function MovieCard({ movie, ratings, watchlist, userRatings, userSubs, onSelect, onToggleWatchlist }) {
   const [hov, setHov] = useState(false);
   const [idx] = useState(() => (movie.id - 1) % GR.length);
   const rt = ratings[movie.id] || { avg:0, count:0 };
   const inWL = watchlist.includes(movie.id);
-  const svc = SERVICES.find(s => s.id === movie.platform);
-  const notSub = svc && !svc.subscribed;
+  const notSub = !userSubs.includes(movie.platform);
   const accent = CARD_ACCENT[movie.category];
   return (
     <div
@@ -424,6 +423,20 @@ function MovieModal({ movie, ratings, reviews, userRatings, watchlist, myVotes, 
           <div>
             <div style={{ fontSize:11, color:"var(--muted)", marginBottom:4 }}>Your Rating</div>
             <StarPicker value={userRat} onChange={v => onRate(movie.id, v)} size={16} />
+          </div>
+          <div style={{ marginLeft:"auto" }}>
+            {(() => {
+              const svc = SERVICES.find(s => s.id === movie.platform);
+              if (!svc) return null;
+              const url = svc.url + encodeURIComponent(movie.title);
+              return (
+                <a href={url} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"inline-flex", alignItems:"center", gap:8, background:svc.color, borderRadius:10, color:"#fff", padding:"9px 18px", fontFamily:"var(--font-head)", fontWeight:800, fontSize:13, textDecoration:"none" }}
+                  onClick={e => e.stopPropagation()}>
+                  ▶ Watch on {svc.name}
+                </a>
+              );
+            })()}
           </div>
         </div>
         {/* Tabs */}
@@ -714,10 +727,142 @@ function AdBanner() {
   );
 }
 
+// ─── SETUP MODAL (My Subscriptions) ─────────────────────────────────────────
+function SetupModal({ userSubs, onSave, onClose, isFirst }) {
+  const [selected, setSelected] = useState(new Set(userSubs));
+  const toggle = id => setSelected(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  return (
+    <div onClick={isFirst ? null : onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.92)", zIndex:1200, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(12px)", animation:"fadeIn .2s" }}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{ background:"var(--surface)", borderRadius:22, width:"100%", maxWidth:560, border:"1px solid var(--border)", boxShadow:"0 40px 80px rgba(0,0,0,.9)", overflow:"hidden" }}>
+        <div style={{ padding:"28px 28px 0" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:6 }}>
+            <Logo size={28} />
+          </div>
+          <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:22, marginBottom:6, marginTop:16 }}>
+            {isFirst ? "Welcome! What are you subscribed to?" : "Manage Subscriptions"}
+          </div>
+          <div style={{ fontSize:13, color:"var(--muted)", marginBottom:24, lineHeight:1.6 }}>
+            {isFirst ? "Pick your services so StreamHub can personalize your experience. You can change this anytime." : "Toggle the services you currently pay for."}
+          </div>
+        </div>
+        <div style={{ padding:"0 28px", maxHeight:340, overflowY:"auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, paddingBottom:24 }}>
+            {SERVICES.map(s => {
+              const on = selected.has(s.id);
+              return (
+                <button key={s.id} onClick={() => toggle(s.id)} style={{
+                  background: on ? `${s.color}20` : "rgba(255,255,255,.04)",
+                  border: `2px solid ${on ? s.color : "rgba(255,255,255,.08)"}`,
+                  borderRadius:12, padding:"12px 10px", display:"flex", flexDirection:"column",
+                  alignItems:"center", gap:8, transition:"all .2s", position:"relative",
+                }}>
+                  {on && <span style={{ position:"absolute", top:6, right:8, color:s.color, fontSize:14, fontWeight:800 }}>✓</span>}
+                  <span style={{ background: on ? s.color : "rgba(255,255,255,.12)", borderRadius:8, width:36, height:36, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, color:"#fff", transition:"background .2s" }}>{s.logo}</span>
+                  <span style={{ fontSize:11, fontWeight:700, color: on ? "#fff" : "var(--muted)", textAlign:"center", lineHeight:1.3 }}>{s.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div style={{ padding:"16px 28px 28px", borderTop:"1px solid var(--border)", display:"flex", gap:12, alignItems:"center" }}>
+          <span style={{ fontSize:13, color:"var(--muted)", flex:1 }}>{selected.size} service{selected.size !== 1 ? "s" : ""} selected</span>
+          {!isFirst && <button onClick={onClose} style={{ background:"rgba(255,255,255,.07)", border:"none", borderRadius:10, color:"var(--text)", padding:"10px 20px", fontSize:14, fontWeight:600 }}>Cancel</button>}
+          <button onClick={() => { onSave([...selected]); onClose(); }} style={{ background:"var(--gold)", border:"none", borderRadius:10, color:"#000", padding:"10px 24px", fontFamily:"var(--font-head)", fontWeight:800, fontSize:14 }}>
+            {isFirst ? "Let's Go →" : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROFILE MODAL ────────────────────────────────────────────────────────────
+function ProfileModal({ onClose, userSubs, tier, watchlist, reviews, userRatings, onEditSubs, onUpgrade, showToast }) {
+  const [name, setName] = useState("StreamHub User");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const totalReviews = Object.values(reviews).flat().filter(r => r.user === "You").length;
+  const totalRatings = Object.keys(userRatings).length;
+  const avatarLetter = name.trim()[0]?.toUpperCase() || "U";
+  const myServices = SERVICES.filter(s => userSubs.includes(s.id));
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.85)", zIndex:1100, display:"flex", alignItems:"center", justifyContent:"center", padding:20, backdropFilter:"blur(8px)", animation:"fadeIn .2s" }}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{ background:"var(--surface)", borderRadius:22, width:"100%", maxWidth:500, border:"1px solid var(--border)", boxShadow:"0 40px 80px rgba(0,0,0,.8)", overflow:"hidden" }}>
+        {/* Header */}
+        <div style={{ background:"linear-gradient(135deg, rgba(124,58,237,.3), rgba(245,197,24,.1))", padding:"28px 28px 24px", position:"relative" }}>
+          <button onClick={onClose} style={{ position:"absolute", top:16, right:16, background:"rgba(0,0,0,.4)", border:"none", borderRadius:10, color:"#fff", width:32, height:32, fontSize:16 }}>✕</button>
+          <div style={{ display:"flex", alignItems:"center", gap:16 }}>
+            <div style={{ width:64, height:64, borderRadius:"50%", background:"var(--purple)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-head)", fontWeight:800, fontSize:26, border:"3px solid rgba(245,197,24,.4)" }}>{avatarLetter}</div>
+            <div>
+              {editing ? (
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  <input value={draft} onChange={e=>setDraft(e.target.value)} autoFocus style={{ background:"rgba(255,255,255,.1)", border:"1px solid rgba(255,255,255,.2)", borderRadius:8, color:"#fff", padding:"6px 10px", fontSize:15, fontFamily:"var(--font-head)", fontWeight:700, outline:"none", width:180 }} />
+                  <button onClick={()=>{setName(draft);setEditing(false);showToast("Name updated!");}} style={{ background:"var(--gold)", border:"none", borderRadius:8, color:"#000", padding:"6px 12px", fontWeight:700, fontSize:12 }}>Save</button>
+                </div>
+              ) : (
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:18 }}>{name}</div>
+                  <button onClick={()=>{setDraft(name);setEditing(true);}} style={{ background:"rgba(255,255,255,.1)", border:"none", borderRadius:6, color:"var(--muted)", padding:"3px 8px", fontSize:11 }}>✏️ Edit</button>
+                </div>
+              )}
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:6 }}>
+                {tier === "premium" ? <span style={{ background:"var(--gold)", color:"#000", fontSize:10, fontWeight:800, padding:"2px 8px", borderRadius:99, fontFamily:"var(--font-head)" }}>✦ PREMIUM</span>
+                  : <span style={{ background:"rgba(255,255,255,.1)", color:"var(--muted)", fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:99 }}>FREE</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding:"20px 28px 28px", display:"flex", flexDirection:"column", gap:20 }}>
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+            {[["♥", watchlist.length, "Watchlist"],["★", totalRatings, "Rated"],["✍", totalReviews, "Reviews"]].map(([icon,val,label])=>(
+              <div key={label} style={{ background:"rgba(255,255,255,.04)", borderRadius:12, padding:"14px 10px", textAlign:"center", border:"1px solid var(--border)" }}>
+                <div style={{ fontSize:20, marginBottom:4 }}>{icon}</div>
+                <div style={{ fontFamily:"var(--font-head)", fontWeight:800, fontSize:22, color:"var(--gold)" }}>{val}</div>
+                <div style={{ fontSize:11, color:"var(--muted)", marginTop:2 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          {/* My Subscriptions */}
+          <div>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:"var(--muted)", letterSpacing:1.2, fontFamily:"var(--font-head)" }}>MY SUBSCRIPTIONS</div>
+              <button onClick={onEditSubs} style={{ background:"none", border:"1px solid var(--border)", borderRadius:8, color:"var(--muted)", padding:"4px 12px", fontSize:12, fontWeight:600 }}>Edit</button>
+            </div>
+            {myServices.length === 0 ? (
+              <div style={{ fontSize:13, color:"var(--muted)", padding:"12px 0" }}>No services selected. <button onClick={onEditSubs} style={{ background:"none", border:"none", color:"var(--gold)", fontSize:13, fontWeight:700, padding:0 }}>Add some →</button></div>
+            ) : (
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                {myServices.map(s=>(
+                  <span key={s.id} style={{ background:`${s.color}20`, border:`1px solid ${s.color}44`, borderRadius:8, padding:"5px 12px", fontSize:12, fontWeight:700, color:"#fff", display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ background:s.color, borderRadius:4, width:16, height:16, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:800 }}>{s.logo}</span>
+                    {s.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Upgrade CTA */}
+          {tier !== "premium" && (
+            <button onClick={()=>{onUpgrade();onClose();}} style={{ width:"100%", background:"linear-gradient(135deg,var(--gold),#f59e0b)", border:"none", borderRadius:12, color:"#000", padding:"12px 0", fontFamily:"var(--font-head)", fontWeight:800, fontSize:15 }}>Upgrade to Premium ✦</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
   const [view, setView] = useState("home"); // home | watchlist | discover
   const [category, setCategory] = useState("all");
+  const [userSubs, setUserSubs] = useState(["netflix","disney","max"]);
+  const [showSetup, setShowSetup] = useState(true);
+  const [showProfile, setShowProfile] = useState(false);
   const [search, setSearch] = useState("");
   const [filterPlat, setFilterPlat] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -788,8 +933,8 @@ export default function StreamHub() {
     const matchC = category === "all" || m.category === category;
     return matchQ && matchP && matchC;
   });
-  const subscribed = SERVICES.filter(s=>s.subscribed);
-  const unsubscribed = SERVICES.filter(s=>!s.subscribed);
+  const subscribed = SERVICES.filter(s => userSubs.includes(s.id));
+  const unsubscribed = SERVICES.filter(s => !userSubs.includes(s.id));
 
   return (
     <>
@@ -816,7 +961,10 @@ export default function StreamHub() {
             ) : (
               <button onClick={()=>setShowUpgrade(true)} style={{ background:"linear-gradient(135deg,var(--gold),#f59e0b)", border:"none", borderRadius:10, color:"#000", padding:"7px 16px", fontFamily:"var(--font-head)", fontWeight:800, fontSize:13 }}>Upgrade ✦</button>
             )}
-            <div style={{ width:36, height:36, borderRadius:"50%", background:"var(--purple)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-head)", fontWeight:700, fontSize:14 }}>U</div>
+            <div onClick={()=>setShowProfile(true)} style={{ width:36, height:36, borderRadius:"50%", background:"var(--purple)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"var(--font-head)", fontWeight:700, fontSize:14, cursor:"pointer", border:"2px solid transparent", transition:"border-color .2s" }}
+              onMouseEnter={e=>e.currentTarget.style.borderColor="var(--gold)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor="transparent"}
+              title="My Profile">U</div>
           </div>
         </header>
 
@@ -908,6 +1056,7 @@ export default function StreamHub() {
                     ratings={ratings}
                     watchlist={watchlist}
                     userRatings={userRatings}
+                    userSubs={userSubs}
                     onSelect={setSelectedMovie}
                     onToggleWatchlist={toggleWatchlist}
                   />
@@ -981,6 +1130,8 @@ export default function StreamHub() {
       )}
       {showUpgrade && <UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")} />}
       {showShare && <ShareModal watchlist={watchlist} onClose={()=>setShowShare(false)} showToast={showToast} />}
+      {showSetup && <SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true} />}
+      {showProfile && <ProfileModal onClose={()=>setShowProfile(false)} userSubs={userSubs} tier={tier} watchlist={watchlist} reviews={reviews} userRatings={userRatings} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} />}
       {toast && <Toast msg={toast} onDone={()=>setToast(null)} />}
     </>
   );
