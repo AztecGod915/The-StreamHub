@@ -17,6 +17,8 @@ const GlobalStyles = () => {
         --purple: #7C3AED;
         --purple-dim: rgba(124,58,237,0.15);
         --cyan: #06B6D4;
+        --anime: #FF6B9D;
+        --sports: #10B981;
         --text: #F0F0FA;
         --muted: rgba(240,240,250,0.45);
         --danger: #EF4444;
@@ -49,14 +51,18 @@ const GlobalStyles = () => {
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const SERVICES = [
-  { id: "netflix",   name: "Netflix",    color: "#E50914", logo: "N",  subscribed: true,  deal: null },
-  { id: "disney",    name: "Disney+",    color: "#0063E5", logo: "D+", subscribed: true,  deal: null },
-  { id: "max",       name: "Max",        color: "#002BE7", logo: "M",  subscribed: true,  deal: null },
-  { id: "hulu",      name: "Hulu",       color: "#1CE783", logo: "H",  subscribed: false, deal: "2 months free" },
-  { id: "apple",     name: "Apple TV+",  color: "#555",    logo: "A",  subscribed: false, deal: "$2.99/mo first year" },
-  { id: "prime",     name: "Prime",      color: "#00A8E1", logo: "P",  subscribed: false, deal: null },
-  { id: "peacock",   name: "Peacock",    color: "#E81C2E", logo: "Pk", subscribed: false, deal: "50% off annual" },
-  { id: "paramount", name: "Paramount+", color: "#0064FF", logo: "P+", subscribed: false, deal: "30-day trial" },
+  { id: "netflix",     name: "Netflix",     color: "#E50914", logo: "N",  subscribed: true,  deal: null },
+  { id: "disney",      name: "Disney+",     color: "#0063E5", logo: "D+", subscribed: true,  deal: null },
+  { id: "max",         name: "Max",         color: "#002BE7", logo: "M",  subscribed: true,  deal: null },
+  { id: "hulu",        name: "Hulu",        color: "#1CE783", logo: "H",  subscribed: false, deal: "2 months free" },
+  { id: "apple",       name: "Apple TV+",   color: "#555",    logo: "A",  subscribed: false, deal: "$2.99/mo first year" },
+  { id: "prime",       name: "Prime",       color: "#00A8E1", logo: "P",  subscribed: false, deal: null },
+  { id: "peacock",     name: "Peacock",     color: "#E81C2E", logo: "Pk", subscribed: false, deal: "50% off annual" },
+  { id: "paramount",   name: "Paramount+",  color: "#0064FF", logo: "P+", subscribed: false, deal: "30-day trial" },
+  { id: "crunchyroll", name: "Crunchyroll", color: "#F47521", logo: "CR", subscribed: false, deal: "14-day free trial" },
+  { id: "espnplus",    name: "ESPN+",       color: "#E31837", logo: "E+", subscribed: false, deal: null },
+  { id: "dazn",        name: "DAZN",        color: "#C8A900", logo: "DZ", subscribed: false, deal: "First month $1.99" },
+  { id: "fubo",        name: "Fubo",        color: "#FF6B00", logo: "F",  subscribed: false, deal: "7-day free trial" },
 ];
 
 const GR = [
@@ -64,21 +70,43 @@ const GR = [
   ["#0a1628","#f59e0b"],["#1c0d2e","#c026d3"],["#0d2137","#06b6d4"],
   ["#1f1200","#d97706"],["#001f0d","#10b981"],["#1a0a0a","#ef4444"],
   ["#0d0d1a","#6366f1"],["#1a1000","#eab308"],["#0a1a1a","#14b8a6"],
+  ["#1a0a18","#f472b6"],["#0d1a08","#22c55e"],["#180d00","#fb923c"],
+  ["#080d1a","#818cf8"],["#1a0808","#f87171"],["#081a18","#34d399"],
+  ["#120818","#c084fc"],["#081808","#4ade80"],
 ];
 
 const MOVIES = [
-  { id:1,  title:"Oppenheimer",       year:2023, platform:"prime",     genre:["Drama","History"],    overview:"The story of J. Robert Oppenheimer and the Manhattan Project." },
-  { id:2,  title:"Barbie",            year:2023, platform:"max",       genre:["Comedy","Fantasy"],   overview:"Barbie and Ken embark on a journey of self-discovery in the real world." },
-  { id:3,  title:"Succession",        year:2023, platform:"max",       genre:["Drama","TV Series"],  overview:"The Roy family's power struggles in their global media empire." },
-  { id:4,  title:"The Bear",          year:2023, platform:"hulu",      genre:["Drama","TV Series"],  overview:"A young chef returns home to run his family's sandwich shop in Chicago." },
-  { id:5,  title:"Dune: Part Two",    year:2024, platform:"max",       genre:["Sci-Fi","Epic"],      overview:"Paul Atreides unites with the Fremen to take revenge on the conspirators." },
-  { id:6,  title:"The Mandalorian",   year:2023, platform:"disney",    genre:["Sci-Fi","TV Series"], overview:"A lone bounty hunter in the outer reaches of the galaxy." },
-  { id:7,  title:"Wednesday",         year:2022, platform:"netflix",   genre:["Horror","Comedy"],    overview:"Wednesday Addams investigates a murder spree while attending Nevermore Academy." },
-  { id:8,  title:"Stranger Things",   year:2022, platform:"netflix",   genre:["Horror","Sci-Fi"],    overview:"Kids in Hawkins battle supernatural forces from the Upside Down." },
-  { id:9,  title:"House of Dragon",   year:2023, platform:"max",       genre:["Fantasy","TV Series"],overview:"The story of House Targaryen set 200 years before Game of Thrones." },
-  { id:10, title:"Ted Lasso",         year:2023, platform:"apple",     genre:["Comedy","TV Series"], overview:"An American football coach hired to manage an English soccer team." },
-  { id:11, title:"Andor",             year:2022, platform:"disney",    genre:["Sci-Fi","TV Series"], overview:"Cassian Andor's journey toward becoming a rebel spy." },
-  { id:12, title:"Beef",              year:2023, platform:"netflix",   genre:["Drama","Comedy"],     overview:"Two strangers whose road rage incident sets off a chain of unexpected events." },
+  // ── Movies & TV ──
+  { id:1,  title:"Oppenheimer",         year:2023, platform:"prime",       category:"movies-tv", genre:["Drama","History"],     overview:"The story of J. Robert Oppenheimer and the Manhattan Project." },
+  { id:2,  title:"Barbie",              year:2023, platform:"max",         category:"movies-tv", genre:["Comedy","Fantasy"],    overview:"Barbie and Ken embark on a journey of self-discovery in the real world." },
+  { id:3,  title:"Succession",          year:2023, platform:"max",         category:"movies-tv", genre:["Drama","TV Series"],   overview:"The Roy family's power struggles in their global media empire." },
+  { id:4,  title:"The Bear",            year:2023, platform:"hulu",        category:"movies-tv", genre:["Drama","TV Series"],   overview:"A young chef returns home to run his family's sandwich shop in Chicago." },
+  { id:5,  title:"Dune: Part Two",      year:2024, platform:"max",         category:"movies-tv", genre:["Sci-Fi","Epic"],       overview:"Paul Atreides unites with the Fremen to take revenge on the conspirators." },
+  { id:6,  title:"The Mandalorian",     year:2023, platform:"disney",      category:"movies-tv", genre:["Sci-Fi","TV Series"],  overview:"A lone bounty hunter in the outer reaches of the galaxy." },
+  { id:7,  title:"Wednesday",           year:2022, platform:"netflix",     category:"movies-tv", genre:["Horror","Comedy"],     overview:"Wednesday Addams investigates a murder spree while attending Nevermore Academy." },
+  { id:8,  title:"Stranger Things",     year:2022, platform:"netflix",     category:"movies-tv", genre:["Horror","Sci-Fi"],     overview:"Kids in Hawkins battle supernatural forces from the Upside Down." },
+  { id:9,  title:"House of Dragon",     year:2023, platform:"max",         category:"movies-tv", genre:["Fantasy","TV Series"], overview:"The story of House Targaryen set 200 years before Game of Thrones." },
+  { id:10, title:"Ted Lasso",           year:2023, platform:"apple",       category:"movies-tv", genre:["Comedy","TV Series"],  overview:"An American football coach hired to manage an English soccer team." },
+  { id:11, title:"Andor",              year:2022, platform:"disney",      category:"movies-tv", genre:["Sci-Fi","TV Series"],  overview:"Cassian Andor's journey toward becoming a rebel spy." },
+  { id:12, title:"Beef",               year:2023, platform:"netflix",     category:"movies-tv", genre:["Drama","Comedy"],      overview:"Two strangers whose road rage incident sets off a chain of unexpected events." },
+  // ── Anime ──
+  { id:13, title:"Attack on Titan",     year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Action"],      overview:"Humanity fights for survival against giant humanoid Titans in the epic series finale." },
+  { id:14, title:"Demon Slayer S3",     year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Action"],      overview:"Tanjiro enters the Swordsmith Village arc in a visually stunning new season." },
+  { id:15, title:"One Piece",           year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Adventure"],   overview:"Luffy and the Straw Hats continue their epic quest to find the legendary One Piece." },
+  { id:16, title:"Jujutsu Kaisen S2",   year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Horror"],      overview:"The Shibuya Incident arc delivers the most intense battles in the series yet." },
+  { id:17, title:"My Hero Academia S6", year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Action"],      overview:"Class 1-A faces their darkest hours in the Paranormal Liberation War arc." },
+  { id:18, title:"Chainsaw Man",        year:2022, platform:"crunchyroll", category:"anime",     genre:["Anime","Horror"],      overview:"Denji merges with his devil dog Pochita to become the Chainsaw Man in this brutal series." },
+  { id:19, title:"Spy x Family",        year:2023, platform:"crunchyroll", category:"anime",     genre:["Anime","Comedy"],      overview:"A spy, assassin, and telepath form a fake family with hilariously real feelings." },
+  { id:20, title:"Vinland Saga S2",     year:2023, platform:"netflix",     category:"anime",     genre:["Anime","Drama"],       overview:"Thorfinn pursues pacifism and purpose in this breathtaking redemption arc." },
+  // ── Sports ──
+  { id:21, title:"UFC 300",             year:2024, platform:"espnplus",    category:"sports",    genre:["Sports","MMA"],        overview:"One of the most stacked cards in UFC history — multiple championship fights on one night." },
+  { id:22, title:"NFL Playoffs 2024",   year:2024, platform:"espnplus",    category:"sports",    genre:["Sports","Football"],   overview:"The road to Super Bowl LVIII — every playoff game, every moment, every miracle catch." },
+  { id:23, title:"Champions League",    year:2024, platform:"dazn",        category:"sports",    genre:["Sports","Soccer"],     overview:"Europe's elite clubs battle it out in the world's most prestigious club competition." },
+  { id:24, title:"F1: Drive to Survive",year:2024, platform:"netflix",     category:"sports",    genre:["Sports","Documentary"],overview:"Behind the scenes of Formula 1's most dramatic season yet in this global hit docuseries." },
+  { id:25, title:"Premier League",      year:2024, platform:"fubo",        category:"sports",    genre:["Sports","Soccer"],     overview:"Live matches and highlights from the world's most-watched football league every week." },
+  { id:26, title:"Canelo vs. Munguia",  year:2024, platform:"dazn",        category:"sports",    genre:["Sports","Boxing"],     overview:"The Mexican superfight — Canelo defends his super middleweight titles against rising star Munguia." },
+  { id:27, title:"NBA League Pass",     year:2024, platform:"espnplus",    category:"sports",    genre:["Sports","Basketball"], overview:"Every game, every team, every night — the full NBA season in stunning HD." },
+  { id:28, title:"WWE SmackDown",       year:2024, platform:"peacock",     category:"sports",    genre:["Sports","Wrestling"],  overview:"The blue brand delivers weekly action, drama, and championship moments every Friday." },
 ];
 
 const INIT_RATINGS = {
@@ -86,6 +114,14 @@ const INIT_RATINGS = {
   4:{avg:8.7,count:756},  5:{avg:8.5,count:1432}, 6:{avg:8.0,count:1890},
   7:{avg:7.6,count:1123}, 8:{avg:8.8,count:2341}, 9:{avg:8.3,count:1670},
   10:{avg:8.6,count:934}, 11:{avg:9.0,count:1122},12:{avg:8.2,count:678},
+  // Anime
+  13:{avg:9.5,count:3421},14:{avg:9.1,count:2890},15:{avg:8.9,count:4120},
+  16:{avg:9.3,count:3100},17:{avg:8.7,count:2200},18:{avg:8.8,count:1980},
+  19:{avg:8.6,count:1750},20:{avg:9.0,count:1340},
+  // Sports
+  21:{avg:9.2,count:876}, 22:{avg:8.8,count:1230},23:{avg:8.5,count:2100},
+  24:{avg:8.3,count:1560},25:{avg:8.1,count:980}, 26:{avg:8.7,count:654},
+  27:{avg:8.4,count:1890},28:{avg:7.9,count:1100},
 };
 
 const INIT_REVIEWS = {
@@ -102,9 +138,30 @@ const INIT_REVIEWS = {
   8:[
     { id:"r5", movieId:8, user:"nostalgic_gamer", avatar:"N", title:"Still the best on Netflix", content:"Season 4 delivered everything fans wanted. The Vecna storyline is genuinely terrifying and the Hawkins kids are all grown up in the best way. Volume 2's finale made me cry.", rating:9, helpful:67, unhelpful:5, ts: Date.now()-86400000*10 },
   ],
+  13:[
+    { id:"r6", movieId:13, user:"otaku_prime", avatar:"O", title:"The Greatest Anime Finale Ever", content:"MAPPA delivered beyond expectations. The final season conclusion had me crying multiple times. An absolutely perfect ending to a generational series. Nothing comes close.", rating:10, helpful:134, unhelpful:4, ts: Date.now()-86400000*8 },
+  ],
+  16:[
+    { id:"r7", movieId:16, user:"jjk_stan", avatar:"J", title:"Shibuya Incident is INSANE", content:"Episode 9 alone was better than most full seasons of anything I've watched. The animation quality is on a completely different level. MAPPA absolutely cooked with this one.", rating:10, helpful:89, unhelpful:2, ts: Date.now()-86400000*4 },
+  ],
+  21:[
+    { id:"r8", movieId:21, user:"mma_fan", avatar:"M", title:"Greatest UFC card ever assembled", content:"Main card delivered top to bottom. Alex Pereira's performance was superhuman. The co-main was equally insane. Worth every single penny of the PPV.", rating:9, helpful:56, unhelpful:3, ts: Date.now()-86400000*6 },
+  ],
+  23:[
+    { id:"r9", movieId:23, user:"footy_head", avatar:"F", title:"The pinnacle of club football", content:"Nothing beats Champions League nights. The drama, the atmosphere, the moments — you can't recreate this anywhere else. DAZN's coverage has been excellent.", rating:9, helpful:44, unhelpful:2, ts: Date.now()-86400000*3 },
+  ],
 };
 
-// ─── LOGO ────────────────────────────────────────────────────────────────────
+// ─── CATEGORY TABS ───────────────────────────────────────────────────────────
+const CATEGORY_TABS = [
+  { id:"all",       label:"All",         icon:"🌐", color:"var(--gold)" },
+  { id:"movies-tv", label:"Movies & TV", icon:"🎬", color:"var(--cyan)" },
+  { id:"anime",     label:"Anime",       icon:"⚔️",  color:"var(--anime)" },
+  { id:"sports",    label:"Sports",      icon:"🏆", color:"var(--sports)" },
+];
+
+const CATEGORY_COLOR = { "all":"var(--gold)", "movies-tv":"var(--cyan)", "anime":"var(--anime)", "sports":"var(--sports)" };
+const CARD_ACCENT = { "anime":"var(--anime)", "sports":"var(--sports)" };
 function Logo({ size = 32 }) {
   return (
     <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -162,7 +219,17 @@ function ServiceBadge({ platformId, small }) {
   );
 }
 
-// ─── MOVIE CARD ───────────────────────────────────────────────────────────────
+// ─── CATEGORY CHIP ────────────────────────────────────────────────────────────
+function CategoryChip({ cat }) {
+  if (!cat || cat === "movies-tv") return null;
+  const color = CARD_ACCENT[cat] || "var(--gold)";
+  const label = cat === "anime" ? "⚔️ Anime" : "🏆 Sports";
+  return (
+    <span style={{ background:`${color}25`, color, fontSize:9, fontWeight:800,
+      padding:"2px 7px", borderRadius:99, fontFamily:"var(--font-head)", letterSpacing:.5,
+      border:`1px solid ${color}44`, whiteSpace:"nowrap" }}>{label}</span>
+  );
+}
 function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleWatchlist }) {
   const [hov, setHov] = useState(false);
   const [idx] = useState(() => (movie.id - 1) % GR.length);
@@ -170,6 +237,7 @@ function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleW
   const inWL = watchlist.includes(movie.id);
   const svc = SERVICES.find(s => s.id === movie.platform);
   const notSub = svc && !svc.subscribed;
+  const accent = CARD_ACCENT[movie.category];
   return (
     <div
       onMouseEnter={() => setHov(true)}
@@ -178,7 +246,7 @@ function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleW
       style={{
         borderRadius: "var(--radius)", overflow:"hidden", cursor:"pointer", position:"relative",
         background: `linear-gradient(160deg, ${GR[idx][0]}, ${GR[idx][1]})`,
-        border: `1px solid ${hov ? "rgba(245,197,24,.35)" : "var(--border)"}`,
+        border: `1px solid ${hov ? (accent||"rgba(245,197,24,.4)") : "var(--border)"}`,
         transform: hov ? "translateY(-4px) scale(1.015)" : "translateY(0) scale(1)",
         transition:"all .25s cubic-bezier(.22,1,.36,1)",
         boxShadow: hov ? `0 20px 40px rgba(0,0,0,.5), 0 0 0 1px ${GR[idx][1]}44` : "0 4px 12px rgba(0,0,0,.3)",
@@ -187,13 +255,14 @@ function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleW
     >
       {/* Poster area */}
       <div style={{ height:160, display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-        <div style={{ fontSize:64, opacity:.18, fontFamily:"var(--font-head)", fontWeight:800, userSelect:"none", color:"#fff" }}>
+        {accent && <div style={{ position:"absolute", inset:0, background:`${accent}14`, pointerEvents:"none" }} />}
+        <div style={{ fontSize:60, opacity:.15, fontFamily:"var(--font-head)", fontWeight:800, userSelect:"none", color:"#fff" }}>
           {movie.title.slice(0,2).toUpperCase()}
         </div>
         {hov && (
           <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.4)", display:"flex", alignItems:"center", justifyContent:"center", animation:"fadeIn .2s" }}>
-            <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(245,197,24,.9)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ fontSize:20, marginLeft:4 }}>▶</span>
+            <div style={{ width:46, height:46, borderRadius:"50%", background:accent||"rgba(245,197,24,.9)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:18, marginLeft:3 }}>▶</span>
             </div>
           </div>
         )}
@@ -202,6 +271,7 @@ function MovieCard({ movie, ratings, watchlist, userRatings, onSelect, onToggleW
             NOT SUBSCRIBED
           </div>
         )}
+        <div style={{ position:"absolute", bottom:8, left:8 }}><CategoryChip cat={movie.category} /></div>
         {/* Watchlist btn */}
         <button
           onClick={e => { e.stopPropagation(); onToggleWatchlist(movie.id); }}
@@ -647,6 +717,7 @@ function AdBanner() {
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
   const [view, setView] = useState("home"); // home | watchlist | discover
+  const [category, setCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [filterPlat, setFilterPlat] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -714,7 +785,8 @@ export default function StreamHub() {
     const q = search.toLowerCase();
     const matchQ = !q || m.title.toLowerCase().includes(q) || m.genre.some(g=>g.toLowerCase().includes(q));
     const matchP = !filterPlat || m.platform === filterPlat;
-    return matchQ && matchP;
+    const matchC = category === "all" || m.category === category;
+    return matchQ && matchP && matchC;
   });
   const subscribed = SERVICES.filter(s=>s.subscribed);
   const unsubscribed = SERVICES.filter(s=>!s.subscribed);
@@ -736,7 +808,7 @@ export default function StreamHub() {
           {/* Search */}
           <div style={{ flex:1, maxWidth:360, position:"relative" }}>
             <span style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"var(--muted)", fontSize:15 }}>🔍</span>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & shows…" style={{ width:"100%", background:"rgba(255,255,255,.06)", border:"1px solid var(--border)", borderRadius:11, color:"var(--text)", padding:"9px 14px 9px 36px", fontSize:14, outline:"none" }} />
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, anime, sports…" style={{ width:"100%", background:"rgba(255,255,255,.06)", border:"1px solid var(--border)", borderRadius:11, color:"var(--text)", padding:"9px 14px 9px 36px", fontSize:14, outline:"none" }} />
           </div>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginLeft:"auto" }}>
             {tier === "premium" ? (
@@ -786,6 +858,27 @@ export default function StreamHub() {
           <main style={{ flex:1, minWidth:0 }}>
             {/* AI Panel */}
             <AIRecsPanel tier={tier} watchlist={watchlist} onUpgrade={()=>setShowUpgrade(true)} />
+
+            {/* ── CATEGORY TABS ── */}
+            <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
+              {CATEGORY_TABS.map(tab => {
+                const active = category === tab.id;
+                const count = tab.id === "all" ? MOVIES.length : MOVIES.filter(m => m.category === tab.id).length;
+                return (
+                  <button key={tab.id} onClick={() => setCategory(tab.id)} style={{
+                    background: active ? `${tab.color}18` : "rgba(255,255,255,.04)",
+                    border: `1px solid ${active ? `${tab.color}55` : "var(--border)"}`,
+                    borderRadius:20, color: active ? tab.color : "var(--muted)",
+                    padding:"7px 16px", fontSize:13, fontWeight:700, fontFamily:"var(--font-head)",
+                    transition:"all .2s", display:"flex", alignItems:"center", gap:6,
+                  }}>
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                    <span style={{ background: active ? `${tab.color}25` : "rgba(255,255,255,.08)", borderRadius:99, padding:"1px 7px", fontSize:11, fontWeight:800 }}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Section header */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
