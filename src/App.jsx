@@ -1072,6 +1072,15 @@ export default function StreamHub() {
         )}
 
         <MobileBottomNav view={view} setView={v=>{setView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
+
+        {/* Mobile side tagline — left */}
+        <div style={{position:"fixed",left:-32,top:"50%",transform:"translateY(-50%) rotate(-90deg)",zIndex:50,pointerEvents:"none"}}>
+          <div style={{background:"linear-gradient(90deg,rgba(124,58,237,.8),rgba(245,197,24,.8))",padding:"5px 18px",borderRadius:"0 0 8px 8px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:9,letterSpacing:3,color:"#fff",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(124,58,237,.4)"}}>SEARCH · FIND · ENJOY</div>
+        </div>
+        {/* Mobile side tagline — right */}
+        <div style={{position:"fixed",right:-32,top:"50%",transform:"translateY(-50%) rotate(90deg)",zIndex:50,pointerEvents:"none"}}>
+          <div style={{background:"linear-gradient(90deg,rgba(245,197,24,.8),rgba(255,107,157,.8))",padding:"5px 18px",borderRadius:"0 0 8px 8px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:9,letterSpacing:3,color:"#fff",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(255,107,157,.4)"}}>SEARCH · FIND · ENJOY</div>
+        </div>
       </div>
 
       {/* Modals */}
@@ -1225,18 +1234,100 @@ export default function StreamHub() {
         </div>
 
         {/* Footer */}
-        <div style={{borderTop:"1px solid var(--border)",padding:"24px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
-          <div style={{display:"flex",alignItems:"center",gap:16}}>
-            <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{height:52,borderRadius:10,boxShadow:"0 4px 16px rgba(0,0,0,.5)"}} />
-            <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16}}><span style={{color:"#fff"}}>Stream</span><span style={{color:"var(--gold)"}}>Hub</span></div>
-              <div style={{fontSize:11,color:"var(--muted)"}}>Search · Find · Enjoy</div>
+        <div style={{position:"relative",overflow:"hidden",borderTop:"1px solid rgba(245,197,24,.15)"}}>
+          {/* Footer hero tagline */}
+          <div style={{
+            padding:"48px 40px 32px",
+            background:"linear-gradient(135deg,rgba(124,58,237,.12) 0%,rgba(7,7,14,0) 40%,rgba(245,197,24,.08) 100%)",
+            textAlign:"center",position:"relative",
+          }}>
+            {/* Big decorative tagline */}
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:800,
+              fontSize:"clamp(28px,4vw,52px)",
+              letterSpacing:"-.01em", marginBottom:6,
+              background:"linear-gradient(90deg,#F5C518,#fff,#F5C518,#06B6D4,#F5C518)",
+              backgroundSize:"300% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 4s linear infinite",
+            }}>Search · Find · Enjoy</div>
+            <div style={{fontSize:13,color:"var(--muted)",marginBottom:32,letterSpacing:2}}>THE STREAMING UNIVERSE IN ONE PLACE</div>
+
+            {/* Word pills */}
+            <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
+              {[
+                {word:"SEARCH",color:"#F5C518",bg:"rgba(245,197,24,.1)",border:"rgba(245,197,24,.3)"},
+                {word:"·",color:"var(--muted)",bg:"transparent",border:"transparent"},
+                {word:"FIND",color:"#06B6D4",bg:"rgba(6,182,212,.1)",border:"rgba(6,182,212,.3)"},
+                {word:"·",color:"var(--muted)",bg:"transparent",border:"transparent"},
+                {word:"ENJOY",color:"#FF6B9D",bg:"rgba(255,107,157,.1)",border:"rgba(255,107,157,.3)"},
+              ].map((p,i)=>(
+                <span key={i} style={{
+                  fontFamily:"var(--font-head)", fontWeight:800,
+                  fontSize: p.word==="·" ? 22 : 18,
+                  color:p.color, letterSpacing: p.word==="·" ? 0 : 3,
+                  background:p.bg, border:`1px solid ${p.border}`,
+                  borderRadius:99, padding: p.word==="·" ? "0 4px" : "8px 24px",
+                  display:"inline-flex", alignItems:"center",
+                  boxShadow: p.word!=="·" ? `0 0 20px ${p.bg}` : "none",
+                  animation: p.word!=="·" ? "badgePop 3s ease-in-out infinite" : "none",
+                  animationDelay:`${i*0.4}s`,
+                }}>{p.word}</span>
+              ))}
+            </div>
+
+            {/* Bottom bar */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:14}}>
+                <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{height:44,borderRadius:9,boxShadow:"0 4px 16px rgba(0,0,0,.6)"}} />
+                <div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
+                    <span style={{color:"#fff"}}>Stream</span>
+                    <span style={{color:"var(--gold)"}}>Hub</span>
+                  </div>
+                  <div style={{fontSize:10,color:"var(--muted)",letterSpacing:1}}>SEARCH · FIND · ENJOY</div>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                {["Netflix","Disney+","Max","Hulu","Crunchyroll","ESPN+","DAZN"].map(n=>(
+                  <span key={n} style={{fontSize:10,color:"rgba(240,240,250,.2)",letterSpacing:.5}}>{n}</span>
+                ))}
+              </div>
             </div>
           </div>
-          <div style={{fontSize:12,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
-          <div style={{display:"flex",gap:12}}>
-            {["Netflix","Disney+","Max","Hulu","Crunchyroll","ESPN+"].map(n=><span key={n} style={{fontSize:11,color:"rgba(240,240,250,.25)"}}>{n}</span>)}
-          </div>
+        </div>
+
+        {/* Left side tagline banner */}
+        <div style={{
+          position:"fixed", left:0, top:"50%", transform:"translateY(-50%) rotate(-90deg)",
+          transformOrigin:"center center", zIndex:50, pointerEvents:"none",
+          display:"flex", alignItems:"center", gap:12,
+        }}>
+          <div style={{
+            background:"linear-gradient(90deg,rgba(124,58,237,.85),rgba(245,197,24,.85))",
+            padding:"8px 28px", borderRadius:"0 0 12px 12px",
+            fontFamily:"var(--font-head)", fontWeight:800, fontSize:11,
+            letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
+            boxShadow:"0 4px 20px rgba(124,58,237,.4)",
+            textShadow:"0 1px 4px rgba(0,0,0,.5)",
+          }}>SEARCH · FIND · ENJOY</div>
+        </div>
+
+        {/* Right side tagline banner */}
+        <div style={{
+          position:"fixed", right:0, top:"50%", transform:"translateY(-50%) rotate(90deg)",
+          transformOrigin:"center center", zIndex:50, pointerEvents:"none",
+          display:"flex", alignItems:"center",
+        }}>
+          <div style={{
+            background:"linear-gradient(90deg,rgba(245,197,24,.85),rgba(255,107,157,.85))",
+            padding:"8px 28px", borderRadius:"0 0 12px 12px",
+            fontFamily:"var(--font-head)", fontWeight:800, fontSize:11,
+            letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
+            boxShadow:"0 4px 20px rgba(255,107,157,.4)",
+            textShadow:"0 1px 4px rgba(0,0,0,.5)",
+          }}>SEARCH · FIND · ENJOY</div>
         </div>
       </div>
 
