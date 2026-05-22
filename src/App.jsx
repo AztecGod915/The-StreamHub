@@ -1073,13 +1073,42 @@ export default function StreamHub() {
 
         <MobileBottomNav view={view} setView={v=>{setView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
-        {/* Mobile side tagline — left */}
-        <div style={{position:"fixed",left:-32,top:"50%",transform:"translateY(-50%) rotate(-90deg)",zIndex:50,pointerEvents:"none"}}>
-          <div style={{background:"linear-gradient(90deg,rgba(124,58,237,.8),rgba(245,197,24,.8))",padding:"5px 18px",borderRadius:"0 0 8px 8px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:9,letterSpacing:3,color:"#fff",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(124,58,237,.4)"}}>SEARCH · FIND · ENJOY</div>
+        {/* Mobile bottom tagline bar - above bottom nav */}
+        <div style={{
+          position:"fixed", bottom:64, left:0, right:0, zIndex:150,
+          background:"linear-gradient(90deg,#7C3AED,#F5C518,#FF6B9D)",
+          padding:"7px 0", textAlign:"center",
+          fontFamily:"var(--font-head)", fontWeight:800,
+          fontSize:11, letterSpacing:4, color:"#fff",
+          boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
+        }}>SEARCH · FIND · ENJOY</div>
+
+        {/* Mobile side tagline — left edge */}
+        <div style={{
+          position:"fixed", left:0, top:"50%", zIndex:50, pointerEvents:"none",
+          transform:"translateY(-50%) translateX(calc(-50% + 14px)) rotate(-90deg)",
+        }}>
+          <div style={{
+            background:"linear-gradient(90deg,#7C3AED,#F5C518)",
+            padding:"5px 20px", borderRadius:"0 0 8px 8px",
+            fontFamily:"var(--font-head)", fontWeight:800,
+            fontSize:9, letterSpacing:3, color:"#fff", whiteSpace:"nowrap",
+            boxShadow:"0 4px 16px rgba(124,58,237,.5)",
+          }}>SEARCH · FIND · ENJOY</div>
         </div>
-        {/* Mobile side tagline — right */}
-        <div style={{position:"fixed",right:-32,top:"50%",transform:"translateY(-50%) rotate(90deg)",zIndex:50,pointerEvents:"none"}}>
-          <div style={{background:"linear-gradient(90deg,rgba(245,197,24,.8),rgba(255,107,157,.8))",padding:"5px 18px",borderRadius:"0 0 8px 8px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:9,letterSpacing:3,color:"#fff",whiteSpace:"nowrap",boxShadow:"0 4px 16px rgba(255,107,157,.4)"}}>SEARCH · FIND · ENJOY</div>
+
+        {/* Mobile side tagline — right edge */}
+        <div style={{
+          position:"fixed", right:0, top:"50%", zIndex:50, pointerEvents:"none",
+          transform:"translateY(-50%) translateX(calc(50% - 14px)) rotate(90deg)",
+        }}>
+          <div style={{
+            background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
+            padding:"5px 20px", borderRadius:"0 0 8px 8px",
+            fontFamily:"var(--font-head)", fontWeight:800,
+            fontSize:9, letterSpacing:3, color:"#fff", whiteSpace:"nowrap",
+            boxShadow:"0 4px 16px rgba(255,107,157,.5)",
+          }}>SEARCH · FIND · ENJOY</div>
         </div>
       </div>
 
@@ -1234,43 +1263,49 @@ export default function StreamHub() {
         </div>
 
         {/* Footer */}
-        <div style={{position:"relative",overflow:"hidden",borderTop:"1px solid rgba(245,197,24,.15)"}}>
+        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,197,24,.2)"}}>
           {/* Footer hero tagline */}
           <div style={{
             padding:"48px 40px 32px",
-            background:"linear-gradient(135deg,rgba(124,58,237,.12) 0%,rgba(7,7,14,0) 40%,rgba(245,197,24,.08) 100%)",
+            background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)",
             textAlign:"center",position:"relative",
           }}>
             {/* Big decorative tagline */}
             <div style={{
               fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:"clamp(28px,4vw,52px)",
-              letterSpacing:"-.01em", marginBottom:6,
-              background:"linear-gradient(90deg,#F5C518,#fff,#F5C518,#06B6D4,#F5C518)",
+              fontSize:"clamp(36px,5vw,68px)",
+              letterSpacing:"-.01em", marginBottom:10,
+              background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#FF6B9D,#F5C518)",
               backgroundSize:"300% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 4s linear infinite",
             }}>Search · Find · Enjoy</div>
-            <div style={{fontSize:13,color:"var(--muted)",marginBottom:32,letterSpacing:2}}>THE STREAMING UNIVERSE IN ONE PLACE</div>
+            <div style={{
+              fontSize:12, letterSpacing:4, marginBottom:36,
+              color:"rgba(240,240,250,.55)", display:"inline-block",
+              background:"rgba(255,255,255,.05)",
+              padding:"6px 20px", borderRadius:99,
+              border:"1px solid rgba(255,255,255,.1)",
+            }}>THE STREAMING UNIVERSE IN ONE PLACE</div>
 
             {/* Word pills */}
             <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
               {[
-                {word:"SEARCH",color:"#F5C518",bg:"rgba(245,197,24,.1)",border:"rgba(245,197,24,.3)"},
-                {word:"·",color:"var(--muted)",bg:"transparent",border:"transparent"},
-                {word:"FIND",color:"#06B6D4",bg:"rgba(6,182,212,.1)",border:"rgba(6,182,212,.3)"},
-                {word:"·",color:"var(--muted)",bg:"transparent",border:"transparent"},
-                {word:"ENJOY",color:"#FF6B9D",bg:"rgba(255,107,157,.1)",border:"rgba(255,107,157,.3)"},
+                {word:"SEARCH", color:"#000",    bg:"#F5C518",  shadow:"rgba(245,197,24,.6)"},
+                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
+                {word:"FIND",   color:"#fff",    bg:"#06B6D4",  shadow:"rgba(6,182,212,.5)"},
+                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
+                {word:"ENJOY",  color:"#fff",    bg:"#FF6B9D",  shadow:"rgba(255,107,157,.5)"},
               ].map((p,i)=>(
                 <span key={i} style={{
                   fontFamily:"var(--font-head)", fontWeight:800,
-                  fontSize: p.word==="·" ? 22 : 18,
-                  color:p.color, letterSpacing: p.word==="·" ? 0 : 3,
-                  background:p.bg, border:`1px solid ${p.border}`,
-                  borderRadius:99, padding: p.word==="·" ? "0 4px" : "8px 24px",
+                  fontSize: p.word==="·" ? 28 : 20,
+                  color:p.color, letterSpacing: p.word==="·" ? 0 : 4,
+                  background:p.bg, borderRadius:99,
+                  padding: p.word==="·" ? "0 8px" : "10px 32px",
                   display:"inline-flex", alignItems:"center",
-                  boxShadow: p.word!=="·" ? `0 0 20px ${p.bg}` : "none",
-                  animation: p.word!=="·" ? "badgePop 3s ease-in-out infinite" : "none",
+                  boxShadow: p.shadow!=="none" ? `0 0 28px ${p.shadow}, 0 4px 12px rgba(0,0,0,.4)` : "none",
+                  animation: p.word!=="·" ? `badgePop 3s ease-in-out infinite` : "none",
                   animationDelay:`${i*0.4}s`,
                 }}>{p.word}</span>
               ))}
@@ -1298,35 +1333,33 @@ export default function StreamHub() {
           </div>
         </div>
 
-        {/* Left side tagline banner */}
+        {/* Left side tagline banner - hugs left edge */}
         <div style={{
-          position:"fixed", left:0, top:"50%", transform:"translateY(-50%) rotate(-90deg)",
-          transformOrigin:"center center", zIndex:50, pointerEvents:"none",
-          display:"flex", alignItems:"center", gap:12,
+          position:"fixed", left:0, top:"50%", zIndex:50, pointerEvents:"none",
+          transform:"translateY(-50%) translateX(-50%) rotate(-90deg)",
+          transformOrigin:"center center",
         }}>
           <div style={{
-            background:"linear-gradient(90deg,rgba(124,58,237,.85),rgba(245,197,24,.85))",
-            padding:"8px 28px", borderRadius:"0 0 12px 12px",
-            fontFamily:"var(--font-head)", fontWeight:800, fontSize:11,
+            background:"linear-gradient(90deg,#7C3AED,#F5C518)",
+            padding:"6px 28px", borderRadius:"0 0 10px 10px",
+            fontFamily:"var(--font-head)", fontWeight:800, fontSize:10,
             letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 20px rgba(124,58,237,.4)",
-            textShadow:"0 1px 4px rgba(0,0,0,.5)",
+            boxShadow:"0 4px 20px rgba(124,58,237,.6)",
           }}>SEARCH · FIND · ENJOY</div>
         </div>
 
-        {/* Right side tagline banner */}
+        {/* Right side tagline banner - hugs right edge */}
         <div style={{
-          position:"fixed", right:0, top:"50%", transform:"translateY(-50%) rotate(90deg)",
-          transformOrigin:"center center", zIndex:50, pointerEvents:"none",
-          display:"flex", alignItems:"center",
+          position:"fixed", right:0, top:"50%", zIndex:50, pointerEvents:"none",
+          transform:"translateY(-50%) translateX(50%) rotate(90deg)",
+          transformOrigin:"center center",
         }}>
           <div style={{
-            background:"linear-gradient(90deg,rgba(245,197,24,.85),rgba(255,107,157,.85))",
-            padding:"8px 28px", borderRadius:"0 0 12px 12px",
-            fontFamily:"var(--font-head)", fontWeight:800, fontSize:11,
+            background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
+            padding:"6px 28px", borderRadius:"0 0 10px 10px",
+            fontFamily:"var(--font-head)", fontWeight:800, fontSize:10,
             letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 20px rgba(255,107,157,.4)",
-            textShadow:"0 1px 4px rgba(0,0,0,.5)",
+            boxShadow:"0 4px 20px rgba(255,107,157,.6)",
           }}>SEARCH · FIND · ENJOY</div>
         </div>
       </div>
