@@ -613,6 +613,77 @@ function SetupModal({ userSubs, onSave, onClose, isFirst }) {
   );
 }
 
+// ─── HERO BANNER ─────────────────────────────────────────────────────────────
+function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
+  const [loaded, setLoaded] = useState(false);
+  if (!movie) return (
+    <div style={{height:520,background:"linear-gradient(135deg,#0d0d1a,#1a0533)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{width:40,height:40,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}} />
+    </div>
+  );
+  const backdrop = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null;
+  const poster   = movie.poster_path   ? `${TMDB_IMG}${movie.poster_path}` : null;
+  const title    = movie.title||movie.name||"";
+  const year     = (movie.release_date||movie.first_air_date||"").slice(0,4);
+  const rating   = movie.vote_average?.toFixed(1)||"—";
+  const inWL     = watchlist.includes(movie.id);
+  const providers = movie.providers||[];
+  return (
+    <div style={{position:"relative",height:520,overflow:"hidden",cursor:"pointer"}} onClick={()=>onSelect(movie)}>
+      {backdrop && <img src={backdrop} alt="" onLoad={()=>setLoaded(true)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:loaded?.55:.2,transition:"opacity 1s"}} />}
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.6) 50%,rgba(7,7,14,.2) 100%)"}} />
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 40%)"}} />
+      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",padding:"0 60px"}}>
+        <div style={{maxWidth:560}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"5px 14px",marginBottom:20,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:.5}}>🔥 FEATURED</div>
+          <h1 style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:"clamp(36px,5vw,64px)",lineHeight:1.05,letterSpacing:"-.02em",marginBottom:16,textShadow:"0 4px 24px rgba(0,0,0,.8)"}}>{title}</h1>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+            <span style={{color:"var(--gold)",fontWeight:700,fontSize:15}}>★ {rating}</span>
+            <span style={{color:"var(--muted)",fontSize:14}}>{year}</span>
+            {providers.slice(0,3).map(p=><ServiceBadge key={p} platformId={p} />)}
+          </div>
+          <p style={{fontSize:15,color:"rgba(240,240,250,.75)",lineHeight:1.7,marginBottom:28,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{movie.overview}</p>
+          <div style={{display:"flex",gap:12}}>
+            <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"13px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:8}}>▶ Watch Now</button>
+            <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15}}>
+              {inWL?"♥ Saved":"♡ Save"}
+            </button>
+          </div>
+        </div>
+        {poster && <img src={poster} alt={title} style={{marginLeft:"auto",height:340,borderRadius:16,boxShadow:"0 32px 80px rgba(0,0,0,.8)",objectFit:"cover",flexShrink:0}} />}
+      </div>
+    </div>
+  );
+}
+
+// ─── FEATURED ROW ─────────────────────────────────────────────────────────────
+function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, onSelect, onToggleWatchlist, color="var(--gold)" }) {
+  const ref = useRef(null);
+  const scroll = dir => ref.current?.scrollBy({left:dir*340,behavior:"smooth"});
+  if (!movies||!movies.length) return null;
+  return (
+    <div style={{marginBottom:36}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>{icon}</span>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color}}>{title}</div>
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>scroll(-1)} style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+          <button onClick={()=>scroll(1)}  style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+        </div>
+      </div>
+      <div ref={ref} style={{display:"flex",gap:12,overflowX:"auto",padding:"4px 24px 8px",scrollbarWidth:"none",scrollSnapType:"x mandatory"}}>
+        {movies.map(m=>(
+          <div key={m.id} style={{flexShrink:0,width:155,scrollSnapAlign:"start"}}>
+            <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={onSelect} onToggleWatchlist={onToggleWatchlist} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── MOBILE COMPONENTS ────────────────────────────────────────────────────────
 function useIsMobile() {
   const [m,setM]=useState(()=>window.innerWidth<=768);
@@ -655,6 +726,8 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
+  const [heroMovie, setHeroMovie] = useState(null);
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -702,6 +775,36 @@ export default function StreamHub() {
     setUserRatings(ratMap);
   };
 
+  // ── Fetch featured rows for homepage ──
+  useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        const [trendData, newData, topData, animeData] = await Promise.all([
+          tmdbFetch("/trending/all/week?language=en-US&page=1"),
+          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
+          tmdbFetch("/movie/top_rated?language=en-US&page=1"),
+          tmdbFetch("/discover/tv?with_keywords=210024&sort_by=popularity.desc&language=en-US&page=1"),
+        ]);
+        const addProviders = async (items, category) => {
+          return Promise.all((items||[]).slice(0,20).map(async m => {
+            const type = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
+            try { const wp=await tmdbFetch(`/${type}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category}; }
+            catch { return {...m,providers:[],category}; }
+          }));
+        };
+        const [trending,newReleases,topRated,anime] = await Promise.all([
+          addProviders(trendData.results,"trending"),
+          addProviders(newData.results,"movies"),
+          addProviders(topData.results,"movies"),
+          addProviders(animeData.results,"anime"),
+        ]);
+        setFeaturedRows({ trending, newReleases, topRated, anime, sports:[] });
+        if (trending.length > 0) setHeroMovie(trending[Math.floor(Math.random()*Math.min(5,trending.length))]);
+      } catch(e) { console.error(e); }
+    };
+    loadFeatured();
+  }, []);
+
   // ── Fetch TMDB content ──
   useEffect(() => {
     const viewMap = {
@@ -716,7 +819,6 @@ export default function StreamHub() {
     setLoading(true);
     tmdbFetch(`${path}&language=en-US&page=1`).then(async data => {
       const results = (data.results||[]).slice(0,20);
-      // Fetch watch providers for each
       const withProviders = await Promise.all(results.map(async m => {
         const type = m.media_type==="tv"||(m.first_air_date&&!m.release_date) ? "tv" : "movie";
         try {
@@ -848,15 +950,57 @@ export default function StreamHub() {
           </div>
         )}
 
-        {/* Grid */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
-          {loading&&!search
-            ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
-            : filtered.length===0
-              ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
-              : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)
-          }
-        </div>
+        {/* Mobile Hero + Featured Rows for trending */}
+        {view==="trending"&&!search.trim() ? (
+          <div>
+            {/* Mobile Hero */}
+            {heroMovie && (
+              <div style={{margin:"0 14px 20px",borderRadius:16,overflow:"hidden",position:"relative",height:220,cursor:"pointer"}} onClick={()=>setSelectedMovie(heroMovie)}>
+                {heroMovie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${heroMovie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />}
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(7,7,14,.95) 0%,transparent 60%)"}} />
+                <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 16px 16px"}}>
+                  <div style={{fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:6}}>{heroMovie.title||heroMovie.name}</div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <span style={{color:"var(--gold)",fontSize:12}}>★ {heroMovie.vote_average?.toFixed(1)}</span>
+                    {(heroMovie.providers||[]).slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small />)}
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Mobile Featured Rows */}
+            {[
+              {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
+              {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
+              {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
+              {title:"Anime",icon:"⚔️",key:"anime",color:"var(--anime)"},
+            ].map(row=>(
+              <div key={row.key} style={{marginBottom:24}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
+                  <span>{row.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:row.color}}>{row.title}</div>
+                </div>
+                <div style={{display:"flex",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none"}}>
+                  {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
+                    <div key={m.id} style={{flexShrink:0,width:130}}>
+                      <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Regular grid */
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
+            {loading&&!search
+              ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
+              : filtered.length===0
+                ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
+                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)
+            }
+          </div>
+        )}
 
         <MobileBottomNav view={view} setView={v=>{setView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
       </div>
@@ -929,24 +1073,39 @@ export default function StreamHub() {
 
           {/* Main */}
           <main style={{flex:1,minWidth:0}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>
-                {search.trim()
-                  ? searching?"Searching…":`${searchResults.length} results for "${search}"`
-                  : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label
-                }
-                {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
+            {/* Homepage hero + rows */}
+            {view==="trending"&&!search.trim() ? (
+              <div style={{margin:"0 -24px"}}>
+                <HeroBanner movie={heroMovie} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
+                <div style={{paddingTop:32}}>
+                  <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
+                  <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
+                  <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
+                  <FeaturedRow title="Anime" icon="⚔️" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                </div>
               </div>
-              {!user&&<button onClick={()=>setShowAuth(true)} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
-            </div>
-            {loading&&!search
-              ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : filtered.length===0
-                ? <div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Click ♡ to save titles!":"No results found."}</div>
-                : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
-                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+            ) : (
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>
+                    {search.trim()
+                      ? searching?"Searching…":`${searchResults.length} results for "${search}"`
+                      : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label
+                    }
+                    {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
                   </div>
-            }
+                  {!user&&<button onClick={()=>setShowAuth(true)} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
+                </div>
+                {loading&&!search
+                  ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
+                  : filtered.length===0
+                    ? <div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Click ♡ to save titles!":"No results found."}</div>
+                    : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
+                        {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                      </div>
+                }
+              </>
+            )}
           </main>
 
           {/* Right Sidebar */}
