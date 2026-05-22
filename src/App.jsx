@@ -47,6 +47,24 @@ const GlobalStyles = () => {
         --font-head:'Syne',sans-serif; --font-body:'Plus Jakarta Sans',sans-serif;
       }
       body { background:var(--bg); color:var(--text); font-family:var(--font-body); -webkit-font-smoothing:antialiased; }
+      body::before {
+        content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+        background:
+          radial-gradient(ellipse 80% 50% at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 80% 10%, rgba(245,197,24,0.08) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 60% at 10% 70%, rgba(6,182,212,0.1) 0%, transparent 55%),
+          radial-gradient(ellipse 70% 50% at 90% 80%, rgba(255,107,157,0.07) 0%, transparent 55%),
+          radial-gradient(ellipse 40% 40% at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 60%);
+        animation:bgBreath 12s ease-in-out infinite;
+      }
+      body::after {
+        content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+        background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+        background-size:60px 60px;
+        mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+      }
+      @keyframes bgBreath { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.8;transform:scale(1.05)} }
+      #root { position:relative; z-index:1; }
       ::-webkit-scrollbar { width:5px; height:5px; }
       ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:99px; }
       @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
@@ -64,6 +82,7 @@ const GlobalStyles = () => {
       @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
       @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
       @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
+      @keyframes trophyBounce { 0%,100%{transform:translateY(0) rotate(-5deg)} 40%{transform:translateY(-6px) rotate(5deg)} 70%{transform:translateY(-3px) rotate(-3deg)} }
       .fadeUp { animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
       .fadeIn { animation:fadeIn .25s ease both; }
       .skeleton { background:linear-gradient(90deg,#1a1a2e 25%,#252540 50%,#1a1a2e 75%); background-size:400px 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
@@ -105,6 +124,7 @@ const CATEGORY_TABS = [
   { id:"movies",   label:"Movies",    icon:"🎬", color:"var(--cyan)", anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA", anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
+  { id:"sports",   label:"Sports",    icon:"🏆", color:"var(--sports)", anim:"trophyBounce" },
   { id:"search",   label:"Search",    icon:"🔍", color:"var(--gold)", anim:null },
 ];
 
@@ -713,8 +733,8 @@ function MobileBottomNav({ view, setView, watchlist, onProfile }) {
     {id:"trending", icon:"🔥", label:"Trending"},
     {id:"movies",   icon:"🎬", label:"Movies"},
     {id:"tv",       icon:"📺", label:"TV"},
+    {id:"sports",   icon:"🏆", label:"Sports"},
     {id:"watchlist",icon:"♥",  label:"Watchlist"},
-    {id:"profile_tab",icon:"●",label:"Profile"},
   ];
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
@@ -802,11 +822,12 @@ export default function StreamHub() {
   useEffect(() => {
     const loadFeatured = async () => {
       try {
-        const [trendData, newData, topData, animeData] = await Promise.all([
+        const [trendData, newData, topData, animeData, sportsData] = await Promise.all([
           tmdbFetch("/trending/all/week?language=en-US&page=1"),
           tmdbFetch("/movie/now_playing?language=en-US&page=1"),
           tmdbFetch("/movie/top_rated?language=en-US&page=1"),
           tmdbFetch("/discover/tv?with_keywords=210024&sort_by=popularity.desc&language=en-US&page=1"),
+          tmdbFetch("/discover/movie?with_genres=99&with_keywords=6075|1284|2702&sort_by=popularity.desc&language=en-US&page=1"),
         ]);
         const addProviders = async (items, category) => {
           return Promise.all((items||[]).slice(0,20).map(async m => {
@@ -815,13 +836,14 @@ export default function StreamHub() {
             catch { return {...m,providers:[],category}; }
           }));
         };
-        const [trending,newReleases,topRated,anime] = await Promise.all([
+        const [trending,newReleases,topRated,anime,sports] = await Promise.all([
           addProviders(trendData.results,"trending"),
           addProviders(newData.results,"movies"),
           addProviders(topData.results,"movies"),
           addProviders(animeData.results,"anime"),
+          addProviders(sportsData.results,"sports"),
         ]);
-        setFeaturedRows({ trending, newReleases, topRated, anime, sports:[] });
+        setFeaturedRows({ trending, newReleases, topRated, anime, sports });
         if (trending.length > 0) setHeroMovie(trending[Math.floor(Math.random()*Math.min(5,trending.length))]);
       } catch(e) { console.error(e); }
     };
@@ -835,6 +857,7 @@ export default function StreamHub() {
       movies:   "/movie/popular",
       tv:       "/tv/popular",
       anime:    "/discover/tv?with_keywords=210024&sort_by=popularity.desc",
+      sports:   "/discover/movie?with_genres=99&with_keywords=6075|1284|2702&sort_by=popularity.desc",
       watchlist: null,
     };
     const path = viewMap[view];
@@ -1018,7 +1041,8 @@ export default function StreamHub() {
               {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
               {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
-              {title:"Anime",icon:"⚔️",key:"anime",color:"var(--anime)"},
+              {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
               <div key={row.key} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
@@ -1137,7 +1161,8 @@ export default function StreamHub() {
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
-                  <FeaturedRow title="Anime" icon="⚔️" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                  <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : (
