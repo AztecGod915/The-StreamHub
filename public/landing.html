@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StreamHub — Search. Find. Enjoy.</title>
+
+  <!-- Social Media Preview (Open Graph) -->
+  <meta property="og:title" content="StreamHub — Search. Find. Enjoy." />
+  <meta property="og:description" content="One app to rule all your streaming services. Search movies, anime & sports across Netflix, Disney+, Max, Crunchyroll and more. Free to start." />
+  <meta property="og:image" content="https://streamhub-aztecgod915.vercel.app/og-image.jpg" />
+  <meta property="og:url" content="https://streamhub-aztecgod915.vercel.app" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="StreamHub — Search. Find. Enjoy." />
+  <meta name="twitter:description" content="One app to rule all your streaming services. Search movies, anime & sports across Netflix, Disney+, Max, Crunchyroll and more." />
+  <meta name="twitter:image" content="https://streamhub-aztecgod915.vercel.app/og-image.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07070E;
+      --gold: #F5C518;
+      --purple: #7C3AED;
+      --cyan: #06B6D4;
+      --anime: #FF6B9D;
+      --sports: #10B981;
+      --text: #F0F0FA;
+      --muted: rgba(240,240,250,0.5);
+      --border: rgba(255,255,255,0.07);
+      --head: 'Syne', sans-serif;
+      --body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(245,197,24,.3); border-radius: 99px; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+    @keyframes float    { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
+    @keyframes glow     { 0%,100% { opacity:.4; } 50% { opacity:.8; } }
+    @keyframes spin     { to { transform:rotate(360deg); } }
+    @keyframes scanline { 0% { transform:translateY(-100%); } 100% { transform:translateY(400%); } }
+    @keyframes ticker   { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+
+    .reveal { opacity:0; transform:translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 68px;
+      background: rgba(7,7,14,.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .nav-logo-icon { width:36px; height:36px; }
+    .nav-logo-text { font-family:var(--head); font-weight:800; font-size:22px; letter-spacing:-.02em; }
+    .nav-logo-text span:first-child { color:#fff; }
+    .nav-logo-text span:last-child { color:var(--gold); }
+    .nav-links { display:flex; gap:28px; }
+    .nav-links a { color:var(--muted); font-size:14px; font-weight:500; text-decoration:none; transition:color .2s; }
+    .nav-links a:hover { color:#fff; }
+    .nav-cta { background:var(--gold); color:#000; border:none; border-radius:10px; padding:9px 20px; font-family:var(--head); font-weight:800; font-size:14px; cursor:pointer; text-decoration:none; transition:opacity .2s; }
+    .nav-cta:hover { opacity:.85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding: 120px 24px 80px; position:relative; overflow:hidden;
+    }
+    .hero-bg {
+      position:absolute; inset:0; z-index:0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,58,237,.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(245,197,24,.08) 0%, transparent 60%),
+                  radial-gradient(ellipse 50% 50% at 20% 60%, rgba(6,182,212,.07) 0%, transparent 60%);
+    }
+    .hero-grid {
+      position:absolute; inset:0; z-index:0;
+      background-image: linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(245,197,24,.1); border:1px solid rgba(245,197,24,.25);
+      border-radius:99px; padding:6px 16px; font-size:12px; font-weight:700;
+      color:var(--gold); letter-spacing:.5px; margin-bottom:28px;
+      animation: fadeUp .6s .1s both;
+    }
+    .hero h1 {
+      font-family:var(--head); font-weight:800; font-size:clamp(48px, 8vw, 88px);
+      line-height:1.05; letter-spacing:-.03em; margin-bottom:24px;
+      animation: fadeUp .6s .2s both;
+    }
+    .hero h1 .gold { color:var(--gold); }
+    .hero h1 .dim  { color:rgba(240,240,250,.35); }
+    .hero-sub {
+      font-size:clamp(16px, 2.5vw, 20px); color:var(--muted); max-width:560px;
+      line-height:1.7; margin-bottom:44px;
+      animation: fadeUp .6s .3s both;
+    }
+    .hero-buttons { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; animation: fadeUp .6s .4s both; }
+    .btn-primary {
+      background:var(--gold); color:#000; border:none; border-radius:12px;
+      padding:14px 32px; font-family:var(--head); font-weight:800; font-size:16px;
+      cursor:pointer; text-decoration:none; transition:all .2s;
+      box-shadow:0 0 40px rgba(245,197,24,.3);
+    }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 40px rgba(245,197,24,.4); }
+    .btn-secondary {
+      background:rgba(255,255,255,.06); color:#fff; border:1px solid var(--border);
+      border-radius:12px; padding:14px 32px; font-family:var(--head); font-weight:700;
+      font-size:16px; cursor:pointer; text-decoration:none; transition:all .2s;
+    }
+    .btn-secondary:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.15); }
+
+    /* ── SERVICE TICKER ── */
+    .ticker-wrap {
+      margin-top:64px; width:100%; overflow:hidden; position:relative; z-index:1;
+      animation: fadeIn .8s .6s both;
+    }
+    .ticker-label { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1.5px; margin-bottom:16px; }
+    .ticker-track { display:flex; gap:16px; animation:ticker 30s linear infinite; width:max-content; }
+    .ticker-item {
+      display:flex; align-items:center; gap:8px;
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:10px; padding:8px 16px; white-space:nowrap; font-size:13px; font-weight:600;
+    }
+    .ticker-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+    /* ── MOCK APP ── */
+    .mock-wrap {
+      position:relative; z-index:1; margin-top:60px; width:100%; max-width:900px;
+      animation: fadeUp .8s .5s both;
+    }
+    .mock-screen {
+      background:#0D0D1A; border-radius:20px; border:1px solid rgba(245,197,24,.2);
+      overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.8), 0 0 0 1px rgba(245,197,24,.1);
+    }
+    .mock-bar { background:#111122; padding:12px 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .mock-dot { width:10px; height:10px; border-radius:50%; }
+    .mock-url { flex:1; background:rgba(255,255,255,.05); border-radius:6px; padding:5px 12px; font-size:11px; color:rgba(255,255,255,.3); max-width:340px; margin:0 auto; text-align:center; }
+    .mock-content { padding:20px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .mock-card {
+      border-radius:10px; overflow:hidden;
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .mock-poster { height:90px; display:flex; align-items:center; justify-content:center; font-family:var(--head); font-weight:800; font-size:24px; color:rgba(255,255,255,.2); }
+    .mock-info { padding:8px; }
+    .mock-title { font-size:10px; font-weight:700; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .mock-badge { font-size:8px; font-weight:800; padding:2px 5px; border-radius:4px; color:#fff; display:inline-block; }
+    .mock-stars { font-size:9px; color:var(--gold); margin-top:3px; }
+
+    /* ── FEATURES ── */
+    .section { padding:100px 24px; max-width:1100px; margin:0 auto; }
+    .section-label { font-size:11px; font-weight:700; color:var(--gold); letter-spacing:2px; margin-bottom:16px; }
+    .section-title { font-family:var(--head); font-weight:800; font-size:clamp(32px,5vw,52px); line-height:1.1; letter-spacing:-.02em; margin-bottom:20px; }
+    .section-sub { font-size:17px; color:var(--muted); line-height:1.7; max-width:520px; }
+
+    .features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:60px; }
+    .feature-card {
+      background:rgba(255,255,255,.03); border:1px solid var(--border);
+      border-radius:18px; padding:28px; transition:all .3s;
+      position:relative; overflow:hidden;
+    }
+    .feature-card::before {
+      content:''; position:absolute; inset:0; opacity:0; transition:opacity .3s;
+      background:radial-gradient(circle at 50% 0%, var(--accent-color, rgba(245,197,24,.15)) 0%, transparent 70%);
+    }
+    .feature-card:hover { transform:translateY(-4px); border-color:rgba(245,197,24,.2); }
+    .feature-card:hover::before { opacity:1; }
+    .feature-icon { font-size:32px; margin-bottom:16px; display:block; }
+    .feature-title { font-family:var(--head); font-weight:700; font-size:18px; margin-bottom:10px; }
+    .feature-desc { font-size:14px; color:var(--muted); line-height:1.65; }
+
+    /* ── CATEGORIES ── */
+    .categories-section { padding:80px 24px; background:rgba(255,255,255,.02); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .categories-inner { max-width:1100px; margin:0 auto; }
+    .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:48px; }
+    .cat-card {
+      border-radius:18px; padding:32px 28px; position:relative; overflow:hidden;
+      border:1px solid rgba(255,255,255,.08); transition:transform .3s;
+    }
+    .cat-card:hover { transform:translateY(-4px); }
+    .cat-emoji { font-size:40px; margin-bottom:16px; display:block; }
+    .cat-title { font-family:var(--head); font-weight:800; font-size:24px; margin-bottom:8px; }
+    .cat-desc { font-size:14px; color:var(--muted); line-height:1.6; margin-bottom:16px; }
+    .cat-count { font-size:12px; font-weight:700; letter-spacing:.5px; }
+
+    /* ── PRICING ── */
+    .pricing-section { padding:100px 24px; max-width:900px; margin:0 auto; text-align:center; }
+    .pricing-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:48px; text-align:left; }
+    .pricing-card { border-radius:20px; padding:28px; border:1px solid var(--border); }
+    .pricing-card.featured { border:2px solid var(--gold); background:rgba(245,197,24,.04); position:relative; }
+    .pricing-popular { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--gold); color:#000; font-family:var(--head); font-weight:800; font-size:10px; padding:4px 14px; border-radius:99px; white-space:nowrap; }
+    .pricing-name { font-family:var(--head); font-weight:800; font-size:20px; margin-bottom:8px; }
+    .pricing-price { font-family:var(--head); font-weight:800; font-size:42px; margin-bottom:20px; }
+    .pricing-price span { font-size:16px; font-weight:400; color:var(--muted); }
+    .pricing-feature { display:flex; gap:10px; align-items:flex-start; font-size:14px; color:var(--muted); margin-bottom:12px; }
+    .pricing-feature .check { color:var(--gold); flex-shrink:0; font-weight:700; }
+    .pricing-btn {
+      display:block; width:100%; text-align:center; border-radius:12px; padding:12px;
+      font-family:var(--head); font-weight:800; font-size:15px; cursor:pointer;
+      text-decoration:none; margin-top:24px; transition:all .2s; border:none;
+    }
+    .pricing-btn.free { background:rgba(255,255,255,.07); color:#fff; }
+    .pricing-btn.free:hover { background:rgba(255,255,255,.12); }
+    .pricing-btn.gold { background:var(--gold); color:#000; box-shadow:0 0 30px rgba(245,197,24,.3); }
+    .pricing-btn.gold:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(245,197,24,.4); }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      padding:100px 24px; text-align:center;
+      background:radial-gradient(ellipse 80% 60% at 50% 50%, rgba(124,58,237,.15) 0%, transparent 70%);
+    }
+    .cta-section h2 { font-family:var(--head); font-weight:800; font-size:clamp(36px,6vw,64px); letter-spacing:-.02em; margin-bottom:20px; }
+    .cta-section p { font-size:18px; color:var(--muted); max-width:480px; margin:0 auto 40px; line-height:1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top:1px solid var(--border); padding:40px 48px;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:16px;
+    }
+    footer .foot-logo { font-family:var(--head); font-weight:800; font-size:18px; }
+    footer .foot-logo span:first-child { color:#fff; }
+    footer .foot-logo span:last-child { color:var(--gold); }
+    footer p { font-size:13px; color:var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding:0 20px; }
+      .nav-links { display:none; }
+      .features-grid, .cat-grid, .pricing-grid { grid-template-columns:1fr; }
+      .mock-content { grid-template-columns:repeat(2,1fr); }
+      footer { flex-direction:column; text-align:center; padding:32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <svg class="nav-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="10" fill="#F5C518"/>
+        <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
+        <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
+        <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
+        <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
+      </svg>
+      <div class="nav-logo-text"><span>Stream</span><span>Hub</span></div>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#categories">Categories</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a href="./index.html" class="nav-cta">Launch App →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+
+    <div class="hero-badge">✦ Free to start — no credit card required</div>
+
+    <h1>
+      Stop guessing<br/>
+      <span class="gold">which app</span> has it<span class="dim">.</span>
+    </h1>
+
+    <p class="hero-sub">
+      StreamHub searches Netflix, Disney+, Max, Crunchyroll, ESPN+ and 8 more services at once — so you spend less time hunting and more time watching.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="./index.html" class="btn-primary">🎬 Start Watching Free</a>
+      <a href="#features" class="btn-secondary">See How It Works</a>
+    </div>
+
+    <!-- Service Ticker -->
+    <div class="ticker-wrap">
+      <div class="ticker-label">SEARCH ACROSS ALL THESE SERVICES</div>
+      <div class="ticker-track" id="ticker">
+        <!-- duplicated for infinite scroll -->
+      </div>
+    </div>
+
+    <!-- Mock App Preview -->
+    <div class="mock-wrap">
+      <div class="mock-screen">
+        <div class="mock-bar">
+          <div class="mock-dot" style="background:#ef4444"></div>
+          <div class="mock-dot" style="background:#f59e0b"></div>
+          <div class="mock-dot" style="background:#10b981"></div>
+          <div class="mock-url">streamhub-aztecgod915.vercel.app</div>
+        </div>
+        <div class="mock-content" id="mockCards"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="reveal">
+      <div class="section-label">WHY STREAMHUB</div>
+      <div class="section-title">Everything you need.<br/>Nothing you don't.</div>
+      <div class="section-sub">Built for people who subscribe to multiple streaming services and are tired of switching between apps.</div>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal" style="--accent-color:rgba(245,197,24,.15)">
+        <span class="feature-icon">🔍</span>
+        <div class="feature-title">Universal Search</div>
+        <div class="feature-desc">Type any title once and instantly see which of your services has it — no more app-hopping.</div>
+      </div>
+      <div class="feature-card reveal" style="--accent-color:rgba(6,182,212,.15)">
+        <span class="feature-icon">⭐</span>
+        <div class="feature-title">Ratings & Reviews</div>
+        <div class="feature-desc">10-star community ratings and written reviews help you decide what's actually worth watching.</div>
+      </div>
+      <div class="feature-card reveal" style="--accent-color:rgba(124,58,237,.15)">
+        <span class="feature-icon">✨</span>
+        <div class="feature-title">AI Recommendations</div>
+        <div class="feature-desc">Premium members get personalized picks powered by Claude AI based on their watchlist and taste.</div>
+      </div>
+      <div class="feature-card reveal" style="--accent-color:rgba(255,107,157,.15)">
+        <span class="feature-icon">♥</span>
+        <div class="feature-title">Shareable Watchlist</div>
+        <div class="feature-desc">Save titles across all services in one list and share it with friends with a single link.</div>
+      </div>
+      <div class="feature-card reveal" style="--accent-color:rgba(16,185,129,.15)">
+        <span class="feature-icon">▶</span>
+        <div class="feature-title">One-Click Launch</div>
+        <div class="feature-desc">Click "Watch on Netflix" and go straight to the title — no searching again in the other app.</div>
+      </div>
+      <div class="feature-card reveal" style="--accent-color:rgba(245,197,24,.15)">
+        <span class="feature-icon">🔥</span>
+        <div class="feature-title">Deals & Offers</div>
+        <div class="feature-desc">See active deals for services you don't subscribe to yet — free trials, discounts and bundles.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="categories-section" id="categories">
+    <div class="categories-inner">
+      <div class="reveal" style="text-align:center; margin-bottom:0;">
+        <div class="section-label" style="text-align:center">WHAT'S ON STREAMHUB</div>
+        <div class="section-title" style="text-align:center">Movies. Anime. Sports.<br/>All in one place.</div>
+      </div>
+      <div class="cat-grid">
+        <div class="cat-card reveal" style="background:linear-gradient(135deg,#0d1b2a,#1f3a5f)">
+          <span class="cat-emoji">🎬</span>
+          <div class="cat-title">Movies & TV</div>
+          <div class="cat-desc">From Oscar winners to binge-worthy series — find everything across Netflix, Max, Disney+, Apple TV+ and more.</div>
+          <div class="cat-count" style="color:var(--cyan)">12 TITLES · 8 SERVICES</div>
+        </div>
+        <div class="cat-card reveal" style="background:linear-gradient(135deg,#1a0a18,#3d1a35)">
+          <span class="cat-emoji">⚔️</span>
+          <div class="cat-title">Anime</div>
+          <div class="cat-desc">Attack on Titan, Demon Slayer, Jujutsu Kaisen and more — all your favourite series on Crunchyroll and Netflix.</div>
+          <div class="cat-count" style="color:var(--anime)">8 TITLES · CRUNCHYROLL + NETFLIX</div>
+        </div>
+        <div class="cat-card reveal" style="background:linear-gradient(135deg,#0a1a0d,#0d3320)">
+          <span class="cat-emoji">🏆</span>
+          <div class="cat-title">Sports</div>
+          <div class="cat-desc">UFC, NFL, Champions League, F1 and more — live and on-demand across ESPN+, DAZN, Fubo and Peacock.</div>
+          <div class="cat-count" style="color:var(--sports)">8 TITLES · ESPN+ · DAZN · FUBO</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing-section" id="pricing">
+    <div class="reveal">
+      <div class="section-label">PRICING</div>
+      <div class="section-title">Start free.<br/>Upgrade when you're ready.</div>
+    </div>
+    <div class="pricing-grid reveal">
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price" style="color:var(--muted)">$0</div>
+        <div class="pricing-feature"><span class="check">✓</span> Browse & search all titles</div>
+        <div class="pricing-feature"><span class="check">✓</span> Community ratings & reviews</div>
+        <div class="pricing-feature"><span class="check">✓</span> Watchlist (up to 10 titles)</div>
+        <div class="pricing-feature"><span class="check">✓</span> Deep links to streaming services</div>
+        <div class="pricing-feature"><span class="check">✓</span> Deals & offers sidebar</div>
+        <a href="./index.html" class="pricing-btn free">Get Started Free</a>
+      </div>
+      <!-- Premium -->
+      <div class="pricing-card featured">
+        <div class="pricing-popular">MOST POPULAR</div>
+        <div class="pricing-name">Premium</div>
+        <div class="pricing-price" style="color:var(--gold)">$9.99<span>/mo</span></div>
+        <div class="pricing-feature"><span class="check">✓</span> Everything in Free</div>
+        <div class="pricing-feature"><span class="check" style="color:var(--gold)">✓</span> <strong>AI-powered recommendations</strong></div>
+        <div class="pricing-feature"><span class="check" style="color:var(--gold)">✓</span> <strong>100% ad-free experience</strong></div>
+        <div class="pricing-feature"><span class="check" style="color:var(--gold)">✓</span> <strong>Unlimited watchlist</strong></div>
+        <div class="pricing-feature"><span class="check" style="color:var(--gold)">✓</span> Priority support</div>
+        <div class="pricing-feature"><span class="check" style="color:var(--gold)">✓</span> Early access to new features</div>
+        <a href="./index.html" class="pricing-btn gold">Upgrade to Premium ✦</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="reveal">
+      <h2>Ready to take control<br/>of your <span style="color:var(--gold)">streaming?</span></h2>
+      <p>Join StreamHub for free and never spend 20 minutes looking for something to watch again.</p>
+      <a href="./index.html" class="btn-primary" style="font-size:18px; padding:16px 40px;">🎬 Launch StreamHub Free</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="foot-logo"><span>Stream</span><span>Hub</span></div>
+    <p>© 2025 StreamHub. Search. Find. Enjoy.</p>
+    <p style="color:rgba(240,240,250,.25); font-size:12px;">Not affiliated with any streaming service.</p>
+  </footer>
+
+  <script>
+    // ── TICKER ──
+    const services = [
+      { name:'Netflix',     color:'#E50914' },
+      { name:'Disney+',     color:'#0063E5' },
+      { name:'Max',         color:'#002BE7' },
+      { name:'Hulu',        color:'#1CE783' },
+      { name:'Apple TV+',   color:'#888' },
+      { name:'Prime Video', color:'#00A8E1' },
+      { name:'Peacock',     color:'#E81C2E' },
+      { name:'Paramount+',  color:'#0064FF' },
+      { name:'Crunchyroll', color:'#F47521' },
+      { name:'ESPN+',       color:'#E31837' },
+      { name:'DAZN',        color:'#C8A900' },
+      { name:'Fubo',        color:'#FF6B00' },
+    ];
+    const ticker = document.getElementById('ticker');
+    const items = [...services, ...services].map(s =>
+      `<div class="ticker-item"><div class="ticker-dot" style="background:${s.color}"></div>${s.name}</div>`
+    ).join('');
+    ticker.innerHTML = items;
+
+    // ── MOCK CARDS ──
+    const mockData = [
+      { title:'Oppenheimer', color:['#1a1a2e','#e94560'], badge:'Prime', bc:'#00A8E1', stars:'★★★★★★★★★' },
+      { title:'Demon Slayer', color:['#1a0a18','#f472b6'], badge:'Crunchyroll', bc:'#F47521', stars:'★★★★★★★★★' },
+      { title:'UFC 300', color:['#1a0a0a','#ef4444'], badge:'ESPN+', bc:'#E31837', stars:'★★★★★★★★★' },
+      { title:'Dune: Pt 2', color:['#0d2137','#06b6d4'], badge:'Max', bc:'#002BE7', stars:'★★★★★★★★' },
+    ];
+    document.getElementById('mockCards').innerHTML = mockData.map(m => `
+      <div class="mock-card">
+        <div class="mock-poster" style="background:linear-gradient(135deg,${m.color[0]},${m.color[1]})">${m.title.slice(0,2)}</div>
+        <div class="mock-info">
+          <div class="mock-title">${m.title}</div>
+          <div class="mock-badge" style="background:${m.bc}">${m.badge}</div>
+          <div class="mock-stars">${m.stars}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // ── SCROLL REVEAL ──
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
