@@ -913,4 +913,79 @@ export default function StreamHub() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>AVAILABLE</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {unsubscribed.map(s=>(
+                  <button key={s.id} onClick={()=>setFilterPlat(filterPlat===s.id?null:s.id)} style={{background:"rgba(255,255,255,.02)",border:`1px solid ${filterPlat===s.id?`${s.color}44`:"rgba(255,255,255,.05)"}`,borderRadius:10,color:"var(--muted)",padding:"6px 12px",fontSize:11,display:"flex",alignItems:"center",gap:8,opacity:.65}}>
+                    <span style={{background:"rgba(255,255,255,.1)",borderRadius:5,width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,flexShrink:0}}>{s.logo}</span>{s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filterPlat&&<button onClick={()=>setFilterPlat(null)} style={{marginTop:12,width:"100%",background:"none",border:"1px solid var(--border)",borderRadius:9,color:"var(--muted)",padding:"6px 0",fontSize:12}}>Clear filter ✕</button>}
+          </aside>
+
+          {/* Main */}
+          <main style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>
+                {search.trim()
+                  ? searching?"Searching…":`${searchResults.length} results for "${search}"`
+                  : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label
+                }
+                {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
+              </div>
+              {!user&&<button onClick={()=>setShowAuth(true)} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
+            </div>
+            {loading&&!search
+              ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
+              : filtered.length===0
+                ? <div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Click ♡ to save titles!":"No results found."}</div>
+                : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
+                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+            }
+          </main>
+
+          {/* Right Sidebar */}
+          <aside style={{width:220,flexShrink:0}}>
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>🔥 DEALS</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {unsubscribed.filter(s=>s.deal).map(s=>(
+                  <div key={s.id} style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.2)",borderRadius:"var(--radius)",padding:12}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                      <span style={{background:s.color,borderRadius:5,width:22,height:22,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:"#fff"}}>{s.logo}</span>
+                      <span style={{fontWeight:700,fontSize:13}}>{s.name}</span>
+                    </div>
+                    <div style={{fontSize:11,color:"var(--gold)",fontWeight:600,marginBottom:8}}>{s.deal}</div>
+                    <button style={{width:"100%",background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 0",fontSize:11,fontWeight:800}}>Get Deal →</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {!user&&(
+              <div style={{background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.25)",borderRadius:"var(--radius)",padding:16,marginBottom:16,textAlign:"center"}}>
+                <div style={{fontSize:24,marginBottom:8}}>👤</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:6}}>Create an Account</div>
+                <div style={{fontSize:12,color:"var(--muted)",marginBottom:12,lineHeight:1.5}}>Save your watchlist, write reviews and sync across devices.</div>
+                <button onClick={()=>setShowAuth(true)} style={{width:"100%",background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 0",fontWeight:700,fontSize:13}}>Sign Up Free</button>
+              </div>
+            )}
+            {tier==="free"&&<div style={{background:"rgba(255,255,255,.03)",border:"1px dashed rgba(255,255,255,.1)",borderRadius:"var(--radius)",padding:16,textAlign:"center"}}><div style={{fontSize:9,color:"var(--muted)",marginBottom:8,letterSpacing:1}}>ADVERTISEMENT</div><div style={{fontSize:12,color:"var(--muted)",lineHeight:1.6}}>🍿 3 months of Hulu for the price of 1. <span style={{color:"var(--gold)",fontWeight:700}}>Claim Now →</span></div></div>}
+          </aside>
+        </div>
+      </div>
+
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
+      {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+    </>
+  );
+}
        
