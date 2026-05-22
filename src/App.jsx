@@ -1001,6 +1001,8 @@ export default function StreamHub() {
               <div style={{margin:"0 14px 20px",borderRadius:16,overflow:"hidden",position:"relative",height:220,cursor:"pointer"}} onClick={()=>setSelectedMovie(heroMovie)}>
                 {heroMovie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${heroMovie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />}
                 <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(7,7,14,.95) 0%,transparent 60%)"}} />
+                {/* Brand logo watermark */}
+                <img src="/streamhub-brand-logo.jpg" alt="" style={{position:"absolute",top:10,right:10,height:36,borderRadius:8,opacity:.7,boxShadow:"0 4px 12px rgba(0,0,0,.6)"}} />
                 <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 16px 16px"}}>
                   <div style={{fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:6}}>{heroMovie.title||heroMovie.name}</div>
@@ -1188,7 +1190,28 @@ export default function StreamHub() {
               </div>
             )}
             {tier==="free"&&<div style={{background:"rgba(255,255,255,.03)",border:"1px dashed rgba(255,255,255,.1)",borderRadius:"var(--radius)",padding:16,textAlign:"center"}}><div style={{fontSize:9,color:"var(--muted)",marginBottom:8,letterSpacing:1}}>ADVERTISEMENT</div><div style={{fontSize:12,color:"var(--muted)",lineHeight:1.6}}>🍿 3 months of Hulu for the price of 1. <span style={{color:"var(--gold)",fontWeight:700}}>Claim Now →</span></div></div>}
+
+            {/* Brand logo in sidebar bottom */}
+            <div style={{marginTop:24,textAlign:"center"}}>
+              <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{width:"100%",borderRadius:12,opacity:.85,boxShadow:"0 8px 24px rgba(0,0,0,.5)"}} />
+              <div style={{fontSize:10,color:"var(--muted)",marginTop:8,letterSpacing:.5}}>Search · Find · Enjoy</div>
+            </div>
           </aside>
+        </div>
+
+        {/* Footer */}
+        <div style={{borderTop:"1px solid var(--border)",padding:"24px 40px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:16}}>
+            <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{height:52,borderRadius:10,boxShadow:"0 4px 16px rgba(0,0,0,.5)"}} />
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16}}><span style={{color:"#fff"}}>Stream</span><span style={{color:"var(--gold)"}}>Hub</span></div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>Search · Find · Enjoy</div>
+            </div>
+          </div>
+          <div style={{fontSize:12,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
+          <div style={{display:"flex",gap:12}}>
+            {["Netflix","Disney+","Max","Hulu","Crunchyroll","ESPN+"].map(n=><span key={n} style={{fontSize:11,color:"rgba(240,240,250,.25)"}}>{n}</span>)}
+          </div>
         </div>
       </div>
 
