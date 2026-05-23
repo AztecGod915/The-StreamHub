@@ -1140,17 +1140,41 @@ export default function StreamHub() {
             ))}
           </nav>
           <div style={{flex:1,maxWidth:400,position:"relative"}}>
-            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--muted)",fontSize:15}}>🔍</span>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search any movie, show, sport…"
-              style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:11,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:14,outline:"none"}} />
+          {/* Search bar - glowing gold border */}
+          <div style={{flex:1,maxWidth:420,position:"relative"}}>
+            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:16,zIndex:1}}>🔍</span>
+            <input
+              value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search any movie, show, sport…"
+              style={{
+                width:"100%",
+                background:"rgba(255,255,255,.07)",
+                border:"1.5px solid rgba(245,197,24,.45)",
+                borderRadius:12, color:"var(--text)",
+                padding:"10px 16px 10px 40px",
+                fontSize:14, outline:"none",
+                boxShadow:"0 0 18px rgba(245,197,24,.12), inset 0 1px 0 rgba(255,255,255,.05)",
+                transition:"all .2s",
+              }}
+              onFocus={e=>{e.target.style.border="1.5px solid rgba(245,197,24,.9)";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.25)";}}
+              onBlur={e=>{e.target.style.border="1.5px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 18px rgba(245,197,24,.12)";}}
+            />
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginLeft:"auto"}}>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13}}>Upgrade ✦</button>
+              :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 18px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",transition:"all .2s"}}>Upgrade ✦</button>
             }
             {!user
-              ? <button onClick={()=>setShowAuth(true)} style={{background:"rgba(255,255,255,.08)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"7px 16px",fontWeight:600,fontSize:13}}>Sign In</button>
+              ? <button onClick={()=>setShowAuth(true)} style={{
+                  background:"linear-gradient(135deg,#7C3AED,#6d28d9)",
+                  border:"1px solid rgba(124,58,237,.6)",
+                  borderRadius:10, color:"#fff",
+                  padding:"9px 20px", fontWeight:700, fontSize:13,
+                  fontFamily:"var(--font-head)",
+                  boxShadow:"0 0 18px rgba(124,58,237,.4)",
+                  transition:"all .2s", cursor:"pointer",
+                }}>👤 Sign In</button>
               : <AvatarButton />
             }
           </div>
