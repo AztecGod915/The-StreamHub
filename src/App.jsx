@@ -137,33 +137,34 @@ const GR = [
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
 function Logo({ size=32 }) {
+  const [imgError, setImgError] = useState(false);
   return (
     <div style={{display:"flex",alignItems:"center",gap:10}}>
       <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex",flexShrink:0}}>
-        <img
-          src="/logo.png"
-          alt="StreamHub"
-          style={{
-            width:size*1.4, height:size*1.4,
-            objectFit:"contain",
-            filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
-            animation:"logoPulse 2.5s ease-in-out infinite",
-          }}
-        />
+        {!imgError ? (
+          <img
+            src="/logo.png"
+            alt="StreamHub"
+            onError={()=>setImgError(true)}
+            style={{
+              width:size*1.4, height:size*1.4, objectFit:"contain",
+              filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+              animation:"logoPulse 2.5s ease-in-out infinite",
+            }}
+          />
+        ) : (
+          <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+            <rect width="40" height="40" rx="10" fill="#F5C518"/>
+            <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
+            <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
+            <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
+            <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
+          </svg>
+        )}
       </div>
       <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em",lineHeight:1}}>
-        <span style={{
-          background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",
-          backgroundSize:"200% auto",
-          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-          animation:"gradientShift 2s linear infinite",
-        }}>Stream</span>
-        <span style={{
-          background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",
-          backgroundSize:"200% auto",
-          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-          animation:"gradientShift 2s linear infinite",
-        }}>Hub</span>
+        <span style={{background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Stream</span>
+        <span style={{background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Hub</span>
       </span>
     </div>
   );
@@ -870,7 +871,7 @@ export default function StreamHub() {
     const path = viewMap[view];
     if (!path) { setLoading(false); return; }
     setLoading(true);
-    tmdbFetch(`${path}&language=en-US&page=1`).then(async data => {
+    tmdbFetch(`${path}${path.includes('?')?'&':'?'}language=en-US&page=1`).then(async data => {
       const results = (data.results||[]).slice(0,20);
       const withProviders = await Promise.all(results.map(async m => {
         const type = m.media_type==="tv"||(m.first_air_date&&!m.release_date) ? "tv" : "movie";
