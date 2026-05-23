@@ -957,18 +957,31 @@ export default function StreamHub() {
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:80}}>
         {/* Mobile Header */}
         <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)"}}>
-          <div style={{display:"flex",alignItems:"center",padding:"0 14px",height:62,gap:10}}>
+          {/* Top row - logo + buttons */}
+          <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             <Logo size={26} />
-            <div style={{flex:1,position:"relative"}}>
-              <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--muted)",fontSize:14}}>🔍</span>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search any movie, show…"
-                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"8px 12px 8px 32px",fontSize:13,outline:"none"}} />
-            </div>
+            <div style={{flex:1}} />
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PRO</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 10px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap"}}>Upgrade ✦</button>
+              :<button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap"}}>Upgrade ✦</button>
             }
             <AvatarButton />
+          </div>
+          {/* Search bar - full width, prominent */}
+          <div style={{padding:"0 14px 10px",position:"relative"}}>
+            <span style={{position:"absolute",left:26,top:"50%",transform:"translateY(-60%)",color:"var(--gold)",fontSize:16}}>🔍</span>
+            <input
+              value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search movies, shows, sports..."
+              style={{
+                width:"100%", background:"rgba(255,255,255,.1)",
+                border:"1.5px solid rgba(245,197,24,.4)",
+                borderRadius:14, color:"var(--text)",
+                padding:"12px 16px 12px 38px",
+                fontSize:15, outline:"none",
+                boxShadow:"0 2px 16px rgba(245,197,24,.1)",
+              }}
+            />
           </div>
           {/* Animated Category tabs */}
           <div style={{overflowX:"auto",padding:"0 14px 10px",display:"flex",gap:8,scrollbarWidth:"none"}}>
