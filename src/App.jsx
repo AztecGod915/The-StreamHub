@@ -1121,61 +1121,35 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)"}}>
         {/* Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.92)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.1)",padding:"0 24px",height:68,display:"flex",alignItems:"center",gap:16}}>
-          <Logo size={34} />
-          <nav style={{display:"flex",gap:4,marginLeft:16}}>
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:72,display:"flex",alignItems:"center",gap:12}}>
+          <Logo size={30} />
+          <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
-                style={{
-                  background:view===t.id?`${t.color}15`:"none", border:"none",
-                  color:view===t.id?t.color:"var(--muted)",
-                  fontFamily:"var(--font-head)", fontWeight:700, fontSize:14,
-                  padding:"6px 14px", borderRadius:9, transition:"all .2s",
-                  display:"flex", alignItems:"center", gap:6,
-                  boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",
-                }}>
+                style={{background:view===t.id?`${t.color}15`:"none",border:"none",color:view===t.id?t.color:"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,transition:"all .2s",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap",boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",cursor:"pointer"}}>
                 <span style={{display:"inline-block",animation:view===t.id&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
                 {t.label}
               </button>
             ))}
           </nav>
-          <div style={{flex:1,maxWidth:400,position:"relative"}}>
-          {/* Search bar - glowing gold border */}
-          <div style={{flex:1,maxWidth:420,position:"relative"}}>
-            <span style={{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:16,zIndex:1}}>🔍</span>
-            <input
-              value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder="Search any movie, show, sport…"
-              style={{
-                width:"100%",
-                background:"rgba(255,255,255,.07)",
-                border:"1.5px solid rgba(245,197,24,.45)",
-                borderRadius:12, color:"var(--text)",
-                padding:"10px 16px 10px 40px",
-                fontSize:14, outline:"none",
-                boxShadow:"0 0 18px rgba(245,197,24,.12), inset 0 1px 0 rgba(255,255,255,.05)",
-                transition:"all .2s",
-              }}
-              onFocus={e=>{e.target.style.border="1.5px solid rgba(245,197,24,.9)";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.25)";}}
-              onBlur={e=>{e.target.style.border="1.5px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 18px rgba(245,197,24,.12)";}}
+          {/* Search bar */}
+          <div style={{flex:1,minWidth:160,maxWidth:320,position:"relative",marginLeft:8}}>
+            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15,zIndex:1}}>🔍</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, shows…"
+              style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.5)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:13,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.15)"}}
+              onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.35)";}}
+              onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.5)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.15)";}}
             />
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginLeft:"auto"}}>
+          {/* Right buttons */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0}}>
             {tier==="premium"
-              ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 18px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",transition:"all .2s"}}>Upgrade ✦</button>
+              ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ PREMIUM</span>
+              :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
             }
             {!user
-              ? <button onClick={()=>setShowAuth(true)} style={{
-                  background:"linear-gradient(135deg,#7C3AED,#6d28d9)",
-                  border:"1px solid rgba(124,58,237,.6)",
-                  borderRadius:10, color:"#fff",
-                  padding:"9px 20px", fontWeight:700, fontSize:13,
-                  fontFamily:"var(--font-head)",
-                  boxShadow:"0 0 18px rgba(124,58,237,.4)",
-                  transition:"all .2s", cursor:"pointer",
-                }}>👤 Sign In</button>
-              : <AvatarButton />
+              ?<button onClick={()=>setShowAuth(true)} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
+              :<AvatarButton />
             }
           </div>
         </header>
