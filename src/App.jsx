@@ -96,6 +96,9 @@ const GlobalStyles = () => {
       @media(min-width:769px) {
         .mobile-only  { display:none !important; }
       }
+      @media(max-width:1100px) and (min-width:769px) {
+        .tablet-hide { display:none !important; }
+      }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -729,12 +732,27 @@ function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, on
   );
 }
 
-// ─── MOBILE COMPONENTS ────────────────────────────────────────────────────────
-function useIsMobile() {
-  const [m,setM]=useState(()=>window.innerWidth<=768);
-  useEffect(()=>{const fn=()=>setM(window.innerWidth<=768);window.addEventListener("resize",fn);return()=>window.removeEventListener("resize",fn);},[]);
-  return m;
+// ─── DEVICE DETECTION ────────────────────────────────────────────────────────
+function useDevice() {
+  const [device, setDevice] = useState(() => {
+    const w = window.innerWidth;
+    if (w <= 768) return "mobile";
+    if (w <= 1100) return "tablet";
+    return "desktop";
+  });
+  useEffect(() => {
+    const fn = () => {
+      const w = window.innerWidth;
+      if (w <= 768) setDevice("mobile");
+      else if (w <= 1100) setDevice("tablet");
+      else setDevice("desktop");
+    };
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return device;
 }
+function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile }) {
   const tabs=[
@@ -764,6 +782,7 @@ function MobileBottomNav({ view, setView, watchlist, onProfile }) {
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
   const isMobile = useIsMobile();
+  const device = useDevice();
 
   // ── Auth state ──
   const [user, setUser] = useState(null);
@@ -1106,6 +1125,141 @@ export default function StreamHub() {
       </div>
 
       {/* Modals */}
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
+      {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+    </>
+  );
+
+  // ─── TABLET LAYOUT ───────────────────────────────────────────────────────────
+  if (device === "tablet") return (
+    <>
+      <GlobalStyles />
+      <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:72}}>
+        {/* Tablet Header */}
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)"}}>
+          <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
+            <Logo size={28} />
+            <div style={{flex:1,position:"relative",maxWidth:400}}>
+              <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, shows, sports…"
+                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.12)"}}
+                onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.3)";}}
+                onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.12)";}}
+              />
+            </div>
+            <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
+              {tier==="premium"
+                ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
+                :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.35)",cursor:"pointer"}}>Upgrade ✦</button>
+              }
+              {!user
+                ?<button onClick={()=>setShowAuth(true)} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
+                :<AvatarButton />
+              }
+            </div>
+          </div>
+          {/* Category tabs */}
+          <div style={{overflowX:"auto",padding:"0 20px 10px",display:"flex",gap:8,scrollbarWidth:"none"}}>
+            {CATEGORY_TABS.filter(t=>t.id!=="search").map(tab=>{
+              const active=view===tab.id;
+              return <button key={tab.id} onClick={()=>{setView(tab.id);setSearch("");}}
+                style={{background:active?`${tab.color}18`:"rgba(255,255,255,.04)",border:`1.5px solid ${active?`${tab.color}66`:"var(--border)"}`,borderRadius:20,color:active?tab.color:"var(--muted)",padding:"7px 18px",fontSize:13,fontWeight:800,fontFamily:"var(--font-head)",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:6,boxShadow:active?`0 0 14px ${tab.color}30`:"none",cursor:"pointer"}}>
+                <span style={{display:"inline-block",animation:active&&tab.anim?`${tab.anim} 1.5s ease-in-out infinite`:"none"}}>{tab.icon}</span>
+                {tab.label}{active&&<span style={{width:6,height:6,borderRadius:"50%",background:tab.color,animation:"pulse 1.5s infinite"}}/>}
+              </button>;
+            })}
+          </div>
+          {/* Service chips */}
+          <div style={{overflowX:"auto",padding:"0 20px 10px",display:"flex",gap:6,scrollbarWidth:"none"}}>
+            <button onClick={()=>setFilterPlat(null)} style={{background:!filterPlat?"var(--gold)":"rgba(255,255,255,.05)",border:`1px solid ${!filterPlat?"var(--gold)":"var(--border)"}`,borderRadius:99,color:!filterPlat?"#000":"var(--muted)",padding:"5px 16px",fontSize:12,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"}}>All</button>
+            {SERVICES.map(s=>{const active=filterPlat===s.id;return(
+              <button key={s.id} onClick={()=>setFilterPlat(active?null:s.id)} style={{background:active?`${s.color}30`:"rgba(255,255,255,.04)",border:`1px solid ${active?s.color:"rgba(255,255,255,.08)"}`,borderRadius:99,color:active?"#fff":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
+                <span style={{background:active?s.color:"rgba(255,255,255,.1)",borderRadius:4,width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:800,color:"#fff"}}>{s.logo}</span>{s.name}
+              </button>
+            );})}
+          </div>
+        </header>
+
+        {/* Tablet Hero */}
+        {view==="trending"&&!search.trim()&&heroMovie&&(
+          <div style={{position:"relative",height:300,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelectedMovie(heroMovie)}>
+            {heroMovie.backdrop_path&&<img src={`https://image.tmdb.org/t/p/w1280${heroMovie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}}/>}
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.5) 60%,rgba(7,7,14,.1) 100%)"}}/>
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 50%)"}}/>
+            <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 24px 24px",display:"flex",alignItems:"flex-end",gap:20}}>
+              {heroMovie.poster_path&&<img src={`${TMDB_IMG}${heroMovie.poster_path}`} alt="" style={{height:150,borderRadius:12,boxShadow:"0 16px 40px rgba(0,0,0,.8)",flexShrink:0}}/>}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:8}}>{heroMovie.title||heroMovie.name}</div>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+                  <span style={{color:"var(--gold)",fontWeight:700}}>★ {heroMovie.vote_average?.toFixed(1)}</span>
+                  {(heroMovie.providers||[]).slice(0,3).map(p=><ServiceBadge key={p} platformId={p}/>)}
+                </div>
+                <div style={{display:"flex",gap:10}}>
+                  <button onClick={e=>{e.stopPropagation();setSelectedMovie(heroMovie);}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 22px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch Now</button>
+                  <button onClick={e=>{e.stopPropagation();toggleWatchlist(heroMovie.id);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{watchlist.includes(heroMovie.id)?"♥ Saved":"♡ Save"}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tablet Grid */}
+        <div style={{padding:"20px 20px 40px"}}>
+          {view==="trending"&&!search.trim() ? (
+            <div>
+              {[{title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+                <div key={row.key} style={{marginBottom:32}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+                    <span style={{fontSize:18}}>{row.icon}</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:16}}>
+                {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
+                {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
+              </div>
+              {loading&&!search
+                ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
+                :filtered.length===0
+                  ?<div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty!":"No results found."}</div>
+                  :<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+              }
+            </>
+          )}
+        </div>
+
+        {/* Tablet Bottom Nav */}
+        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
+          {[{id:"trending",icon:"🔥",label:"Trending"},{id:"movies",icon:"🎬",label:"Movies"},{id:"tv",icon:"📺",label:"TV"},{id:"sports",icon:"🏆",label:"Sports"},{id:"watchlist",icon:"♥",label:"Watchlist"}].map(t=>{
+            const active=view===t.id;
+            return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
+              style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:active?"var(--gold)":"rgba(240,240,250,.35)",position:"relative",cursor:"pointer"}}>
+              <span style={{fontSize:22,lineHeight:1,filter:active?"drop-shadow(0 0 8px rgba(245,197,24,.8))":"none"}}>{t.icon}</span>
+              <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>{t.label}</span>
+              {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:36,height:2.5,background:"var(--gold)",borderRadius:99,boxShadow:"0 0 8px var(--gold)"}}/>}
+            </button>;
+          })}
+          <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:"rgba(240,240,250,.35)",cursor:"pointer"}}>
+            <span style={{fontSize:22}}>👤</span>
+            <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Profile</span>
+          </button>
+        </div>
+      </div>
+
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
