@@ -1242,6 +1242,16 @@ export default function StreamHub() {
           )}
         </div>
 
+        {/* Tablet tagline banner - above bottom nav */}
+        <div style={{
+          position:"fixed", bottom:72, left:0, right:0, zIndex:150,
+          background:"linear-gradient(90deg,#7C3AED,#F5C518,#FF6B9D)",
+          padding:"7px 0", textAlign:"center",
+          fontFamily:"var(--font-head)", fontWeight:800,
+          fontSize:12, letterSpacing:5, color:"#fff",
+          boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
+        }}>SEARCH · FIND · ENJOY</div>
+
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {[{id:"trending",icon:"🔥",label:"Trending"},{id:"movies",icon:"🎬",label:"Movies"},{id:"tv",icon:"📺",label:"TV"},{id:"sports",icon:"🏆",label:"Sports"},{id:"watchlist",icon:"♥",label:"Watchlist"}].map(t=>{
