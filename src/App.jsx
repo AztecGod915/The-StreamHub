@@ -139,22 +139,29 @@ const GR = [
 function Logo({ size=32 }) {
   return (
     <div style={{display:"flex",alignItems:"center",gap:10}}>
-      <div style={{animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",display:"flex"}}>
-        <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-          <rect width="40" height="40" rx="10" fill="#F5C518"/>
-          <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
-          <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
-          <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
-          <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
-        </svg>
+      <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex",flexShrink:0}}>
+        <img
+          src="/logo.png"
+          alt="StreamHub"
+          style={{
+            width:size*1.4, height:size*1.4,
+            objectFit:"contain",
+            filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+            animation:"logoPulse 2.5s ease-in-out infinite",
+          }}
+        />
       </div>
       <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em",lineHeight:1}}>
-        <span style={{color:"#fff"}}>Stream</span>
         <span style={{
-          background:"linear-gradient(90deg,#F5C518,#f59e0b,#F5C518)",
+          background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",
           backgroundSize:"200% auto",
-          WebkitBackgroundClip:"text",
-          WebkitTextFillColor:"transparent",
+          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+          animation:"gradientShift 2s linear infinite",
+        }}>Stream</span>
+        <span style={{
+          background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",
+          backgroundSize:"200% auto",
+          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
           animation:"gradientShift 2s linear infinite",
         }}>Hub</span>
       </span>
@@ -1038,7 +1045,7 @@ export default function StreamHub() {
                 {heroMovie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${heroMovie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />}
                 <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(7,7,14,.95) 0%,transparent 60%)"}} />
                 {/* Brand logo watermark */}
-                <img src="/streamhub-brand-logo.jpg" alt="" style={{position:"absolute",top:10,right:10,height:36,borderRadius:8,opacity:.7,boxShadow:"0 4px 12px rgba(0,0,0,.6)"}} />
+                <img src="/logo.png" alt="" style={{position:"absolute",top:10,right:10,height:40,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,197,24,.6))",opacity:.9}} />
                 <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 16px 16px"}}>
                   <div style={{fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:6}}>{heroMovie.title||heroMovie.name}</div>
@@ -1241,7 +1248,7 @@ export default function StreamHub() {
 
             {/* Brand logo in sidebar bottom */}
             <div style={{marginTop:24,textAlign:"center"}}>
-              <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{width:"100%",borderRadius:12,opacity:.85,boxShadow:"0 8px 24px rgba(0,0,0,.5)"}} />
+              <img src="/logo.png" alt="StreamHub" style={{width:"70%",objectFit:"contain",filter:"drop-shadow(0 0 16px rgba(245,197,24,.4))",animation:"logoPulse 3s ease-in-out infinite"}} />
               <div style={{fontSize:10,color:"var(--muted)",marginTop:8,letterSpacing:.5}}>Search · Find · Enjoy</div>
             </div>
           </aside>
@@ -1299,11 +1306,11 @@ export default function StreamHub() {
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img src="/streamhub-brand-logo.jpg" alt="StreamHub" style={{height:44,borderRadius:9,boxShadow:"0 4px 16px rgba(0,0,0,.6)"}} />
+                <img src="/logo.png" alt="StreamHub" style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
-                    <span style={{color:"#fff"}}>Stream</span>
-                    <span style={{color:"var(--gold)"}}>Hub</span>
+                    <span style={{color:"#F5C518"}}>Stream</span>
+                    <span style={{color:"#7C3AED"}}>Hub</span>
                   </div>
                   <div style={{fontSize:10,color:"var(--muted)",letterSpacing:1}}>SEARCH · FIND · ENJOY</div>
                 </div>
