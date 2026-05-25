@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { Analytics } from "@vercel/analytics/react";
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -912,22 +913,119 @@ export default function StreamHub() {
     }).catch(()=>setLoading(false));
   }, [view]);
 
-  // ── Search ──
+  // ── Smart Search (genre + mood + title) ──
+  const GENRE_MAP = {
+    // Moods & genres → TMDB genre IDs
+    "action":      { ids:"28",      type:"movie" },
+    "comedy":      { ids:"35",      type:"both"  },
+    "horror":      { ids:"27",      type:"both"  },
+    "romance":     { ids:"10749",   type:"both"  },
+    "sci-fi":      { ids:"878",     type:"both"  },
+    "scifi":       { ids:"878",     type:"both"  },
+    "science fiction":{ ids:"878",  type:"both"  },
+    "thriller":    { ids:"53",      type:"both"  },
+    "drama":       { ids:"18",      type:"both"  },
+    "animation":   { ids:"16",      type:"both"  },
+    "animated":    { ids:"16",      type:"both"  },
+    "documentary": { ids:"99",      type:"both"  },
+    "doc":         { ids:"99",      type:"both"  },
+    "fantasy":     { ids:"14",      type:"both"  },
+    "mystery":     { ids:"9648",    type:"both"  },
+    "crime":       { ids:"80",      type:"both"  },
+    "adventure":   { ids:"12",      type:"both"  },
+    "family":      { ids:"10751",   type:"both"  },
+    "kids":        { ids:"10751",   type:"both"  },
+    "music":       { ids:"10402",   type:"both"  },
+    "western":     { ids:"37",      type:"movie" },
+    "war":         { ids:"10752",   type:"movie" },
+    "history":     { ids:"36",      type:"movie" },
+    "superhero":   { ids:"28,12,14",type:"both"  },
+    "anime":       { ids:"16",      type:"tv",   keyword:"210024" },
+    "sports":      { ids:"99",      type:"movie" },
+    "funny":       { ids:"35",      type:"both"  },
+    "scary":       { ids:"27",      type:"both"  },
+    "sad":         { ids:"18",      type:"both"  },
+    "feel good":   { ids:"35,10751",type:"both"  },
+    "feel-good":   { ids:"35,10751",type:"both"  },
+    "romantic":    { ids:"10749",   type:"both"  },
+    "date night":  { ids:"10749,35",type:"both"  },
+    "christmas":   { ids:"10751",   type:"both"  },
+    "holiday":     { ids:"10751",   type:"both"  },
+    "new":         { ids:null,      type:"new"   },
+    "new releases":{ ids:null,      type:"new"   },
+    "trending":    { ids:null,      type:"trending"},
+    "popular":     { ids:null,      type:"trending"},
+    "top rated":   { ids:null,      type:"top"   },
+    "best":        { ids:null,      type:"top"   },
+  };
+
+  const isGenreSearch = (q) => {
+    const lower = q.toLowerCase().trim();
+    return GENRE_MAP[lower] || null;
+  };
+
+  const doGenreSearch = async (genreConfig) => {
+    const addProviders = async (items, cat) =>
+      Promise.all((items||[]).slice(0,20).map(async m => {
+        const t = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
+        try { const wp=await tmdbFetch(`/${t}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category:cat}; }
+        catch { return {...m,providers:[],category:cat}; }
+      }));
+
+    if (genreConfig.type === "trending") {
+      const d = await tmdbFetch("/trending/all/week?language=en-US&page=1");
+      return addProviders(d.results,"trending");
+    }
+    if (genreConfig.type === "top") {
+      const [m,t] = await Promise.all([
+        tmdbFetch(`/movie/top_rated?language=en-US&page=1`),
+        tmdbFetch(`/tv/top_rated?language=en-US&page=1`),
+      ]);
+      return addProviders([...(m.results||[]),...(t.results||[])].slice(0,20),"movies");
+    }
+    if (genreConfig.type === "new") {
+      const d = await tmdbFetch("/movie/now_playing?language=en-US&page=1");
+      return addProviders(d.results,"movies");
+    }
+
+    const kwParam = genreConfig.keyword ? `&with_keywords=${genreConfig.keyword}` : "";
+    const results = [];
+    if (genreConfig.type === "movie" || genreConfig.type === "both") {
+      const d = await tmdbFetch(`/discover/movie?with_genres=${genreConfig.ids}&sort_by=popularity.desc&language=en-US&page=1${kwParam}`);
+      results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"movie"})));
+    }
+    if (genreConfig.type === "tv" || genreConfig.type === "both") {
+      const d = await tmdbFetch(`/discover/tv?with_genres=${genreConfig.ids}&sort_by=popularity.desc&language=en-US&page=1${kwParam}`);
+      results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"tv"})));
+    }
+    return addProviders(results.slice(0,20),"movies");
+  };
+
   useEffect(() => {
     if (!search.trim()) { setSearchResults([]); return; }
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
-      const data = await tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=1`);
-      const results = (data.results||[]).filter(r=>r.media_type!=="person").slice(0,20);
-      const withProviders = await Promise.all(results.map(async m => {
-        const type = m.media_type==="tv" ? "tv" : "movie";
-        try {
-          const wp = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
-          return { ...m, providers:getProviders(wp), category:m.media_type };
-        } catch { return { ...m, providers:[], category:m.media_type }; }
-      }));
-      setSearchResults(withProviders);
+      try {
+        const genreConfig = isGenreSearch(search);
+        if (genreConfig) {
+          // Genre/mood search
+          const results = await doGenreSearch(genreConfig);
+          setSearchResults(results);
+        } else {
+          // Title search
+          const data = await tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=1`);
+          const results = (data.results||[]).filter(r=>r.media_type!=="person").slice(0,20);
+          const withProviders = await Promise.all(results.map(async m => {
+            const type = m.media_type==="tv" ? "tv" : "movie";
+            try {
+              const wp = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
+              return { ...m, providers:getProviders(wp), category:m.media_type };
+            } catch { return { ...m, providers:[], category:m.media_type }; }
+          }));
+          setSearchResults(withProviders);
+        }
+      } catch(e) { console.error(e); }
       setSearching(false);
     }, 500);
   }, [search]);
@@ -1007,7 +1105,7 @@ export default function StreamHub() {
             <span style={{position:"absolute",left:26,top:"50%",transform:"translateY(-60%)",color:"var(--gold)",fontSize:16}}>🔍</span>
             <input
               value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder="Search movies, shows, sports..."
+              placeholder="Search by title, genre or mood…"
               style={{
                 width:"100%", background:"rgba(255,255,255,.1)",
                 border:"1.5px solid rgba(245,197,24,.4)",
@@ -1139,6 +1237,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
     </>
   );
 
@@ -1153,7 +1252,7 @@ export default function StreamHub() {
             <Logo size={28} />
             <div style={{flex:1,position:"relative",maxWidth:400}}>
               <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, shows, sports…"
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
                 style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.12)"}}
                 onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.3)";}}
                 onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.12)";}}
@@ -1284,6 +1383,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
     </>
   );
 
@@ -1307,7 +1407,7 @@ export default function StreamHub() {
           {/* Search bar */}
           <div style={{flex:1,minWidth:160,maxWidth:320,position:"relative",marginLeft:8}}>
             <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15,zIndex:1}}>🔍</span>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, shows…"
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
               style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.5)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:13,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.15)"}}
               onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.35)";}}
               onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.5)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.15)";}}
@@ -1533,6 +1633,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
     </>
   );
 }
