@@ -34,6 +34,14 @@ function getProviders(watchProviders) {
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => {
   useEffect(() => {
+    // ── Google Analytics ──
+    const gaScript1 = document.createElement("script");
+    gaScript1.async = true;
+    gaScript1.src = "https://www.googletagmanager.com/gtag/js?id=G-LK433DT8M2";
+    document.head.appendChild(gaScript1);
+    const gaScript2 = document.createElement("script");
+    gaScript2.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LK433DT8M2');`;
+    document.head.appendChild(gaScript2);
     const style = document.createElement("style");
     style.textContent = `
       @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
