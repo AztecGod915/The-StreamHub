@@ -788,6 +788,70 @@ function MobileBottomNav({ view, setView, watchlist, onProfile }) {
   );
 }
 
+// ─── GENRE SEARCH HELPERS ────────────────────────────────────────────────────
+const GENRE_MAP = {
+  "action":          { ids:"28",       type:"movie" },
+  "comedy":          { ids:"35",       type:"both"  },
+  "horror":          { ids:"27",       type:"both"  },
+  "romance":         { ids:"10749",    type:"both"  },
+  "sci-fi":          { ids:"878",      type:"both"  },
+  "scifi":           { ids:"878",      type:"both"  },
+  "science fiction": { ids:"878",      type:"both"  },
+  "thriller":        { ids:"53",       type:"both"  },
+  "drama":           { ids:"18",       type:"both"  },
+  "animation":       { ids:"16",       type:"both"  },
+  "animated":        { ids:"16",       type:"both"  },
+  "documentary":     { ids:"99",       type:"both"  },
+  "doc":             { ids:"99",       type:"both"  },
+  "fantasy":         { ids:"14",       type:"both"  },
+  "mystery":         { ids:"9648",     type:"both"  },
+  "crime":           { ids:"80",       type:"both"  },
+  "adventure":       { ids:"12",       type:"both"  },
+  "family":          { ids:"10751",    type:"both"  },
+  "kids":            { ids:"10751",    type:"both"  },
+  "music":           { ids:"10402",    type:"both"  },
+  "western":         { ids:"37",       type:"movie" },
+  "war":             { ids:"10752",    type:"movie" },
+  "history":         { ids:"36",       type:"movie" },
+  "superhero":       { ids:"28,12,14", type:"both"  },
+  "anime":           { ids:"16",       type:"tv", keyword:"210024" },
+  "sports":          { ids:"99",       type:"movie" },
+  "funny":           { ids:"35",       type:"both"  },
+  "scary":           { ids:"27",       type:"both"  },
+  "sad":             { ids:"18",       type:"both"  },
+  "feel good":       { ids:"35,10751", type:"both"  },
+  "feel-good":       { ids:"35,10751", type:"both"  },
+  "romantic":        { ids:"10749",    type:"both"  },
+  "date night":      { ids:"10749,35", type:"both"  },
+  "christmas":       { ids:"10751",    type:"both"  },
+  "holiday":         { ids:"10751",    type:"both"  },
+  "new":             { ids:null,       type:"new"      },
+  "new releases":    { ids:null,       type:"new"      },
+  "trending":        { ids:null,       type:"trending" },
+  "popular":         { ids:null,       type:"trending" },
+  "top rated":       { ids:null,       type:"top"      },
+  "best":            { ids:null,       type:"top"      },
+};
+
+const isGenreSearch = (q) => GENRE_MAP[q.toLowerCase().trim()] || null;
+
+const doGenreSearch = async (cfg) => {
+  const addProviders = async (items, cat) =>
+    Promise.all((items||[]).slice(0,20).map(async m => {
+      const t = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
+      try { const wp=await tmdbFetch(`/${t}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category:cat}; }
+      catch { return {...m,providers:[],category:cat}; }
+    }));
+  if (cfg.type==="trending") { const d=await tmdbFetch("/trending/all/week?language=en-US&page=1"); return addProviders(d.results,"trending"); }
+  if (cfg.type==="top") { const [mv,tv]=await Promise.all([tmdbFetch("/movie/top_rated?language=en-US&page=1"),tmdbFetch("/tv/top_rated?language=en-US&page=1")]); return addProviders([...(mv.results||[]),...(tv.results||[])].slice(0,20),"movies"); }
+  if (cfg.type==="new") { const d=await tmdbFetch("/movie/now_playing?language=en-US&page=1"); return addProviders(d.results,"movies"); }
+  const kw = cfg.keyword ? `&with_keywords=${cfg.keyword}` : "";
+  const results = [];
+  if (cfg.type==="movie"||cfg.type==="both") { const d=await tmdbFetch(`/discover/movie?with_genres=${cfg.ids}&sort_by=popularity.desc&language=en-US&page=1${kw}`); results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"movie"}))); }
+  if (cfg.type==="tv"||cfg.type==="both") { const d=await tmdbFetch(`/discover/tv?with_genres=${cfg.ids}&sort_by=popularity.desc&language=en-US&page=1${kw}`); results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"tv"}))); }
+  return addProviders(results.slice(0,20),"movies");
+};
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
   const isMobile = useIsMobile();
@@ -814,10 +878,12 @@ export default function StreamHub() {
   const [userSubs, setUserSubs] = useState(["netflix","disney","max"]);
   const [showSetup, setShowSetup] = useState(false);
 
-  // Only show setup if user has never completed it
+  // Load saved subs from localStorage on startup (for non-logged-in users)
   useEffect(() => {
-    const completed = localStorage.getItem("streamhub_setup_done");
-    if (!completed) setShowSetup(true);
+    const saved = localStorage.getItem("streamhub_subs");
+    const done  = localStorage.getItem("streamhub_setup_done");
+    if (saved) { try { setUserSubs(JSON.parse(saved)); } catch(e) {} }
+    if (!done)  setShowSetup(true);
   }, []);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [tier, setTier] = useState("free");
@@ -845,11 +911,27 @@ export default function StreamHub() {
     // Load profile
     let { data:prof } = await supabase.from("profiles").select("*").eq("id",u.id).single();
     if (!prof) {
-      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free" });
-      prof = { id:u.id, username:u.email.split("@")[0], tier:"free" };
+      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false });
+      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false };
     }
     setProfile(prof);
     setTier(prof.tier||"free");
+
+    // Load subscriptions from profile
+    if (prof.subscriptions) {
+      try {
+        const subs = typeof prof.subscriptions === "string" ? JSON.parse(prof.subscriptions) : prof.subscriptions;
+        setUserSubs(subs);
+        localStorage.setItem("streamhub_subs", JSON.stringify(subs));
+      } catch(e) {}
+    }
+
+    // Hide setup if user already completed it
+    if (prof.setup_done) {
+      setShowSetup(false);
+      localStorage.setItem("streamhub_setup_done", "true");
+    }
+
     // Load watchlist
     const { data:wl } = await supabase.from("watchlist").select("movie_id").eq("user_id",u.id);
     setWatchlist((wl||[]).map(w=>w.movie_id));
@@ -919,94 +1001,7 @@ export default function StreamHub() {
     }).catch(()=>setLoading(false));
   }, [view]);
 
-  // ── Smart Search (genre + mood + title) ──
-  const GENRE_MAP = {
-    // Moods & genres → TMDB genre IDs
-    "action":      { ids:"28",      type:"movie" },
-    "comedy":      { ids:"35",      type:"both"  },
-    "horror":      { ids:"27",      type:"both"  },
-    "romance":     { ids:"10749",   type:"both"  },
-    "sci-fi":      { ids:"878",     type:"both"  },
-    "scifi":       { ids:"878",     type:"both"  },
-    "science fiction":{ ids:"878",  type:"both"  },
-    "thriller":    { ids:"53",      type:"both"  },
-    "drama":       { ids:"18",      type:"both"  },
-    "animation":   { ids:"16",      type:"both"  },
-    "animated":    { ids:"16",      type:"both"  },
-    "documentary": { ids:"99",      type:"both"  },
-    "doc":         { ids:"99",      type:"both"  },
-    "fantasy":     { ids:"14",      type:"both"  },
-    "mystery":     { ids:"9648",    type:"both"  },
-    "crime":       { ids:"80",      type:"both"  },
-    "adventure":   { ids:"12",      type:"both"  },
-    "family":      { ids:"10751",   type:"both"  },
-    "kids":        { ids:"10751",   type:"both"  },
-    "music":       { ids:"10402",   type:"both"  },
-    "western":     { ids:"37",      type:"movie" },
-    "war":         { ids:"10752",   type:"movie" },
-    "history":     { ids:"36",      type:"movie" },
-    "superhero":   { ids:"28,12,14",type:"both"  },
-    "anime":       { ids:"16",      type:"tv",   keyword:"210024" },
-    "sports":      { ids:"99",      type:"movie" },
-    "funny":       { ids:"35",      type:"both"  },
-    "scary":       { ids:"27",      type:"both"  },
-    "sad":         { ids:"18",      type:"both"  },
-    "feel good":   { ids:"35,10751",type:"both"  },
-    "feel-good":   { ids:"35,10751",type:"both"  },
-    "romantic":    { ids:"10749",   type:"both"  },
-    "date night":  { ids:"10749,35",type:"both"  },
-    "christmas":   { ids:"10751",   type:"both"  },
-    "holiday":     { ids:"10751",   type:"both"  },
-    "new":         { ids:null,      type:"new"   },
-    "new releases":{ ids:null,      type:"new"   },
-    "trending":    { ids:null,      type:"trending"},
-    "popular":     { ids:null,      type:"trending"},
-    "top rated":   { ids:null,      type:"top"   },
-    "best":        { ids:null,      type:"top"   },
-  };
-
-  const isGenreSearch = (q) => {
-    const lower = q.toLowerCase().trim();
-    return GENRE_MAP[lower] || null;
-  };
-
-  const doGenreSearch = async (genreConfig) => {
-    const addProviders = async (items, cat) =>
-      Promise.all((items||[]).slice(0,20).map(async m => {
-        const t = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
-        try { const wp=await tmdbFetch(`/${t}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category:cat}; }
-        catch { return {...m,providers:[],category:cat}; }
-      }));
-
-    if (genreConfig.type === "trending") {
-      const d = await tmdbFetch("/trending/all/week?language=en-US&page=1");
-      return addProviders(d.results,"trending");
-    }
-    if (genreConfig.type === "top") {
-      const [m,t] = await Promise.all([
-        tmdbFetch(`/movie/top_rated?language=en-US&page=1`),
-        tmdbFetch(`/tv/top_rated?language=en-US&page=1`),
-      ]);
-      return addProviders([...(m.results||[]),...(t.results||[])].slice(0,20),"movies");
-    }
-    if (genreConfig.type === "new") {
-      const d = await tmdbFetch("/movie/now_playing?language=en-US&page=1");
-      return addProviders(d.results,"movies");
-    }
-
-    const kwParam = genreConfig.keyword ? `&with_keywords=${genreConfig.keyword}` : "";
-    const results = [];
-    if (genreConfig.type === "movie" || genreConfig.type === "both") {
-      const d = await tmdbFetch(`/discover/movie?with_genres=${genreConfig.ids}&sort_by=popularity.desc&language=en-US&page=1${kwParam}`);
-      results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"movie"})));
-    }
-    if (genreConfig.type === "tv" || genreConfig.type === "both") {
-      const d = await tmdbFetch(`/discover/tv?with_genres=${genreConfig.ids}&sort_by=popularity.desc&language=en-US&page=1${kwParam}`);
-      results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"tv"})));
-    }
-    return addProviders(results.slice(0,20),"movies");
-  };
-
+  // ── Smart Search ──
   useEffect(() => {
     if (!search.trim()) { setSearchResults([]); return; }
     clearTimeout(searchTimer.current);
@@ -1051,10 +1046,18 @@ export default function StreamHub() {
     }
   };
 
-  const handleSaveUserSubs = (subs) => {
+  const handleSaveUserSubs = async (subs) => {
     setUserSubs(subs);
     localStorage.setItem("streamhub_subs", JSON.stringify(subs));
     localStorage.setItem("streamhub_setup_done", "true");
+    setShowSetup(false);
+    // Save to Supabase if logged in
+    if (user) {
+      await supabase.from("profiles").update({
+        subscriptions: JSON.stringify(subs),
+        setup_done: true,
+      }).eq("id", user.id);
+    }
   };
 
   // Load saved subs from localStorage on startup
