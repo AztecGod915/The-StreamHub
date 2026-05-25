@@ -812,7 +812,13 @@ export default function StreamHub() {
   const [watchlist, setWatchlist] = useState([]);
   const [userRatings, setUserRatings] = useState({});
   const [userSubs, setUserSubs] = useState(["netflix","disney","max"]);
-  const [showSetup, setShowSetup] = useState(true);
+  const [showSetup, setShowSetup] = useState(false);
+
+  // Only show setup if user has never completed it
+  useEffect(() => {
+    const completed = localStorage.getItem("streamhub_setup_done");
+    if (!completed) setShowSetup(true);
+  }, []);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [tier, setTier] = useState("free");
   const [toast, setToast] = useState(null);
@@ -1045,7 +1051,19 @@ export default function StreamHub() {
     }
   };
 
-  const handleRate = (movieId, val) => {
+  const handleSaveUserSubs = (subs) => {
+    setUserSubs(subs);
+    localStorage.setItem("streamhub_subs", JSON.stringify(subs));
+    localStorage.setItem("streamhub_setup_done", "true");
+  };
+
+  // Load saved subs from localStorage on startup
+  useEffect(() => {
+    const saved = localStorage.getItem("streamhub_subs");
+    if (saved) {
+      try { setUserSubs(JSON.parse(saved)); } catch(e) {}
+    }
+  }, []);
     setUserRatings(p=>({...p,[movieId]:val}));
   };
 
@@ -1235,7 +1253,7 @@ export default function StreamHub() {
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
-      {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -1381,7 +1399,7 @@ export default function StreamHub() {
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
-      {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -1631,7 +1649,7 @@ export default function StreamHub() {
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
-      {showSetup&&<SetupModal userSubs={userSubs} onSave={setUserSubs} onClose={()=>setShowSetup(false)} isFirst={true}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
