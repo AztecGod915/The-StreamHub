@@ -1067,6 +1067,8 @@ export default function StreamHub() {
       try { setUserSubs(JSON.parse(saved)); } catch(e) {}
     }
   }, []);
+
+  const handleRate = (movieId, val) => {
     setUserRatings(p=>({...p,[movieId]:val}));
   };
 
