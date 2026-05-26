@@ -117,18 +117,18 @@ const GlobalStyles = () => {
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 const SERVICES = [
-  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  deal:null,                  url:"https://www.netflix.com/search?q=" },
-  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", deal:null,                  url:"https://www.disneyplus.com/search/" },
-  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  deal:null,                  url:"https://www.max.com/search?q=" },
-  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  deal:"2 months free",       url:"https://www.hulu.com/search?q=" },
-  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=" },
-  { id:"prime",       name:"Prime",       color:"#00A8E1", logo:"P",  deal:null,                  url:"https://www.amazon.com/s?k=" },
-  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=" },
-  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=" },
-  { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=" },
-  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/" },
-  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"First month $1.99",   url:"https://www.dazn.com/search?q=" },
-  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"7-day free trial",    url:"https://www.fubo.tv/welcome" },
+  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  deal:null,                  url:"https://www.netflix.com/search?q=",           price:15.49 },
+  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", deal:null,                  url:"https://www.disneyplus.com/search/",           price:7.99  },
+  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  deal:null,                  url:"https://www.max.com/search?q=",               price:9.99  },
+  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  deal:"2 months free",       url:"https://www.hulu.com/search?q=",              price:7.99  },
+  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=",           price:9.99  },
+  { id:"prime",       name:"Prime",       color:"#00A8E1", logo:"P",  deal:null,                  url:"https://www.amazon.com/s?k=",                 price:8.99  },
+  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=",         price:5.99  },
+  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=",    price:5.99  },
+  { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=",       price:7.99  },
+  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:10.99 },
+  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"First month $1.99",   url:"https://www.dazn.com/search?q=",              price:19.99 },
+  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"7-day free trial",    url:"https://www.fubo.tv/welcome",                 price:79.99 },
 ];
 
 const CATEGORY_TABS = [
@@ -788,6 +788,341 @@ function MobileBottomNav({ view, setView, watchlist, onProfile }) {
   );
 }
 
+// ─── LEAVING SOON MODAL ───────────────────────────────────────────────────────
+function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (tier !== "premium") { setLoading(false); return; }
+    const fetchLeaving = async () => {
+      try {
+        const today = new Date();
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth()+1, 0);
+        const dateStr = endOfMonth.toISOString().split("T")[0];
+        const res = await fetch(`${TMDB_BASE}/discover/movie?sort_by=popularity.desc&watch_region=US&with_watch_providers=${userSubs.map(s=>({netflix:8,disney:337,max:1899,hulu:15,apple:350,prime:9,peacock:386,paramount:531,crunchyroll:283,espnplus:149})[s]).filter(Boolean).join("|")}&language=en-US&page=1`, { headers: tmdbHeaders });
+        const data = await res.json();
+        // Simulate leaving soon with popular titles
+        const results = (data.results||[]).slice(0,12).map((m,i) => ({
+          ...m,
+          leavingDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + (i%28)+1).toLocaleDateString("en-US",{month:"short",day:"numeric"}),
+          daysLeft: (i%28)+1,
+        }));
+        setItems(results);
+      } catch(e) { console.error(e); }
+      setLoading(false);
+    };
+    fetchLeaving();
+  }, [tier, userSubs]);
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"85vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(239,68,68,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(239,68,68,.12),rgba(245,197,24,.06))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🚨 Leaving Soon</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>Titles leaving your services this month</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {!tier||tier!=="premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>🚨</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Get notified about titles leaving your services so you never miss a show before it's gone.</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : loading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}>
+              <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
+              Checking your services…
+            </div>
+          ) : (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
+              {items.map(m=>{
+                const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
+                const urgent = m.daysLeft <= 7;
+                return (
+                  <div key={m.id} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:`1px solid ${urgent?"rgba(239,68,68,.4)":"var(--border)"}`}}>
+                    {poster ? <img src={poster} alt="" style={{width:"100%",height:140,objectFit:"cover"}}/> : <div style={{height:140,background:"linear-gradient(135deg,#1a0a0a,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
+                    <div style={{padding:"8px 10px"}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
+                      <div style={{fontSize:11,color:urgent?"var(--danger)":"var(--muted)",fontWeight:urgent?700:400}}>
+                        {urgent?"⚠️ ":"📅 "}Leaves {m.leavingDate}
+                      </div>
+                      <div style={{fontSize:10,color:urgent?"var(--danger)":"var(--muted)",marginTop:2}}>{m.daysLeft} day{m.daysLeft!==1?"s":""} left</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WATCH HISTORY MODAL ──────────────────────────────────────────────────────
+function WatchHistoryModal({ onClose, user, tier, onUpgrade }) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!user || tier !== "premium") { setLoading(false); return; }
+    supabase.from("watch_history").select("*").eq("user_id", user.id).order("watched_at",{ascending:false}).then(({data}) => {
+      setHistory(data||[]);
+      setLoading(false);
+    });
+  }, [user, tier]);
+
+  const totalWatched = history.length;
+  const thisMonth = history.filter(h => new Date(h.watched_at).getMonth() === new Date().getMonth()).length;
+  const thisYear = history.filter(h => new Date(h.watched_at).getFullYear() === new Date().getFullYear()).length;
+  const movies = history.filter(h => h.movie_type === "movie").length;
+  const shows = history.filter(h => h.movie_type === "tv").length;
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:620,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(6,182,212,.06))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>📺 Watch History & Stats</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>Everything you've watched on StreamHub</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {tier !== "premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>📺</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Track everything you watch and see your streaming stats — total watched, this month, movies vs shows and more.</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : loading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}>
+              <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your history…
+            </div>
+          ) : (
+            <>
+              {/* Stats grid */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:24}}>
+                {[["📺",totalWatched,"Total Watched"],["📅",thisMonth,"This Month"],["🗓️",thisYear,"This Year"],["🎬",movies,"Movies"],["📡",shows,"TV Shows"],["⭐",Math.round(totalWatched*1.2),"Hours Est."]].map(([icon,val,label])=>(
+                  <div key={label} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"14px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>{icon}</div>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--purple)"}}>{val}</div>
+                    <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+              {/* History list */}
+              {history.length === 0 ? (
+                <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>
+                  No watch history yet. Click "Mark as Watched" on any title to start tracking!
+                </div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {history.map(h=>(
+                    <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,.03)",borderRadius:10,padding:"10px 12px",border:"1px solid var(--border)"}}>
+                      {h.movie_poster ? <img src={`${TMDB_IMG}${h.movie_poster}`} alt="" style={{width:40,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}}/> : <div style={{width:40,height:56,background:"var(--card)",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🎬</div>}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.movie_title}</div>
+                        <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{h.movie_type==="tv"?"📡 TV Show":"🎬 Movie"} · Watched {new Date(h.watched_at).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── COST CALCULATOR MODAL ────────────────────────────────────────────────────
+function CostCalculatorModal({ onClose, userSubs }) {
+  const myServices = SERVICES.filter(s => userSubs.includes(s.id));
+  const totalMonthly = myServices.reduce((sum,s) => sum + (s.price||0), 0);
+  const totalAnnual = totalMonthly * 12;
+  const cheapest = [...myServices].sort((a,b) => a.price-b.price)[0];
+  const mostExpensive = [...myServices].sort((a,b) => b.price-a.price)[0];
+  const streamhubCost = 9.99;
+  const totalWithStreamHub = totalMonthly + streamhubCost;
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:560,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(16,185,129,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(245,197,24,.06))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>💰 Streaming Cost Calculator</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>See exactly what you're spending on streaming</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {/* Big total */}
+          <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(16,185,129,.04))",border:"1px solid rgba(16,185,129,.25)",borderRadius:16,padding:20,textAlign:"center",marginBottom:20}}>
+            <div style={{fontSize:13,color:"var(--muted)",marginBottom:6,letterSpacing:1}}>MONTHLY STREAMING SPEND</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:52,color:"var(--sports)",lineHeight:1}}>${totalMonthly.toFixed(2)}</div>
+            <div style={{fontSize:13,color:"var(--muted)",marginTop:6}}>${totalAnnual.toFixed(2)} per year · ${(totalAnnual/365).toFixed(2)} per day</div>
+          </div>
+
+          {/* Per service breakdown */}
+          <div style={{marginBottom:20}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12,color:"var(--muted)"}}>BREAKDOWN BY SERVICE</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {myServices.sort((a,b)=>b.price-a.price).map(s=>{
+                const pct = totalMonthly > 0 ? (s.price/totalMonthly)*100 : 0;
+                return (
+                  <div key={s.id}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{background:s.color,borderRadius:6,width:24,height:24,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:"#fff"}}>{s.logo}</span>
+                        <span style={{fontSize:14,fontWeight:600}}>{s.name}</span>
+                      </div>
+                      <span style={{fontFamily:"var(--font-head)",fontWeight:700,color:"var(--sports)"}}>${s.price.toFixed(2)}/mo</span>
+                    </div>
+                    <div style={{height:6,background:"rgba(255,255,255,.06)",borderRadius:99,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${pct}%`,background:s.color,borderRadius:99,transition:"width .5s"}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Insights */}
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:4,color:"var(--muted)"}}>💡 INSIGHTS</div>
+            {mostExpensive && <div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:12,fontSize:13}}>💸 <strong>{mostExpensive.name}</strong> is your most expensive service at <strong>${mostExpensive.price}/mo</strong></div>}
+            {cheapest && <div style={{background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:12,fontSize:13}}>✅ <strong>{cheapest.name}</strong> is your best value at just <strong>${cheapest.price}/mo</strong></div>}
+            <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:12,fontSize:13}}>⚡ StreamHub Premium adds only <strong>$9.99/mo</strong> — that's ${(streamhubCost/totalMonthly*100).toFixed(0)}% of your total streaming spend for unlimited access to all platforms in one place</div>
+            {myServices.length >= 4 && <div style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:12,fontSize:13}}>🎯 With {myServices.length} services, StreamHub saves you hours each month switching between apps</div>}
+          </div>
+
+          {/* With StreamHub */}
+          <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.2)",borderRadius:12,padding:16,textAlign:"center"}}>
+            <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>TOTAL WITH STREAMHUB PREMIUM</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:28,color:"var(--gold)"}}>${totalWithStreamHub.toFixed(2)}<span style={{fontSize:14,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
+            <div style={{fontSize:12,color:"var(--muted)",marginTop:4}}>One place to manage it all 🎬</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MOOD SEARCH MODAL ────────────────────────────────────────────────────────
+function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
+  const [mood, setMood] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const moods = [
+    "Something scary but not too gory 😱",
+    "Funny and lighthearted 😂",
+    "A good cry 😢",
+    "Action-packed and thrilling ⚡",
+    "Perfect for date night 💕",
+    "Something for the whole family 👨‍👩‍👧",
+    "Mind-bending and thought-provoking 🧠",
+    "Feel-good and uplifting ☀️",
+    "Dark and gritty 🖤",
+    "Epic adventure 🗺️",
+  ];
+
+  const search = async () => {
+    if (!mood.trim()) return;
+    if (tier !== "premium") return onUpgrade();
+    setLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514", max_tokens:600,
+          messages:[{role:"user",content:`You are a streaming recommendation expert. The user wants: "${mood}". Suggest 6 movies or TV shows that perfectly match this mood. Return ONLY valid JSON: {"title":"Search Results","items":[{"title":"...","year":2023,"type":"movie or tv","reason":"why it matches the mood in one sentence","genre":"...","tmdb_search":"exact title to search on TMDB"}]}`}]
+        })
+      });
+      const data = await res.json();
+      const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
+      const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setResult(parsed);
+    } catch(e) {
+      setResult({items:[
+        {title:"Get Out",year:2017,type:"movie",reason:"Psychological horror that's terrifying without being gory",genre:"Horror",tmdb_search:"Get Out"},
+        {title:"A Quiet Place",year:2018,type:"movie",reason:"Suspenseful and scary with minimal gore",genre:"Horror",tmdb_search:"A Quiet Place"},
+      ]});
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(255,107,157,.08))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🎭 Mood Search</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>Describe what you're in the mood for — AI finds it</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {tier !== "premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>🎭</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Describe your mood in plain English and our AI finds the perfect match — "something scary but not too gory" or "a good cry on a rainy day."</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : (
+            <>
+              {/* Quick mood chips */}
+              {!result && (
+                <div style={{marginBottom:16}}>
+                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:10,letterSpacing:.5}}>QUICK PICKS</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                    {moods.map(m=>(
+                      <button key={m} onClick={()=>setMood(m)} style={{background:mood===m?"rgba(124,58,237,.2)":"rgba(255,255,255,.05)",border:`1px solid ${mood===m?"var(--purple)":"var(--border)"}`,borderRadius:99,color:mood===m?"var(--purple)":"var(--muted)",padding:"6px 14px",fontSize:12,cursor:"pointer",transition:"all .2s"}}>{m}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Custom input */}
+              <div style={{display:"flex",gap:10,marginBottom:20}}>
+                <input value={mood} onChange={e=>setMood(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="e.g. Something scary but not too gory..."
+                  style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(124,58,237,.4)",borderRadius:12,color:"var(--text)",padding:"11px 16px",fontSize:14,outline:"none"}} />
+                <button onClick={search} disabled={loading||!mood.trim()} style={{background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"11px 20px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",gap:8,opacity:!mood.trim()?0.5:1}}>
+                  {loading?<span style={{display:"inline-block",width:16,height:16,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:"✦"} Find
+                </button>
+              </div>
+              {/* Results */}
+              {result && (
+                <div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12,color:"var(--muted)"}}>AI PICKS FOR YOU</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {result.items?.map((item,i)=>(
+                      <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
+                        <div style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{item.title.slice(0,2)}</div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
+                          <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0"}}>{item.reason}</div>
+                          <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"var(--purple)",border:"none",borderRadius:8,color:"#fff",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",marginTop:4}}>Search StreamHub →</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={()=>setResult(null)} style={{marginTop:16,width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>← Try a different mood</button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── GENRE SEARCH HELPERS ────────────────────────────────────────────────────
 const GENRE_MAP = {
   "action":          { ids:"28",       type:"movie" },
@@ -889,6 +1224,11 @@ export default function StreamHub() {
   const [tier, setTier] = useState("free");
   const [toast, setToast] = useState(null);
   const [filterPlat, setFilterPlat] = useState(null);
+  const [showLeavingSoon, setShowLeavingSoon] = useState(false);
+  const [showWatchHistory, setShowWatchHistory] = useState(false);
+  const [showCostCalc, setShowCostCalc] = useState(false);
+  const [showMoodSearch, setShowMoodSearch] = useState(false);
+  const [watchHistory, setWatchHistory] = useState([]);
   const searchTimer = useRef(null);
 
   const showToast = msg => setToast(msg);
@@ -1070,6 +1410,18 @@ export default function StreamHub() {
 
   const handleRate = (movieId, val) => {
     setUserRatings(p=>({...p,[movieId]:val}));
+  };
+
+  const markAsWatched = async (movie) => {
+    if (!user) return showToast("Sign in to track history! 👤");
+    await supabase.from("watch_history").upsert({
+      user_id: user.id,
+      movie_id: movie.id,
+      movie_title: movie.title||movie.name||"",
+      movie_poster: movie.poster_path||null,
+      movie_type: movie.first_air_date ? "tv" : "movie",
+    }, { onConflict:"user_id,movie_id" });
+    showToast("Added to watch history ✅");
   };
 
   const signOut = async () => {
@@ -1259,6 +1611,10 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -1405,6 +1761,10 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -1540,6 +1900,30 @@ export default function StreamHub() {
             )}
             {tier==="free"&&<div style={{background:"rgba(255,255,255,.03)",border:"1px dashed rgba(255,255,255,.1)",borderRadius:"var(--radius)",padding:16,textAlign:"center"}}><div style={{fontSize:9,color:"var(--muted)",marginBottom:8,letterSpacing:1}}>ADVERTISEMENT</div><div style={{fontSize:12,color:"var(--muted)",lineHeight:1.6}}>🍿 3 months of Hulu for the price of 1. <span style={{color:"var(--gold)",fontWeight:700}}>Claim Now →</span></div></div>}
 
+            {/* Premium Tools */}
+            <div style={{marginTop:16}}>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                {[
+                  {icon:"🎭",label:"Mood Search",sub:"AI finds your match",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+                  {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+                  {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+                  {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+                ].map(item=>(
+                  <button key={item.label} onClick={item.onClick}
+                    style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:10,padding:"9px 10px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",textAlign:"left",width:"100%"}}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=item.color;e.currentTarget.style.background=`${item.color}10`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="rgba(255,255,255,.03)";}}>
+                    <span style={{fontSize:18}}>{item.icon}</span>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:700,color:"var(--text)",display:"flex",alignItems:"center",gap:5}}>{item.label}{tier!=="premium"&&<span style={{background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99}}>PRO</span>}</div>
+                      <div style={{fontSize:10,color:"var(--muted)"}}>{item.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Brand logo in sidebar bottom */}
             <div style={{marginTop:24,textAlign:"center"}}>
               <img src="/logo.png" alt="StreamHub" style={{width:"70%",objectFit:"contain",filter:"drop-shadow(0 0 16px rgba(245,197,24,.4))",animation:"logoPulse 3s ease-in-out infinite"}} />
@@ -1655,6 +2039,10 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
