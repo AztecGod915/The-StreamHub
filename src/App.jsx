@@ -151,33 +151,28 @@ const GR = [
 function Logo({ size=32 }) {
   const [imgError, setImgError] = useState(false);
   return (
-    <div style={{display:"flex",alignItems:"center",gap:10}}>
-      <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex",flexShrink:0}}>
+    <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
+      <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex"}}>
         {!imgError ? (
           <img
             src="/logo.png"
-            alt="StreamHub"
+            alt="The StreamHub"
             onError={()=>setImgError(true)}
             style={{
-              width:size*1.4, height:size*1.4, objectFit:"contain",
-              filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+              height: size * 1.6,
+              width: "auto",
+              objectFit:"contain",
+              filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",
               animation:"logoPulse 2.5s ease-in-out infinite",
             }}
           />
         ) : (
-          <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="10" fill="#F5C518"/>
-            <rect x="3" y="3" width="34" height="34" rx="8" fill="#0D0D1A"/>
-            <polygon points="16,13 16,27 28,20" fill="#F5C518"/>
-            <circle cx="11" cy="20" r="3" fill="#7C3AED"/>
-            <circle cx="11" cy="20" r="1.5" fill="#F5C518"/>
-          </svg>
+          <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em"}}>
+            <span style={{background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>The Stream</span>
+            <span style={{background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Hub</span>
+          </span>
         )}
       </div>
-      <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em",lineHeight:1}}>
-        <span style={{background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Stream</span>
-        <span style={{background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Hub</span>
-      </span>
     </div>
   );
 }
@@ -1537,6 +1532,27 @@ export default function StreamHub() {
           </div>
         )}
 
+        {/* Mobile Premium Tools Strip */}
+        <div style={{padding:"0 14px 16px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+          <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
+            {[
+              {icon:"🎭",label:"Mood Search",sub:"AI finds your match",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+              {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+              {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+              {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+            ].map(item=>(
+              <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:100,transition:"all .2s"}}
+                onTouchStart={e=>e.currentTarget.style.background=`${item.color}15`}
+                onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.04)"}>
+                <span style={{fontSize:24}}>{item.icon}</span>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--text)",textAlign:"center",whiteSpace:"nowrap"}}>{item.label}{tier!=="premium"&&<span style={{marginLeft:4,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99,verticalAlign:"middle"}}>PRO</span>}</div>
+                <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",whiteSpace:"nowrap"}}>{item.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Mobile Hero + Featured Rows for trending */}
         {view==="trending"&&!search.trim() ? (
           <div>
@@ -1695,7 +1711,31 @@ export default function StreamHub() {
         )}
 
         {/* Tablet Grid */}
-        <div style={{padding:"20px 20px 40px"}}>
+        <div style={{padding:"20px 20px 120px"}}>
+          {/* Tablet Premium Tools */}
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+              {[
+                {icon:"🎭",label:"Mood Search",sub:"AI finds your perfect watch",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+                {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these titles",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+                {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+                {icon:"💰",label:"Cost Calculator",sub:"See your streaming spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+              ].map(item=>(
+                <button key={item.label} onClick={item.onClick}
+                  style={{background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",width:"100%"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background=`${item.color}12`;e.currentTarget.style.borderColor=item.color;}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.04)";e.currentTarget.style.borderColor=`${item.color}44`;}}>
+                  <span style={{fontSize:28}}>{item.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)",textAlign:"center"}}>
+                    {item.label}
+                    {tier!=="premium"&&<span style={{marginLeft:5,background:"var(--gold)",color:"#000",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:99}}>PRO</span>}
+                  </div>
+                  <div style={{fontSize:11,color:"var(--muted)",textAlign:"center"}}>{item.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
           {view==="trending"&&!search.trim() ? (
             <div>
               {[{title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
@@ -1987,7 +2027,7 @@ export default function StreamHub() {
                 <img src="/logo.png" alt="StreamHub" style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
-                    <span style={{color:"#F5C518"}}>Stream</span>
+                    <span style={{color:"#F5C518"}}>The Stream</span>
                     <span style={{color:"#7C3AED"}}>Hub</span>
                   </div>
                   <div style={{fontSize:10,color:"var(--muted)",letterSpacing:1}}>SEARCH · FIND · ENJOY</div>
