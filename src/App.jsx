@@ -159,7 +159,7 @@ function Logo({ size=32 }) {
             alt="The StreamHub"
             onError={()=>setImgError(true)}
             style={{
-              height: size * 1.6,
+              height: size * 2.2,
               width: "auto",
               objectFit:"contain",
               filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",
