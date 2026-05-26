@@ -1461,12 +1461,26 @@ export default function StreamHub() {
         {/* Mobile Header */}
         <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)"}}>
           {/* Top row - logo + buttons */}
-          <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
-            <Logo size={26} />
-            <div style={{flex:1}} />
+          <div style={{display:"flex",alignItems:"center",padding:"8px 14px",gap:10}}>
+            {/* Logo - wider to fill space */}
+            <div style={{flex:1,display:"flex",alignItems:"center"}}>
+              <img
+                src="/logo.png"
+                alt="The StreamHub"
+                onError={e=>e.target.style.display="none"}
+                style={{
+                  height:64,
+                  width:"auto",
+                  maxWidth:220,
+                  objectFit:"contain",
+                  filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+                  animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+                }}
+              />
+            </div>
             {tier==="premium"
-              ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PRO</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap"}}>Upgrade ✦</button>
+              ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
+              :<button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
             <AvatarButton />
           </div>
