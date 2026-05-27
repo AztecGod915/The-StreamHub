@@ -466,11 +466,12 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
             <StarPicker value={rating} onChange={handleRate} size={16} />
           </div>
           {svc && (
-            <a href={svc.url+encodeURIComponent(movie.title||movie.name)} target="_blank" rel="noopener noreferrer"
-              onClick={e=>e.stopPropagation()}
-              style={{marginLeft:"auto",display:"inline-flex",alignItems:"center",gap:8,background:svc.color,borderRadius:10,color:"#fff",padding:"9px 18px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13}}>
-              ▶ Watch on {svc.name}
-            </a>
+            <WatchButton
+              serviceId={mainProvider}
+              title={movie.title||movie.name}
+              webUrl={svc.url}
+              style={{marginLeft:"auto"}}
+            />
           )}
         </div>
         {/* Tabs */}
@@ -1116,6 +1117,99 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── DEEP LINK HELPER ────────────────────────────────────────────────────────
+// App URL schemes for mobile — tries to open the native app first,
+// falls back to website if app not installed
+const APP_SCHEMES = {
+  netflix:     { ios:"nflx://",                          android:"intent://www.netflix.com#Intent;scheme=https;package=com.netflix.mediaclient;end" },
+  disney:      { ios:"disneyplus://",                    android:"intent://www.disneyplus.com#Intent;scheme=https;package=com.disney.disneyplus;end" },
+  max:         { ios:"max://",                           android:"intent://play.max.com#Intent;scheme=https;package=com.hbo.hbonow;end" },
+  hulu:        { ios:"hulu://",                          android:"intent://www.hulu.com#Intent;scheme=https;package=com.hulu.plus;end" },
+  apple:       { ios:"videos://",                        android:null },
+  prime:       { ios:"aiv://",                           android:"intent://www.amazon.com#Intent;scheme=https;package=com.amazon.avod.thirdpartyclient;end" },
+  peacock:     { ios:"peacock://",                       android:"intent://www.peacocktv.com#Intent;scheme=https;package=com.peacocktv.peacockandroid;end" },
+  paramount:   { ios:"paramountplus://",                 android:"intent://www.paramountplus.com#Intent;scheme=https;package=com.cbs.app;end" },
+  crunchyroll: { ios:"crunchyroll://",                   android:"intent://www.crunchyroll.com#Intent;scheme=https;package=com.crunchyroll.crunchyroid;end" },
+  espnplus:    { ios:"sportscenter://",                  android:"intent://www.espn.com#Intent;scheme=https;package=com.espn.score_center;end" },
+  dazn:        { ios:"dazn://",                          android:"intent://www.dazn.com#Intent;scheme=https;package=com.dazn;end" },
+  fubo:        { ios:"fubo://",                          android:"intent://www.fubo.tv#Intent;scheme=https;package=tv.fubo.mobile;end" },
+  tubi:        { ios:"tubi://",                          android:"intent://tubitv.com#Intent;scheme=https;package=com.tubitv;end" },
+};
+
+function getWatchUrl(serviceId, title, webUrl) {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const scheme = APP_SCHEMES[serviceId];
+
+  if (!isMobile || !scheme) return webUrl + encodeURIComponent(title);
+
+  if (isIOS && scheme.ios) {
+    // Try app scheme — iOS will open app if installed, error if not
+    return scheme.ios;
+  }
+  if (isAndroid && scheme.android) {
+    return scheme.android;
+  }
+  // Fallback to web
+  return webUrl + encodeURIComponent(title);
+}
+
+function WatchButton({ serviceId, title, webUrl, style }) {
+  const svc = SERVICES.find(s => s.id === serviceId);
+  if (!svc) return null;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  const handleWatch = (e) => {
+    e.stopPropagation();
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const scheme = APP_SCHEMES[serviceId];
+
+    if (isMobileDevice && scheme) {
+      if (isIOS && scheme.ios) {
+        // Try to open app — if it fails after 1.5s, open website
+        const appUrl = scheme.ios;
+        const webFallback = svc.url + encodeURIComponent(title);
+        const start = Date.now();
+        window.location.href = appUrl;
+        setTimeout(() => {
+          // If we're still here after 1.5s, app didn't open — go to web
+          if (Date.now() - start < 2000) {
+            window.open(webFallback, "_blank");
+          }
+        }, 1500);
+        return;
+      }
+      if (isAndroid && scheme.android) {
+        window.location.href = scheme.android;
+        setTimeout(() => {
+          window.open(svc.url + encodeURIComponent(title), "_blank");
+        }, 1500);
+        return;
+      }
+    }
+    // Desktop — open website in new tab
+    window.open(svc.url + encodeURIComponent(title), "_blank");
+  };
+
+  return (
+    <button onClick={handleWatch}
+      style={{
+        display:"inline-flex", alignItems:"center", gap:8,
+        background:svc.color, borderRadius:10, color:"#fff",
+        padding:"9px 18px", fontFamily:"var(--font-head)",
+        fontWeight:800, fontSize:13, border:"none", cursor:"pointer",
+        boxShadow:`0 4px 16px ${svc.color}44`,
+        ...style
+      }}>
+      ▶ Watch on {svc.name}
+      {isMobile && <span style={{fontSize:10,opacity:.8}}>📱</span>}
+    </button>
   );
 }
 
