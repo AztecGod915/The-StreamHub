@@ -129,6 +129,7 @@ const SERVICES = [
   { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:10.99 },
   { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"First month $1.99",   url:"https://www.dazn.com/search?q=",              price:19.99 },
   { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"7-day free trial",    url:"https://www.fubo.tv/welcome",                 price:79.99 },
+  { id:"tubi",        name:"Tubi",        color:"#FA4343", logo:"Tu", deal:"Always Free! 🎉",      url:"https://tubitv.com/search/",                  price:0     },
 ];
 
 const CATEGORY_TABS = [
@@ -155,11 +156,11 @@ function Logo({ size=32 }) {
       <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex"}}>
         {!imgError ? (
           <img
-            src="/logo.png"
+            src="/logo-clean.png"
             alt="The StreamHub"
             onError={()=>setImgError(true)}
             style={{
-              height: size * 2.2,
+              height: size * 2.8,
               width: "auto",
               objectFit:"contain",
               filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",
@@ -1465,13 +1466,13 @@ export default function StreamHub() {
             {/* Logo - wider to fill space */}
             <div style={{flex:1,display:"flex",alignItems:"center"}}>
               <img
-                src="/logo.png"
+                src="/logo-clean.png"
                 alt="The StreamHub"
                 onError={e=>e.target.style.display="none"}
                 style={{
-                  height:64,
+                  height:72,
                   width:"auto",
-                  maxWidth:220,
+                  maxWidth:240,
                   objectFit:"contain",
                   filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
