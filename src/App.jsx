@@ -1356,23 +1356,60 @@ function WatchButton({ serviceId, title, webUrl, style }) {
 // ─── WELCOME BANNER ───────────────────────────────────────────────────────────
 function WelcomeBanner() {
   return (
-    <div style={{
-      background:"linear-gradient(135deg,rgba(124,58,237,.15) 0%,rgba(245,197,24,.08) 100%)",
-      borderBottom:"1px solid rgba(245,197,24,.15)",
-      padding:"20px 20px 18px",
-      textAlign:"center",
-    }}>
+    <div style={{padding:"20px 24px 4px"}}>
       <div style={{
-        fontFamily:"var(--font-head)", fontWeight:800,
-        fontSize:"clamp(18px,4vw,32px)",
-        lineHeight:1.15, marginBottom:8,
-        background:"linear-gradient(90deg,#F5C518,#fff,#F5C518)",
-        backgroundSize:"200% auto",
-        WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-        animation:"gradientShift 3s linear infinite",
-      }}>Search All Your Streaming Services At Once</div>
-      <div style={{fontSize:"clamp(12px,2vw,15px)",color:"rgba(240,240,250,.6)",maxWidth:520,margin:"0 auto",lineHeight:1.6}}>
-        Netflix · Disney+ · Max · Hulu · Crunchyroll · ESPN+ · Tubi and more — one search finds everything
+        background:"linear-gradient(135deg,rgba(124,58,237,.25) 0%,rgba(7,7,14,.9) 40%,rgba(245,197,24,.12) 100%)",
+        border:"1px solid rgba(245,197,24,.25)",
+        borderRadius:20,
+        padding:"28px 36px",
+        textAlign:"center",
+        position:"relative",
+        overflow:"hidden",
+        boxShadow:"0 8px 32px rgba(124,58,237,.2), 0 0 0 1px rgba(245,197,24,.08)",
+      }}>
+        {/* Decorative background orbs */}
+        <div style={{position:"absolute",top:-40,left:-40,width:180,height:180,borderRadius:"50%",background:"rgba(124,58,237,.15)",filter:"blur(40px)",pointerEvents:"none"}} />
+        <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,197,24,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
+
+        {/* Badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:1}}>
+          ✦ FREE TO START — NO CREDIT CARD REQUIRED
+        </div>
+
+        {/* Headline */}
+        <div style={{
+          fontFamily:"var(--font-head)", fontWeight:800,
+          fontSize:"clamp(20px,3vw,36px)",
+          lineHeight:1.15, marginBottom:10,
+          background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#F5C518)",
+          backgroundSize:"250% auto",
+          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+          animation:"gradientShift 4s linear infinite",
+        }}>Search All Your Streaming Services At Once</div>
+
+        {/* Subtext */}
+        <div style={{fontSize:"clamp(12px,1.5vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 18px",lineHeight:1.7}}>
+          Netflix · Disney+ · Max · Hulu · Crunchyroll · ESPN+ · Tubi and more — one search finds everything
+        </div>
+
+        {/* Service dots */}
+        <div style={{display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
+          {[
+            {name:"Netflix",color:"#E50914"},
+            {name:"Disney+",color:"#0063E5"},
+            {name:"Max",color:"#002BE7"},
+            {name:"Hulu",color:"#1CE783"},
+            {name:"Prime",color:"#00A8E1"},
+            {name:"Crunchyroll",color:"#F47521"},
+            {name:"ESPN+",color:"#E31837"},
+            {name:"Tubi",color:"#FA4343"},
+          ].map(s=>(
+            <div key={s.name} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:600,color:"rgba(240,240,250,.6)"}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:s.color,flexShrink:0}} />
+              {s.name}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
