@@ -1330,6 +1330,59 @@ function WatchButton({ serviceId, title, webUrl, style }) {
   );
 }
 
+// ─── WELCOME BANNER ───────────────────────────────────────────────────────────
+function WelcomeBanner() {
+  return (
+    <div style={{
+      background:"linear-gradient(135deg,rgba(124,58,237,.15) 0%,rgba(245,197,24,.08) 100%)",
+      borderBottom:"1px solid rgba(245,197,24,.15)",
+      padding:"20px 20px 18px",
+      textAlign:"center",
+    }}>
+      <div style={{
+        fontFamily:"var(--font-head)", fontWeight:800,
+        fontSize:"clamp(18px,4vw,32px)",
+        lineHeight:1.15, marginBottom:8,
+        background:"linear-gradient(90deg,#F5C518,#fff,#F5C518)",
+        backgroundSize:"200% auto",
+        WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+        animation:"gradientShift 3s linear infinite",
+      }}>Search All Your Streaming Services At Once</div>
+      <div style={{fontSize:"clamp(12px,2vw,15px)",color:"rgba(240,240,250,.6)",maxWidth:520,margin:"0 auto",lineHeight:1.6}}>
+        Netflix · Disney+ · Max · Hulu · Crunchyroll · ESPN+ · Tubi and more — one search finds everything
+      </div>
+    </div>
+  );
+}
+
+// ─── SIGNUP PROMPT ────────────────────────────────────────────────────────────
+function SignupPrompt({ onSignup, onDismiss }) {
+  return (
+    <div style={{
+      position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)",
+      zIndex:300, width:"calc(100% - 32px)", maxWidth:480,
+      background:"linear-gradient(135deg,rgba(12,10,28,.98),rgba(20,12,40,.98))",
+      border:"1px solid rgba(245,197,24,.35)",
+      borderRadius:18, padding:"18px 20px",
+      boxShadow:"0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(245,197,24,.1)",
+      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer",lineHeight:1}}>✕</button>
+      <div style={{display:"flex",alignItems:"center",gap:14}}>
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"} style={{height:48,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 8px rgba(245,197,24,.4))"}} />
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>Save your watchlist & more</div>
+          <div style={{fontSize:12,color:"rgba(240,240,250,.55)",lineHeight:1.5}}>Create a free account to sync across devices, write reviews and unlock Premium features.</div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:10,marginTop:14}}>
+        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>Sign Up Free →</button>
+        <button onClick={onDismiss} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.4)",padding:"11px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── GENRE SEARCH HELPERS ────────────────────────────────────────────────────
 const GENRE_MAP = {
   "action":          { ids:"28",       type:"movie" },
@@ -1436,6 +1489,16 @@ export default function StreamHub() {
   const [showCostCalc, setShowCostCalc] = useState(false);
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [watchHistory, setWatchHistory] = useState([]);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+
+  // Show signup prompt after 30 seconds for non-logged-in users
+  useEffect(() => {
+    if (user) return;
+    const dismissed = localStorage.getItem("streamhub_signup_dismissed");
+    if (dismissed) return;
+    const timer = setTimeout(() => setShowSignupPrompt(true), 30000);
+    return () => clearTimeout(timer);
+  }, [user]);
   const searchTimer = useRef(null);
 
   const showToast = msg => setToast(msg);
@@ -1759,6 +1822,7 @@ export default function StreamHub() {
         )}
 
         {/* Mobile Premium Tools Strip */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         <div style={{padding:"0 14px 16px"}}>
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
@@ -1857,6 +1921,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -1913,6 +1978,7 @@ export default function StreamHub() {
         </header>
 
         {/* Tablet Hero */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         {view==="trending"&&!search.trim()&&heroMovie&&(
           <div style={{position:"relative",height:300,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelectedMovie(heroMovie)}>
             {heroMovie.backdrop_path&&<img src={`https://image.tmdb.org/t/p/w1280${heroMovie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}}/>}
@@ -2031,6 +2097,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -2106,6 +2173,7 @@ export default function StreamHub() {
             {/* Homepage hero + rows */}
             {view==="trending"&&!search.trim() ? (
               <div style={{margin:"0 -24px"}}>
+                {!user && <WelcomeBanner />}
                 <HeroBanner movie={heroMovie} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
                 <div style={{paddingTop:32}}>
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
@@ -2309,6 +2377,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
