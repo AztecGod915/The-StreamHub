@@ -493,7 +493,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
 }
 
 // ─── MOVIE MODAL ──────────────────────────────────────────────────────────────
-function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onRate, onToggleWatchlist, onVote, showToast }) {
+function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onRate, onToggleWatchlist, onVote, showToast, onSelectSimilar }) {
   const [tab, setTab] = useState("overview");
   const [reviews, setReviews] = useState([]);
   const [details, setDetails] = useState(null);
@@ -502,6 +502,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
   const [revContent, setRevContent] = useState("");
   const [revRating, setRevRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [allProviders, setAllProviders] = useState({flatrate:[],rent:[],buy:[],free:[]});
   const inWL = watchlist.includes(movie.id);
   const providers = movie.providers||[];
   const mainProvider = providers[0];
@@ -509,11 +510,20 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
   const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
 
   useEffect(()=>{
-    // Load TMDB details
     const type = movie.first_air_date ? "tv" : "movie";
     tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar`).then(d=>setDetails(d));
-    // Load reviews from Supabase
     supabase.from("reviews").select("*,profiles(username)").eq("movie_id",movie.id).order("created_at",{ascending:false}).then(({data})=>setReviews(data||[]));
+    // Fetch full provider data including rent/buy
+    fetch(`${TMDB_BASE}/${type}/${movie.id}/watch/providers`, {headers:tmdbHeaders})
+      .then(r=>r.json()).then(data=>{
+        const res = data.results?.US || data.results?.GB || Object.values(data.results||{})[0] || {};
+        setAllProviders({
+          flatrate: res.flatrate||[],
+          rent:     res.rent||[],
+          buy:      res.buy||[],
+          free:     res.free||[],
+        });
+      }).catch(()=>{});
   },[movie.id]);
 
   const handleRate = async(val) => {
@@ -544,7 +554,9 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
   const releaseYear = (movie.release_date||movie.first_air_date||"").slice(0,4);
   const genres = details?.genres?.slice(0,3)||[];
   const cast = details?.credits?.cast?.slice(0,5)||[];
-  const similar = details?.similar?.results?.slice(0,4)||[];
+  const similar = details?.similar?.results?.slice(0,6)||[];
+  const hasStreaming = providers.length > 0 || allProviders.flatrate.length > 0 || allProviders.free.length > 0;
+  const hasRentBuy = allProviders.rent.length > 0 || allProviders.buy.length > 0;
 
   const inp = {background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"10px 14px",width:"100%",fontSize:13,outline:"none"};
 
@@ -568,6 +580,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
             </div>
           </div>
         </div>
+
         {/* Rating bar */}
         <div style={{display:"flex",alignItems:"center",gap:16,padding:"14px 20px",borderBottom:"1px solid var(--border)",flexShrink:0,background:"var(--card)",flexWrap:"wrap"}}>
           <div>
@@ -583,41 +596,139 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
             <StarPicker value={rating} onChange={handleRate} size={16} />
           </div>
           {svc && (
-            <WatchButton
-              serviceId={mainProvider}
-              title={movie.title||movie.name}
-              webUrl={svc.url}
-              style={{marginLeft:"auto"}}
-            />
+            <WatchButton serviceId={mainProvider} title={movie.title||movie.name} webUrl={svc.url} style={{marginLeft:"auto"}} />
           )}
         </div>
+
         {/* Tabs */}
         <div style={{display:"flex",gap:4,padding:"12px 20px 0",borderBottom:"1px solid var(--border)",flexShrink:0}}>
-          {["overview","cast","reviews"].map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,padding:"8px 16px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize"}}>{t}{t==="reviews"&&` (${reviews.length})`}</button>
+          {["overview","where to watch","cast","reviews"].map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"8px 12px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer",whiteSpace:"nowrap"}}>
+              {t}{t==="reviews"&&` (${reviews.length})`}
+            </button>
           ))}
         </div>
+
         {/* Tab Content */}
         <div style={{overflowY:"auto",flex:1,padding:20}}>
+
+          {/* Overview tab */}
           {tab==="overview" && (
             <div>
               <p style={{fontSize:14,lineHeight:1.75,color:"rgba(240,240,250,.8)",marginBottom:20}}>{movie.overview||details?.overview||"No description available."}</p>
               {similar.length>0 && (
                 <>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:12,color:"var(--muted)"}}>Similar Titles</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
                     {similar.map(sm=>{
                       const sp=sm.poster_path?`${TMDB_IMG}${sm.poster_path}`:null;
-                      return <div key={sm.id} style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)"}}>
-                        {sp?<img src={sp} alt="" style={{width:"100%",height:80,objectFit:"cover"}} />:<div style={{height:80,background:`linear-gradient(135deg,${GR[sm.id%GR.length][0]},${GR[sm.id%GR.length][1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
-                        <div style={{padding:"6px 8px"}}><div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sm.title||sm.name}</div><div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div></div>
-                      </div>;
+                      return (
+                        <div key={sm.id} onClick={()=>onSelectSimilar&&onSelectSimilar(sm)}
+                          style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
+                          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}}
+                          onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
+                          {sp
+                            ?<img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}} />
+                            :<div style={{height:100,background:`linear-gradient(135deg,${GR[sm.id%GR.length][0]},${GR[sm.id%GR.length][1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
+                          <div style={{padding:"8px 10px"}}>
+                            <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{sm.title||sm.name}</div>
+                            <div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div>
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
                 </>
               )}
             </div>
           )}
+
+          {/* Where to Watch tab */}
+          {tab==="where to watch" && (
+            <div>
+              {/* Streaming */}
+              {(allProviders.flatrate.length>0||allProviders.free.length>0) && (
+                <div style={{marginBottom:24}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <span style={{fontSize:18}}>📺</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--sports)"}}>Stream Free (Included with subscription)</div>
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+                    {[...allProviders.flatrate,...allProviders.free].map((p,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"8px 14px"}}>
+                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
+                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rent */}
+              {allProviders.rent.length>0 && (
+                <div style={{marginBottom:24}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <span style={{fontSize:18}}>🎬</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--cyan)"}}>Rent</div>
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+                    {allProviders.rent.map((p,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(6,182,212,.08)",border:"1px solid rgba(6,182,212,.2)",borderRadius:10,padding:"8px 14px"}}>
+                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
+                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Buy */}
+              {allProviders.buy.length>0 && (
+                <div style={{marginBottom:24}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                    <span style={{fontSize:18}}>🛒</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--gold)"}}>Buy</div>
+                  </div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+                    {allProviders.buy.map((p,i)=>(
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"8px 14px"}}>
+                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
+                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Nothing available */}
+              {!hasStreaming && !hasRentBuy && (
+                <div style={{textAlign:"center",padding:"40px 20px"}}>
+                  <div style={{fontSize:48,marginBottom:16}}>😔</div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:18,marginBottom:8}}>Not Available for Streaming</div>
+                  <div style={{color:"var(--muted)",fontSize:14,lineHeight:1.7,marginBottom:20}}>This title isn't currently on any major streaming service. You may be able to find it on:</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:10,justifyContent:"center"}}>
+                    {[
+                      {name:"YouTube",url:`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title||movie.name)}`,color:"#FF0000"},
+                      {name:"Amazon",url:`https://www.amazon.com/s?k=${encodeURIComponent(movie.title||movie.name)}+dvd`,color:"#FF9900"},
+                      {name:"eBay",url:`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(movie.title||movie.name)}`,color:"#86B817"},
+                      {name:"Google",url:`https://www.google.com/search?q=${encodeURIComponent(movie.title||movie.name)}+where+to+watch`,color:"#4285F4"},
+                    ].map(s=>(
+                      <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                        style={{display:"inline-flex",alignItems:"center",gap:8,background:`${s.color}15`,border:`1px solid ${s.color}44`,borderRadius:10,padding:"10px 18px",color:"var(--text)",fontSize:13,fontWeight:700,textDecoration:"none"}}>
+                        🔗 Search on {s.name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:16,textAlign:"center"}}>
+                Streaming availability data provided by JustWatch via TMDB · May vary by region
+              </div>
+            </div>
+          )}
+
+          {/* Cast tab */}
           {tab==="cast" && (
             <div>
               {cast.length===0?<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>No cast info available.</div>:(
@@ -1972,7 +2083,7 @@ export default function StreamHub() {
       </div>
 
       {/* Modals */}
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -2148,7 +2259,7 @@ export default function StreamHub() {
         </div>
       </div>
 
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -2428,7 +2539,7 @@ export default function StreamHub() {
         </div>
       </div>
 
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast}/>}
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
