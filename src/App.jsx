@@ -1297,7 +1297,6 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
 
   const search = async () => {
     if (!mood.trim()) return;
-    if (tier !== "premium") return onUpgrade();
     setLoading(true);
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -1325,60 +1324,49 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(255,107,157,.08))"}}>
           <div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🎭 Mood Search</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🎭 Mood Search <span style={{background:"rgba(16,185,129,.15)",color:"var(--sports)",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>FREE</span></div>
             <div style={{fontSize:13,color:"var(--muted)"}}>Describe what you're in the mood for — AI finds it</div>
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{overflowY:"auto",padding:20,flex:1}}>
-          {tier !== "premium" ? (
-            <div style={{textAlign:"center",padding:"40px 20px"}}>
-              <div style={{fontSize:48,marginBottom:16}}>🎭</div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
-              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Describe your mood in plain English and our AI finds the perfect match — "something scary but not too gory" or "a good cry on a rainy day."</div>
-              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
-            </div>
-          ) : (
-            <>
-              {/* Quick mood chips */}
-              {!result && (
-                <div style={{marginBottom:16}}>
-                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:10,letterSpacing:.5}}>QUICK PICKS</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                    {moods.map(m=>(
-                      <button key={m} onClick={()=>setMood(m)} style={{background:mood===m?"rgba(124,58,237,.2)":"rgba(255,255,255,.05)",border:`1px solid ${mood===m?"var(--purple)":"var(--border)"}`,borderRadius:99,color:mood===m?"var(--purple)":"var(--muted)",padding:"6px 14px",fontSize:12,cursor:"pointer",transition:"all .2s"}}>{m}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Custom input */}
-              <div style={{display:"flex",gap:10,marginBottom:20}}>
-                <input value={mood} onChange={e=>setMood(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="e.g. Something scary but not too gory..."
-                  style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(124,58,237,.4)",borderRadius:12,color:"var(--text)",padding:"11px 16px",fontSize:14,outline:"none"}} />
-                <button onClick={search} disabled={loading||!mood.trim()} style={{background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"11px 20px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",gap:8,opacity:!mood.trim()?0.5:1}}>
-                  {loading?<span style={{display:"inline-block",width:16,height:16,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:"✦"} Find
-                </button>
+          {/* Quick mood chips */}
+          {!result && (
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:10,letterSpacing:.5}}>QUICK PICKS</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {moods.map(m=>(
+                  <button key={m} onClick={()=>setMood(m)} style={{background:mood===m?"rgba(124,58,237,.2)":"rgba(255,255,255,.05)",border:`1px solid ${mood===m?"var(--purple)":"var(--border)"}`,borderRadius:99,color:mood===m?"var(--purple)":"var(--muted)",padding:"6px 14px",fontSize:12,cursor:"pointer",transition:"all .2s"}}>{m}</button>
+                ))}
               </div>
-              {/* Results */}
-              {result && (
-                <div>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12,color:"var(--muted)"}}>AI PICKS FOR YOU</div>
-                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                    {result.items?.map((item,i)=>(
-                      <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
-                        <div style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{item.title.slice(0,2)}</div>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
-                          <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0"}}>{item.reason}</div>
-                          <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"var(--purple)",border:"none",borderRadius:8,color:"#fff",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",marginTop:4}}>Search StreamHub →</button>
-                        </div>
-                      </div>
-                    ))}
+            </div>
+          )}
+          {/* Custom input */}
+          <div style={{display:"flex",gap:10,marginBottom:20}}>
+            <input value={mood} onChange={e=>setMood(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="e.g. Something scary but not too gory..."
+              style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(124,58,237,.4)",borderRadius:12,color:"var(--text)",padding:"11px 16px",fontSize:14,outline:"none"}} />
+            <button onClick={search} disabled={loading||!mood.trim()} style={{background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"11px 20px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",gap:8,opacity:!mood.trim()?0.5:1}}>
+              {loading?<span style={{display:"inline-block",width:16,height:16,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:"✦"} Find
+            </button>
+          </div>
+          {/* Results */}
+          {result && (
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12,color:"var(--muted)"}}>AI PICKS FOR YOU</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {result.items?.map((item,i)=>(
+                  <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
+                    <div style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{item.title.slice(0,2)}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
+                      <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0"}}>{item.reason}</div>
+                      <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"var(--purple)",border:"none",borderRadius:8,color:"#fff",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",marginTop:4}}>Search StreamHub →</button>
+                    </div>
                   </div>
-                  <button onClick={()=>setResult(null)} style={{marginTop:16,width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>← Try a different mood</button>
-                </div>
-              )}
-            </>
+                ))}
+              </div>
+              <button onClick={()=>setResult(null)} style={{marginTop:16,width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>← Try a different mood</button>
+            </div>
           )}
         </div>
       </div>
@@ -1565,6 +1553,196 @@ function SignupPrompt({ onSignup, onDismiss }) {
         <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>Sign Up Free →</button>
         <button onClick={onDismiss} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.4)",padding:"11px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
       </div>
+    </div>
+  );
+}
+
+// ─── PERSONALIZED AI RECOMMENDATIONS ─────────────────────────────────────────
+function PersonalizedRecsModal({ onClose, user, tier, onUpgrade, watchlist, userRatings, onResults }) {
+  const [loading, setLoading] = useState(false);
+  const [recs, setRecs] = useState(null);
+
+  const getRecs = async () => {
+    if (tier !== "premium") { onUpgrade(); onClose(); return; }
+    setLoading(true);
+    try {
+      // Build taste profile from watchlist and ratings
+      const topRated = Object.entries(userRatings)
+        .sort((a,b) => b[1]-a[1])
+        .slice(0,5)
+        .map(([id, rating]) => `Movie ID ${id} rated ${rating}/10`);
+      const watchlistSize = watchlist.length;
+      const prompt = `You are a personalized streaming expert. Based on this user's taste profile:
+- They have ${watchlistSize} titles saved to their watchlist
+- Their top rated titles (by ID and rating): ${topRated.join(", ") || "No ratings yet"}
+- Watchlist movie IDs: ${watchlist.slice(0,10).join(", ") || "Empty"}
+
+Suggest 6 highly personalized movie or TV show recommendations. Focus on variety — mix genres but match the quality level of their rated titles. Return ONLY valid JSON:
+{"items":[{"title":"...","year":2023,"type":"movie or tv","reason":"personalized reason based on their taste in one sentence","genre":"...","tmdb_search":"exact title"}]}`;
+
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:800, messages:[{role:"user",content:prompt}] })
+      });
+      const data = await res.json();
+      const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
+      const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setRecs(parsed.items||[]);
+    } catch(e) { setRecs([]); }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (user && tier==="premium") getRecs(); }, []);
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(245,197,24,.12),rgba(124,58,237,.08))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>✦ Personalized For You <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>PRO</span></div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>AI picks based on your actual taste and watchlist</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {tier !== "premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>✦</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Our AI studies your watchlist and ratings to suggest titles you'll actually love — not just popular picks, but YOUR kind of content.</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : loading ? (
+            <div style={{textAlign:"center",padding:"40px 0"}}>
+              <div style={{width:48,height:48,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 20px"}}/>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Analyzing your taste…</div>
+              <div style={{color:"var(--muted)",fontSize:13}}>Looking at your watchlist and ratings to find perfect matches</div>
+            </div>
+          ) : recs && recs.length > 0 ? (
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:16,color:"var(--muted)"}}>PICKED JUST FOR YOU</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {recs.map((item,i)=>(
+                  <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
+                    <div style={{width:44,height:44,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,position:"relative"}}>
+                      {item.title.slice(0,2)}
+                      <span style={{position:"absolute",top:-6,right:-6,background:"var(--gold)",color:"#000",borderRadius:99,width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800}}>#{i+1}</span>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
+                      <div style={{fontSize:11,color:"var(--gold)",marginBottom:3}}>{item.genre}</div>
+                      <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0",lineHeight:1.5}}>{item.reason}</div>
+                      <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:8,color:"#000",padding:"5px 14px",fontSize:11,fontWeight:800,cursor:"pointer",marginTop:6}}>Find on StreamHub →</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={getRecs} style={{marginTop:16,width:"100%",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,color:"var(--gold)",padding:"11px 0",fontSize:13,fontWeight:700,cursor:"pointer"}}>✦ Refresh Recommendations</button>
+            </div>
+          ) : (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>📋</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Add to your watchlist first!</div>
+              <div style={{color:"var(--muted)",fontSize:14,lineHeight:1.6}}>Save some titles and rate a few movies so our AI can learn your taste and make personalized picks.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ADVANCED STATS SECTION ───────────────────────────────────────────────────
+function AdvancedStats({ user, watchlist, userRatings, watchHistory }) {
+  const currentYear = new Date().getFullYear();
+  const thisYear = watchHistory.filter(h => new Date(h.watched_at).getFullYear() === currentYear);
+  const thisMonth = watchHistory.filter(h => new Date(h.watched_at).getMonth() === new Date().getMonth() && new Date(h.watched_at).getFullYear() === currentYear);
+  const movies = watchHistory.filter(h => h.movie_type === "movie");
+  const shows = watchHistory.filter(h => h.movie_type === "tv");
+  const avgRating = Object.values(userRatings).length > 0 ? (Object.values(userRatings).reduce((a,b)=>a+b,0)/Object.values(userRatings).length).toFixed(1) : "—";
+  const estHours = Math.round(watchHistory.length * 1.8);
+  const streak = Math.min(thisMonth.length, 30);
+
+  const stats = [
+    { icon:"📺", value:watchHistory.length, label:"Total Watched",  color:"var(--cyan)" },
+    { icon:"🎬", value:movies.length,        label:"Movies",         color:"var(--gold)" },
+    { icon:"📡", value:shows.length,         label:"TV Shows",       color:"var(--purple)" },
+    { icon:"🗓️", value:thisYear.length,      label:`In ${currentYear}`, color:"var(--sports)" },
+    { icon:"⏱️", value:`${estHours}h`,       label:"Est. Hours",    color:"var(--anime)" },
+    { icon:"♥",  value:watchlist.length,     label:"Watchlisted",   color:"var(--danger)" },
+    { icon:"★",  value:Object.keys(userRatings).length, label:"Rated",  color:"var(--gold)" },
+    { icon:"📅", value:thisMonth.length,     label:"This Month",    color:"var(--cyan)" },
+  ];
+
+  // Ratings distribution
+  const ratingDist = [1,2,3,4,5,6,7,8,9,10].map(n => ({
+    rating: n,
+    count: Object.values(userRatings).filter(r => r === n).length
+  }));
+  const maxCount = Math.max(...ratingDist.map(r=>r.count), 1);
+
+  return (
+    <div style={{padding:"32px 0 20px",borderTop:"1px solid var(--border)"}}>
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:24,padding:"0 24px"}}>
+        <span style={{fontSize:24}}>📊</span>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20}}>Your Streaming Stats</div>
+          <div style={{fontSize:13,color:"var(--muted)"}}>
+            {user ? "Your personal streaming overview" : "Sign in to track your stats"}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12,padding:"0 24px",marginBottom:24}}>
+        {stats.map((s,i)=>(
+          <div key={i} style={{background:"rgba(255,255,255,.03)",border:`1px solid ${s.color}22`,borderRadius:14,padding:"16px 14px",textAlign:"center",transition:"all .2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=`${s.color}55`;e.currentTarget.style.background=`${s.color}08`;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}22`;e.currentTarget.style.background="rgba(255,255,255,.03)";}}>
+            <div style={{fontSize:24,marginBottom:6}}>{s.icon}</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,color:s.color,lineHeight:1}}>{s.value}</div>
+            <div style={{fontSize:11,color:"var(--muted)",marginTop:4,fontWeight:600}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Ratings distribution */}
+      {Object.keys(userRatings).length > 0 && (
+        <div style={{padding:"0 24px",marginBottom:24}}>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:16,color:"var(--muted)"}}>YOUR RATING DISTRIBUTION · Avg {avgRating}/10</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:6,height:60}}>
+            {ratingDist.map(({rating,count})=>(
+              <div key={rating} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <div style={{width:"100%",background:"var(--gold)",borderRadius:"4px 4px 0 0",height:`${(count/maxCount)*100}%`,minHeight:count>0?4:0,opacity:count>0?1:.15,transition:"height .5s"}}/>
+                <span style={{fontSize:9,color:"var(--muted)",fontWeight:700}}>{rating}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fun facts */}
+      {watchHistory.length > 0 && (
+        <div style={{padding:"0 24px"}}>
+          <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.1),rgba(245,197,24,.06))",border:"1px solid rgba(245,197,24,.15)",borderRadius:16,padding:20}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--gold)",marginBottom:12,letterSpacing:.5}}>🎉 FUN FACTS</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>📺 You've watched approximately <strong style={{color:"var(--gold)"}}>{estHours} hours</strong> of content</div>
+              {movies.length > shows.length ? <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>🎬 You're a <strong style={{color:"var(--gold)"}}>Movie Person</strong> — {movies.length} movies vs {shows.length} shows</div>
+               : shows.length > 0 ? <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>📡 You're a <strong style={{color:"var(--purple)"}}>TV Show Fan</strong> — {shows.length} shows vs {movies.length} movies</div> : null}
+              {parseFloat(avgRating) >= 8 && <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>⭐ You're a tough critic — your average rating is <strong style={{color:"var(--gold)"}}>{avgRating}/10</strong></div>}
+              {watchlist.length >= 10 && <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>♥ You have <strong style={{color:"var(--anime)"}}>{watchlist.length} titles</strong> saved — that's a great weekend lineup!</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!user && (
+        <div style={{textAlign:"center",padding:"20px 24px",color:"var(--muted)",fontSize:14}}>
+          Sign in to track your personal streaming stats 📊
+        </div>
+      )}
     </div>
   );
 }
@@ -1799,6 +1977,7 @@ export default function StreamHub() {
   const [showWatchHistory, setShowWatchHistory] = useState(false);
   const [showCostCalc, setShowCostCalc] = useState(false);
   const [showMoodSearch, setShowMoodSearch] = useState(false);
+  const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [watchHistory, setWatchHistory] = useState([]);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
@@ -1861,6 +2040,9 @@ export default function StreamHub() {
     const ratMap = {};
     (rt||[]).forEach(r=>ratMap[r.movie_id]=r.rating);
     setUserRatings(ratMap);
+    // Load watch history for stats
+    const { data:wh } = await supabase.from("watch_history").select("*").eq("user_id",u.id).order("watched_at",{ascending:false});
+    setWatchHistory(wh||[]);
   };
 
   // ── Fetch featured rows for homepage ──
@@ -2111,7 +2293,7 @@ export default function StreamHub() {
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
-              {icon:"🎭",label:"Mood Search",sub:"AI finds your match",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+              {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
               {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
               {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
               {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
@@ -2171,6 +2353,9 @@ export default function StreamHub() {
 
         <MobileBottomNav view={view} setView={v=>{setView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+
         {/* Mobile bottom tagline bar - above bottom nav */}
         <div style={{
           position:"fixed", bottom:64, left:0, right:0, zIndex:150,
@@ -2192,6 +2377,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
@@ -2250,7 +2436,7 @@ export default function StreamHub() {
             <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
-                {icon:"🎭",label:"Mood Search",sub:"AI finds your perfect watch",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+                {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
                 {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these titles",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
                 {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
                 {icon:"💰",label:"Cost Calculator",sub:"See your streaming spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
@@ -2301,6 +2487,9 @@ export default function StreamHub() {
           )}
         </div>
 
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+
         {/* Tablet tagline banner - above bottom nav */}
         <div style={{
           position:"fixed", bottom:72, left:0, right:0, zIndex:150,
@@ -2345,6 +2534,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
@@ -2471,7 +2661,7 @@ export default function StreamHub() {
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:7}}>
                 {[
-                  {icon:"🎭",label:"Mood Search",sub:"AI finds your match",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+                  {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
                   {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
                   {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
                   {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
@@ -2500,6 +2690,9 @@ export default function StreamHub() {
 
         {/* Footer */}
         <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,197,24,.2)"}}>
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+
           {/* Footer hero tagline */}
           <div style={{
             padding:"48px 40px 32px",
@@ -2609,6 +2802,7 @@ export default function StreamHub() {
       {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
