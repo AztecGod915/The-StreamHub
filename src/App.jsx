@@ -127,8 +127,8 @@ const SERVICES = [
   { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=",    price:5.99  },
   { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=",       price:7.99  },
   { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:10.99 },
-  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"First month $1.99",   url:"https://www.dazn.com/search?q=",              price:19.99 },
-  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"7-day free trial",    url:"https://www.fubo.tv/welcome",                 price:79.99 },
+  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"Cancel anytime, no PPV fees",   url:"https://www.dazn.com/search?q=",              price:19.99 },
+  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"5-day free trial + $30 off",    url:"https://www.fubo.tv/welcome",                 price:79.99 },
   { id:"tubi",        name:"Tubi",        color:"#FA4343", logo:"Tu", deal:"Always Free! 🎉",      url:"https://tubitv.com/search/",                  price:0     },
 ];
 
