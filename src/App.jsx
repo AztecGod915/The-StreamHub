@@ -2631,8 +2631,12 @@ export default function StreamHub() {
             {view==="trending"&&!search.trim() ? (
               <div style={{margin:"0 -24px"}}>
                 {!user && <WelcomeBanner />}
-                <HeroBanner movie={heroMovie} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
-                <div style={{paddingTop:32}}>
+                <div style={{padding:"16px 16px 0"}}>
+                  <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
+                    <HeroBanner movie={heroMovie} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
+                  </div>
+                </div>
+                <div style={{paddingTop:24}}>
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
