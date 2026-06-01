@@ -817,27 +817,67 @@ function UpgradeModal({ onClose, onComplete }) {
   };
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:480,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:520,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         {step==="plans"&&(
           <div style={{padding:28}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>Choose Your Plan</div>
-              <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20}}>✕</button>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:24}}>
-              <div style={{border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:18}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,marginBottom:4}}>Free</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,color:"var(--muted)",marginBottom:14}}>$0</div>
-                {["Search millions of titles","Community ratings & reviews","Watchlist (up to 10)","Deep links to services","Ads included"].map(f=><div key={f} style={{display:"flex",gap:8,alignItems:"center",fontSize:13,color:"var(--muted)",marginBottom:8}}><span>○</span>{f}</div>)}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>Upgrade to Premium</div>
+                <div style={{fontSize:13,color:"var(--muted)",marginTop:2}}>Unlock the full streaming experience</div>
               </div>
-              <div style={{border:"2px solid var(--gold)",borderRadius:"var(--radius)",padding:18,background:"rgba(245,197,24,.04)",position:"relative"}}>
-                <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"3px 10px",borderRadius:99,fontFamily:"var(--font-head)"}}>BEST VALUE</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,marginBottom:4}}>Premium</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:14,fontWeight:400}}>/mo</span></div>
-                {["Everything in Free","AI Recommendations","Ad-free experience","Unlimited watchlist","Priority support","Early access"].map(f=><div key={f} style={{display:"flex",gap:8,alignItems:"center",fontSize:13,marginBottom:8}}><span style={{color:"var(--gold)"}}>✓</span>{f}</div>)}
+              <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+            </div>
+
+            {/* Comparison */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+              {/* Free */}
+              <div style={{border:"1px solid var(--border)",borderRadius:14,padding:16}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Free Account</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--muted)",marginBottom:14}}>$0</div>
+                {[
+                  {text:"10 searches/day",      ok:true},
+                  {text:"Watchlist (50 titles)", ok:true},
+                  {text:"3 AI picks",            ok:true},
+                  {text:"Ratings & reviews",     ok:true},
+                  {text:"Watch trailers",        ok:true},
+                  {text:"Mood Search",           ok:false},
+                  {text:"Leaving Soon alerts",   ok:false},
+                  {text:"Watch History",         ok:false},
+                  {text:"Cost Calculator",       ok:false},
+                ].map((f,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:f.ok?"var(--text)":"var(--muted)",marginBottom:7,opacity:f.ok?1:.5}}>
+                    <span style={{color:f.ok?"var(--sports)":"rgba(255,255,255,.2)",fontSize:13}}>{f.ok?"✓":"✕"}</span>{f.text}
+                  </div>
+                ))}
+              </div>
+
+              {/* Premium */}
+              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,197,24,.04)",position:"relative"}}>
+                <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
+                {[
+                  {text:"Unlimited searches",         ok:true},
+                  {text:"Unlimited watchlist",        ok:true},
+                  {text:"12 AI picks",                ok:true},
+                  {text:"Ratings & reviews",          ok:true},
+                  {text:"Watch trailers",             ok:true},
+                  {text:"🎭 Mood Search",             ok:true},
+                  {text:"🚨 Leaving Soon alerts",     ok:true},
+                  {text:"📺 Watch History & Stats",   ok:true},
+                  {text:"💰 Cost Calculator",         ok:true},
+                ].map((f,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,marginBottom:7,color:"var(--text)"}}>
+                    <span style={{color:"var(--gold)",fontSize:13}}>✓</span>{f.text}
+                  </div>
+                ))}
               </div>
             </div>
-            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>Upgrade to Premium →</button>
+
+            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+              Upgrade to Premium — $9.99/mo →
+            </button>
+            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
           </div>
         )}
         {step==="pay"&&(
@@ -1285,10 +1325,65 @@ function CostCalculatorModal({ onClose, userSubs }) {
 }
 
 // ─── MOOD SEARCH MODAL ────────────────────────────────────────────────────────
+// ─── MOOD SEARCH LIMIT (1 free per day) ──────────────────────────────────────
+function getMoodSearchCount() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem("streamhub_mood_data") || "{}");
+  if (stored.date !== today) return 0;
+  return stored.count || 0;
+}
+function incrementMoodSearchCount() {
+  const today = new Date().toDateString();
+  const count = getMoodSearchCount();
+  localStorage.setItem("streamhub_mood_data", JSON.stringify({ date: today, count: count + 1 }));
+}
+
+// ─── AI PICKS LIMIT (weekly reset) ───────────────────────────────────────────
+function getAIPicksCount() {
+  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const stored = JSON.parse(localStorage.getItem("streamhub_aipicks_data") || "{}");
+  if (stored.week !== week) return 0;
+  return stored.count || 0;
+}
+function incrementAIPicksCount() {
+  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const count = getAIPicksCount();
+  localStorage.setItem("streamhub_aipicks_data", JSON.stringify({ week, count: count + 1 }));
+}
+
 function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const freeMoodUsed = tier !== "premium" && getMoodSearchCount() >= 1;
+
+  // Soft gate for non-premium users who used their daily free search
+  if (freeMoodUsed) return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,197,24,.3)",padding:32,textAlign:"center"}}>
+        <div style={{fontSize:52,marginBottom:12}}>🎭</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used your free Mood Search today</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
+          Free accounts get <strong style={{color:"var(--gold)"}}>1 Mood Search per day</strong>.<br/>
+          Upgrade to Premium for unlimited AI mood matching.
+        </div>
+        <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--gold)",marginBottom:8,letterSpacing:.5}}>✦ PREMIUM GETS</div>
+          {["Unlimited Mood Searches daily","12 AI picks weekly (vs 3)","Leaving Soon alerts","Full Watch History & Stats","Streaming Cost Calculator"].map((f,i)=>(
+            <div key={i} style={{display:"flex",gap:8,fontSize:12,color:"var(--muted)",marginBottom:i<4?6:0}}>
+              <span style={{color:"var(--gold)"}}>✓</span>{f}
+            </div>
+          ))}
+        </div>
+        <button onClick={()=>{onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+          Upgrade to Premium ✦
+        </button>
+        <div style={{fontSize:12,color:"var(--muted)"}}>Or come back tomorrow for your next free search 🕐</div>
+        <button onClick={onClose} style={{marginTop:10,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:12,cursor:"pointer"}}>Close</button>
+      </div>
+    </div>
+  );
+
   const moods = [
     "Something scary but not too gory 😱",
     "Funny and lighthearted 😂",
@@ -1305,6 +1400,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const search = async () => {
     if (!mood.trim()) return;
     setLoading(true);
+    if (tier !== "premium") incrementMoodSearchCount();
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -1331,10 +1427,19 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(255,107,157,.08))"}}>
           <div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🎭 Mood Search <span style={{background:"rgba(16,185,129,.15)",color:"var(--sports)",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>FREE</span></div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>
+              🎭 Mood Search <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>PRO</span>
+            </div>
             <div style={{fontSize:13,color:"var(--muted)"}}>Describe what you're in the mood for — AI finds it</div>
           </div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+            {tier !== "premium" && (
+              <div style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>
+                1 free search/day
+              </div>
+            )}
+            <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+          </div>
         </div>
         <div style={{overflowY:"auto",padding:20,flex:1}}>
           {/* Quick mood chips */}
@@ -1714,6 +1819,8 @@ function PersonalizedRecsModal({ onClose, user, tier, onUpgrade, watchlist, user
 
   const getRecs = async () => {
     if (tier !== "premium") { onUpgrade(); onClose(); return; }
+    // Track weekly usage
+    incrementAIPicksCount();
     setLoading(true);
     try {
       const recCount = tier === "premium" ? 6 : 3;
@@ -2333,10 +2440,15 @@ export default function StreamHub() {
     }
     const inWL = watchlist.includes(movieId);
     // Free account limit: 50 titles
-    const FREE_WL_LIMIT = 50;
+    const FREE_WL_LIMIT = user ? 50 : 10;
     if (!inWL && tier !== "premium" && watchlist.length >= FREE_WL_LIMIT) {
-      showToast(`Upgrade to Premium for unlimited watchlist! ✦`);
-      setShowUpgrade(true);
+      if (!user) {
+        showToast("Sign up free to save up to 50 titles! 👤");
+        setShowSignupPrompt(true);
+      } else {
+        showToast("Upgrade to Premium for unlimited watchlist! ✦");
+        setShowUpgrade(true);
+      }
       return;
     }
     if (inWL) {
@@ -2438,9 +2550,9 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:80}}>
         {/* Mobile Header */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)"}}>
+        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)",paddingTop:"env(safe-area-inset-top)"}}>
           {/* Top row - logo + buttons */}
-          <div style={{display:"flex",alignItems:"center",padding:"8px 14px",gap:10}}>
+          <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             {/* Logo - wider to fill space */}
             <div style={{flex:1,display:"flex",alignItems:"center"}}>
               <img
@@ -2603,7 +2715,7 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:72}}>
         {/* Tablet Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)"}}>
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)",paddingTop:"env(safe-area-inset-top)"}}>
           <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
             <Logo size={28} />
             <div style={{flex:1,position:"relative",maxWidth:400}}>
