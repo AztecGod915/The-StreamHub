@@ -1499,11 +1499,11 @@ function WelcomeBanner() {
           backgroundSize:"250% auto",
           WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
           animation:"gradientShift 4s linear infinite",
-        }}>Search All Your Streaming Services At Once</div>
+        }}>Your AI Streaming Assistant</div>
 
         {/* Subtext */}
         <div style={{fontSize:"clamp(12px,1.5vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 18px",lineHeight:1.7}}>
-          Netflix · Disney+ · Max · Hulu · Crunchyroll · ESPN+ · Tubi and more — one search finds everything
+          Searches Netflix, Disney+, Max, Hulu, Crunchyroll, ESPN+, Tubi and more — all at once.
         </div>
 
         {/* Service dots */}
@@ -1545,8 +1545,8 @@ function SignupPrompt({ onSignup, onDismiss }) {
       <div style={{display:"flex",alignItems:"center",gap:14}}>
         <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"} style={{height:48,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 8px rgba(245,197,24,.4))"}} />
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>Save your watchlist & more</div>
-          <div style={{fontSize:12,color:"rgba(240,240,250,.55)",lineHeight:1.5}}>Create a free account to sync across devices, write reviews and unlock Premium features.</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>Your AI Streaming Assistant</div>
+          <div style={{fontSize:12,color:"rgba(240,240,250,.55)",lineHeight:1.5}}>Sign up free to save your watchlist, get AI picks and sync across all your devices.</div>
         </div>
       </div>
       <div style={{display:"flex",gap:10,marginTop:14}}>
@@ -2738,7 +2738,7 @@ export default function StreamHub() {
               background:"rgba(255,255,255,.05)",
               padding:"6px 20px", borderRadius:99,
               border:"1px solid rgba(255,255,255,.1)",
-            }}>THE STREAMING UNIVERSE IN ONE PLACE</div>
+            }}>YOUR AI STREAMING ASSISTANT</div>
 
             {/* Word pills */}
             <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
