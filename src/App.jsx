@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 
+// ─── GOOGLE ANALYTICS EVENT TRACKER ──────────────────────────────────────────
+const track = (eventName, params = {}) => {
+  try {
+    if (window.gtag) window.gtag("event", eventName, params);
+  } catch(e) {}
+};
+
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -1374,6 +1381,40 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   );
 }
 
+// ─── PWA INSTALL PROMPT ───────────────────────────────────────────────────────
+function InstallPrompt({ onDismiss }) {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  return (
+    <div style={{
+      position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
+      zIndex:350, width:"calc(100% - 28px)", maxWidth:400,
+      background:"linear-gradient(135deg,rgba(7,7,14,.98),rgba(12,8,28,.98))",
+      border:"1px solid rgba(124,58,237,.4)",
+      borderRadius:18, padding:"16px 18px",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8)",
+      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer"}}>✕</button>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+        <img src="/icons/icon-72x72.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0}} />
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:2}}>Add to Home Screen</div>
+          <div style={{fontSize:12,color:"rgba(240,240,250,.5)"}}>Get the full app experience — free</div>
+        </div>
+      </div>
+      {isIOS ? (
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>Share</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub on your iPhone
+        </div>
+      ) : (
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>⋮ Menu</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── DEEP LINK HELPER ────────────────────────────────────────────────────────
 // App URL schemes for mobile — tries to open the native app first,
 // falls back to website if app not installed
@@ -1530,28 +1571,137 @@ function WelcomeBanner() {
 }
 
 // ─── SIGNUP PROMPT ────────────────────────────────────────────────────────────
-function SignupPrompt({ onSignup, onDismiss }) {
+// ─── SEARCH LIMIT WALL ────────────────────────────────────────────────────────
+const SEARCH_LIMIT = 10;
+
+function getSearchCount() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem("streamhub_search_data") || "{}");
+  // Reset if it's a new day
+  if (stored.date !== today) return 0;
+  return stored.count || 0;
+}
+
+function incrementSearchCount() {
+  const today = new Date().toDateString();
+  const count = getSearchCount();
+  localStorage.setItem("streamhub_search_data", JSON.stringify({ date: today, count: count + 1 }));
+}
+
+function resetSearchCount() {
+  localStorage.removeItem("streamhub_search_data");
+}
+
+function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
   return (
-    <div style={{
-      position:"fixed", bottom:80, left:"50%", transform:"translateX(-50%)",
-      zIndex:300, width:"calc(100% - 32px)", maxWidth:480,
-      background:"linear-gradient(135deg,rgba(12,10,28,.98),rgba(20,12,40,.98))",
-      border:"1px solid rgba(245,197,24,.35)",
-      borderRadius:18, padding:"18px 20px",
-      boxShadow:"0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(245,197,24,.1)",
-      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
-    }}>
-      <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer",lineHeight:1}}>✕</button>
-      <div style={{display:"flex",alignItems:"center",gap:14}}>
-        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"} style={{height:48,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 8px rgba(245,197,24,.4))"}} />
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>Your AI Streaming Assistant</div>
-          <div style={{fontSize:12,color:"rgba(240,240,250,.55)",lineHeight:1.5}}>Sign up free to save your watchlist, get AI picks and sync across all your devices.</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .3s"}}>
+      <div style={{
+        background:"linear-gradient(135deg,#0d0a1e,#140d28)",
+        border:"1px solid rgba(245,197,24,.4)",
+        borderRadius:24, padding:"36px 32px", maxWidth:420, width:"100%",
+        boxShadow:"0 32px 80px rgba(0,0,0,.8), 0 0 60px rgba(245,197,24,.1)",
+        textAlign:"center", animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+      }}>
+        {/* Logo */}
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+          style={{height:80,width:"auto",objectFit:"contain",marginBottom:20,filter:"drop-shadow(0 0 20px rgba(245,197,24,.5))"}} />
+
+        {/* Limit reached badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"5px 14px",marginBottom:16,fontSize:12,fontWeight:700,color:"#f87171"}}>
+          🔍 You've used all {SEARCH_LIMIT} free searches
+        </div>
+
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,marginBottom:8,lineHeight:1.2}}>
+          Create a free account<br/>to keep searching
+        </div>
+        <div style={{fontSize:14,color:"rgba(240,240,250,.5)",marginBottom:28,lineHeight:1.7}}>
+          It's completely free — no credit card needed
+        </div>
+
+        {/* Benefits */}
+        <div style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:"18px 20px",marginBottom:24,textAlign:"left"}}>
+          {[
+            {icon:"🔍", title:"Unlimited searches", desc:"Search as much as you want"},
+            {icon:"♥",  title:"Save to Watchlist", desc:"Up to 50 titles across all devices"},
+            {icon:"✦",  title:"AI Picks for you",  desc:"Personalized recommendations"},
+            {icon:"📺", title:"Watch History",      desc:"Track everything you watch"},
+            {icon:"⭐", title:"Ratings & Reviews",  desc:"Rate and review any title"},
+          ].map((b,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<4?14:0}}>
+              <div style={{width:36,height:36,borderRadius:10,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{b.icon}</div>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)"}}>{b.title}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>{b.desc}</div>
+              </div>
+              <div style={{marginLeft:"auto",color:"var(--sports)",fontSize:14}}>✓</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <button onClick={onSignup} style={{width:"100%",background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:14,color:"#000",padding:"15px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.35)"}}>
+          🚀 Create Free Account
+        </button>
+        <button onClick={onDismiss} style={{background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:13,cursor:"pointer",padding:"8px 0"}}>
+          Maybe later
+        </button>
+
+        {/* Premium tease */}
+        <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(255,255,255,.06)",fontSize:12,color:"rgba(240,240,250,.3)"}}>
+          Want even more? <span style={{color:"var(--gold)",fontWeight:700}}>Premium ($9.99/mo)</span> unlocks unlimited watchlist, ad-free, AI mood search & more ✦
         </div>
       </div>
-      <div style={{display:"flex",gap:10,marginTop:14}}>
-        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>Sign Up Free →</button>
-        <button onClick={onDismiss} style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.4)",padding:"11px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
+    </div>
+  );
+}
+
+// ─── SIGNUP PROMPT (30 second popup) ─────────────────────────────────────────
+function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
+  return (
+    <div style={{
+      position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
+      zIndex:300, width:"calc(100% - 28px)", maxWidth:460,
+      background:"linear-gradient(135deg,rgba(10,8,26,.98),rgba(18,10,36,.98))",
+      border:"1px solid rgba(245,197,24,.4)",
+      borderRadius:20, padding:"20px",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8), 0 0 40px rgba(245,197,24,.1)",
+      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      <button onClick={onDismiss} style={{position:"absolute",top:12,right:14,background:"none",border:"none",color:"rgba(240,240,250,.25)",fontSize:16,cursor:"pointer"}}>✕</button>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+          style={{height:44,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Join free — it's worth it</div>
+          <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>
+            {searchesUsed > 0 ? `You've made ${searchesUsed} searches — keep going for free!` : "No credit card. No catch."}
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits grid */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+        {[
+          {icon:"♥",  text:"Save your Watchlist",   color:"var(--danger)"},
+          {icon:"✦",  text:"Get AI Picks for you",  color:"var(--gold)"},
+          {icon:"🔍", text:"Unlimited searches",     color:"var(--cyan)"},
+          {icon:"📺", text:"Track Watch History",    color:"var(--purple)"},
+        ].map((b,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:"9px 10px"}}>
+            <span style={{fontSize:16,color:b.color}}>{b.icon}</span>
+            <span style={{fontSize:11,fontWeight:600,color:"rgba(240,240,250,.8)",lineHeight:1.3}}>{b.text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",boxShadow:"0 6px 20px rgba(245,197,24,.3)"}}>
+          🚀 Sign Up Free
+        </button>
+        <button onClick={onDismiss} style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.35)",padding:"12px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
       </div>
     </div>
   );
@@ -1566,18 +1716,18 @@ function PersonalizedRecsModal({ onClose, user, tier, onUpgrade, watchlist, user
     if (tier !== "premium") { onUpgrade(); onClose(); return; }
     setLoading(true);
     try {
-      // Build taste profile from watchlist and ratings
+      const recCount = tier === "premium" ? 6 : 3;
       const topRated = Object.entries(userRatings)
         .sort((a,b) => b[1]-a[1])
-        .slice(0,5)
+        .slice(0, tier === "premium" ? 10 : 5)
         .map(([id, rating]) => `Movie ID ${id} rated ${rating}/10`);
       const watchlistSize = watchlist.length;
       const prompt = `You are a personalized streaming expert. Based on this user's taste profile:
 - They have ${watchlistSize} titles saved to their watchlist
 - Their top rated titles (by ID and rating): ${topRated.join(", ") || "No ratings yet"}
-- Watchlist movie IDs: ${watchlist.slice(0,10).join(", ") || "Empty"}
+- Watchlist movie IDs: ${watchlist.slice(0, tier === "premium" ? 20 : 10).join(", ") || "Empty"}
 
-Suggest 6 highly personalized movie or TV show recommendations. Focus on variety — mix genres but match the quality level of their rated titles. Return ONLY valid JSON:
+Suggest ${recCount} highly personalized movie or TV show recommendations. Focus on variety — mix genres but match the quality level of their rated titles. Return ONLY valid JSON:
 {"items":[{"title":"...","year":2023,"type":"movie or tv","reason":"personalized reason based on their taste in one sentence","genre":"...","tmdb_search":"exact title"}]}`;
 
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -1999,10 +2149,22 @@ export default function StreamHub() {
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [watchHistory, setWatchHistory] = useState([]);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [showSearchLimit, setShowSearchLimit] = useState(false);
+  const [searchesUsed, setSearchesUsed] = useState(getSearchCount());
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+  // Show PWA install prompt after 60s on mobile
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const dismissed = localStorage.getItem("streamhub_install_dismissed");
+    if (!isMobile || dismissed) return;
+    const timer = setTimeout(() => setShowInstallPrompt(true), 60000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Show signup prompt after 30 seconds for non-logged-in users
   useEffect(() => {
-    if (user) return;
+    if (user) { resetSearchCount(); setSearchesUsed(0); return; }
     const dismissed = localStorage.getItem("streamhub_signup_dismissed");
     if (dismissed) return;
     const timer = setTimeout(() => setShowSignupPrompt(true), 30000);
@@ -2126,9 +2288,17 @@ export default function StreamHub() {
   // ── Smart Search ──
   useEffect(() => {
     if (!search.trim()) { setSearchResults([]); return; }
+    // Enforce search limit for non-logged-in users
+    if (!user) {
+      const count = getSearchCount();
+      if (count >= SEARCH_LIMIT) { setShowSearchLimit(true); return; }
+      incrementSearchCount();
+      setSearchesUsed(getSearchCount());
+    }
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
+      track("search", { search_term: search.trim(), is_mood_search: !!isGenreSearch(search) });
       try {
         const genreConfig = isGenreSearch(search);
         if (genreConfig) {
@@ -2155,16 +2325,30 @@ export default function StreamHub() {
 
   // ── Watchlist ──
   const toggleWatchlist = async (movieId) => {
-    if (!user) return showToast("Sign in to save! 👤");
+    if (!user) {
+      showToast("Sign in free to save your watchlist! 👤");
+      track("watchlist_attempt_no_auth");
+      setShowSignupPrompt(true);
+      return;
+    }
     const inWL = watchlist.includes(movieId);
+    // Free account limit: 50 titles
+    const FREE_WL_LIMIT = 50;
+    if (!inWL && tier !== "premium" && watchlist.length >= FREE_WL_LIMIT) {
+      showToast(`Upgrade to Premium for unlimited watchlist! ✦`);
+      setShowUpgrade(true);
+      return;
+    }
     if (inWL) {
       setWatchlist(prev=>prev.filter(x=>x!==movieId));
       await supabase.from("watchlist").delete().eq("user_id",user.id).eq("movie_id",movieId);
       showToast("Removed from watchlist");
+      track("watchlist_remove", { movie_id: movieId });
     } else {
       setWatchlist(prev=>[...prev,movieId]);
       await supabase.from("watchlist").insert({user_id:user.id,movie_id:movieId});
       showToast("Added to watchlist ♥");
+      track("watchlist_add", { movie_id: movieId });
     }
   };
 
@@ -2173,7 +2357,7 @@ export default function StreamHub() {
     localStorage.setItem("streamhub_subs", JSON.stringify(subs));
     localStorage.setItem("streamhub_setup_done", "true");
     setShowSetup(false);
-    // Save to Supabase if logged in
+    track("setup_complete", { services_count: subs.length });
     if (user) {
       await supabase.from("profiles").update({
         subscriptions: JSON.stringify(subs),
@@ -2190,9 +2374,15 @@ export default function StreamHub() {
     }
   }, []);
 
-  const handleRate = (movieId, val) => {
-    setUserRatings(p=>({...p,[movieId]:val}));
+  const handleSelectMovie = (movie) => {
+    setSelectedMovie(movie);
+    track("movie_open", {
+      movie_title: movie.title||movie.name||"",
+      movie_type: movie.first_air_date ? "tv" : "movie",
+    });
   };
+
+  const handleSetView = (v) => { setView(v); track("tab_change", { tab: v }); };
 
   const markAsWatched = async (movie) => {
     if (!user) return showToast("Sign in to track history! 👤");
@@ -2204,12 +2394,14 @@ export default function StreamHub() {
       movie_type: movie.first_air_date ? "tv" : "movie",
     }, { onConflict:"user_id,movie_id" });
     showToast("Added to watch history ✅");
+    track("mark_watched", { movie_title: movie.title||movie.name, movie_type: movie.first_air_date?"tv":"movie" });
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setShowProfile(false);
     showToast("Signed out 👋");
+    track("sign_out");
   };
 
   // ── Display movies ──
@@ -2267,7 +2459,7 @@ export default function StreamHub() {
             </div>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
+              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
             <AvatarButton />
           </div>
@@ -2333,7 +2525,7 @@ export default function StreamHub() {
           <div>
             {/* Mobile Hero */}
             {heroMovie && (
-              <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} />
+              <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
             )}
             {/* Mobile Featured Rows */}
             {[
@@ -2351,7 +2543,7 @@ export default function StreamHub() {
                 <div style={{display:"flex",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none"}}>
                   {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
                     <div key={m.id} style={{flexShrink:0,width:130}}>
-                      <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} />
+                      <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
                     </div>
                   ))}
                 </div>
@@ -2365,12 +2557,12 @@ export default function StreamHub() {
               ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
               : filtered.length===0
                 ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
-                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)
+                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
             }
           </div>
         )}
 
-        <MobileBottomNav view={view} setView={v=>{setView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
+        <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
         <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
@@ -2397,7 +2589,9 @@ export default function StreamHub() {
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
-      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -2423,10 +2617,10 @@ export default function StreamHub() {
             <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
               {tier==="premium"
                 ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
-                :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.35)",cursor:"pointer"}}>Upgrade ✦</button>
+                :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.35)",cursor:"pointer"}}>Upgrade ✦</button>
               }
               {!user
-                ?<button onClick={()=>setShowAuth(true)} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
+                ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
                 :<AvatarButton />
               }
             </div>
@@ -2445,7 +2639,7 @@ export default function StreamHub() {
         {/* Tablet Hero with Trailer */}
         {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         {view==="trending"&&!search.trim()&&heroMovie&&(
-          <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} />
+          <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
         )}
 
         {/* Tablet Grid */}
@@ -2483,7 +2677,7 @@ export default function StreamHub() {
                     <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-                    {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                    {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                   </div>
                 </div>
               ))}
@@ -2499,7 +2693,7 @@ export default function StreamHub() {
                 :filtered.length===0
                   ?<div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty!":"No results found."}</div>
                   :<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                   </div>
               }
             </>
@@ -2554,7 +2748,9 @@ export default function StreamHub() {
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
-      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -2590,10 +2786,10 @@ export default function StreamHub() {
           <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0}}>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ PREMIUM</span>
-              :<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
+              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
             }
             {!user
-              ?<button onClick={()=>setShowAuth(true)} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
+              ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
               :<AvatarButton />
             }
           </div>
@@ -2633,15 +2829,15 @@ export default function StreamHub() {
                 {!user && <WelcomeBanner />}
                 <div style={{padding:"16px 16px 0"}}>
                   <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
-                    <HeroBanner movie={heroMovie} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
+                    <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
                   </div>
                 </div>
                 <div style={{paddingTop:24}}>
-                  <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
-                  <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
-                  <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
-                  <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
+                  <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
+                  <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
+                  <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : (
@@ -2654,14 +2850,14 @@ export default function StreamHub() {
                     }
                     {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
                   </div>
-                  {!user&&<button onClick={()=>setShowAuth(true)} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
+                  {!user&&<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
                 </div>
                 {loading&&!search
                   ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                   : filtered.length===0
                     ? <div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Click ♡ to save titles!":"No results found."}</div>
                     : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
-                        {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                        {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                       </div>
                 }
               </>
@@ -2675,7 +2871,7 @@ export default function StreamHub() {
                 <div style={{fontSize:24,marginBottom:8}}>👤</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:6}}>Create an Account</div>
                 <div style={{fontSize:12,color:"var(--muted)",marginBottom:12,lineHeight:1.5}}>Save your watchlist, write reviews and sync across devices.</div>
-                <button onClick={()=>setShowAuth(true)} style={{width:"100%",background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 0",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign Up Free</button>
+                <button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{width:"100%",background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 0",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign Up Free</button>
               </div>
             )}
 
@@ -2826,7 +3022,9 @@ export default function StreamHub() {
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
-      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>

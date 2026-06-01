@@ -2,10 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#F5C518" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="StreamHub" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+
+    <!-- SEO -->
     <title>The StreamHub — Your AI Streaming Assistant</title>
-    <meta name="description" content="Your AI streaming assistant. Searches Netflix, Disney+, Max, Hulu, Crunchyroll, ESPN+, Tubi and more — all at once. Find movies, shows, anime and sports by title, genre or mood. Free to start." />
+    <meta name="description" content="Your AI streaming assistant. Searches Netflix, Disney+, Max, Hulu, Crunchyroll, ESPN+, Tubi and more — all at once. Free to start." />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="The StreamHub — Your AI Streaming Assistant" />
+    <meta property="og:description" content="Search Netflix, Disney+, Max, Hulu and 9 more streaming services at once. AI mood search, trailers, watch history and more. Free to start." />
+    <meta property="og:image" content="https://thestreamhub.app/og-image.jpg" />
+    <meta property="og:url" content="https://thestreamhub.app" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="The StreamHub — Your AI Streaming Assistant" />
+    <meta name="twitter:description" content="Search Netflix, Disney+, Max, Hulu and 9 more at once. AI mood search, trailers and more. Free to start." />
+    <meta name="twitter:image" content="https://thestreamhub.app/og-image.jpg" />
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LK433DT8M2"></script>
@@ -14,6 +42,17 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-LK433DT8M2');
+    </script>
+
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW error:', err));
+        });
+      }
     </script>
   </head>
   <body>
