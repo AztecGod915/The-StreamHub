@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -232,8 +232,11 @@ function MovieCard({ movie, watchlist, userRatings, userSubs, onSelect, onToggle
         transform:hov?"translateY(-4px) scale(1.015)":"translateY(0) scale(1)",
         transition:"all .25s cubic-bezier(.22,1,.36,1)",
         boxShadow:hov?"0 20px 40px rgba(0,0,0,.5)":"0 4px 12px rgba(0,0,0,.3)",
-        filter:notSub?"brightness(0.6) saturate(0.5)":"none",background:"var(--card)"}}>
-      {/* Poster */}
+        filter:notSub?"brightness(0.6) saturate(0.5)":"none",
+        background:"var(--card)",
+        WebkitTapHighlightColor:"transparent",
+        touchAction:"manipulation",
+      }}>      {/* Poster */}
       <div style={{height:200,position:"relative",overflow:"hidden",background:`linear-gradient(135deg,${GR[idx][0]},${GR[idx][1]})`}}>
         {poster
           ? <img src={poster} alt={movie.title||movie.name} style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" />
@@ -1025,7 +1028,7 @@ function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, on
           <button onClick={()=>scroll(1)}  style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
         </div>
       </div>
-      <div ref={ref} style={{display:"flex",gap:12,overflowX:"auto",padding:"4px 24px 8px",scrollbarWidth:"none",scrollSnapType:"x mandatory"}}>
+      <div ref={ref} style={{display:"flex",gap:12,overflowX:"auto",padding:"4px 24px 8px",scrollbarWidth:"none",scrollSnapType:"x mandatory",touchAction:"pan-x"}}>
         {movies.map(m=>(
           <div key={m.id} style={{flexShrink:0,width:155,scrollSnapAlign:"start"}}>
             <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={onSelect} onToggleWatchlist={onToggleWatchlist} />
@@ -1518,6 +1521,41 @@ function InstallPrompt({ onDismiss }) {
       )}
     </div>
   );
+}
+
+// ─── SKELETON CARD (outside component to prevent remount) ───────────────────
+function SkeletonCard() {
+  return (
+    <div style={{borderRadius:"var(--radius)",overflow:"hidden",border:"1px solid var(--border)"}}>
+      <div className="skeleton" style={{height:200}} />
+      <div style={{padding:"10px 12px 12px",background:"var(--card)"}}>
+        <div className="skeleton" style={{height:14,marginBottom:8,width:"80%"}} />
+        <div className="skeleton" style={{height:11,width:"50%"}} />
+      </div>
+    </div>
+  );
+}
+
+// ─── ERROR BOUNDARY (catches MovieModal render errors) ───────────────────────
+class MovieErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError:false }; }
+  static getDerivedStateFromError() { return { hasError:true }; }
+  componentDidCatch(err) { console.error("MovieModal error:", err); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div onClick={this.props.onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:16,padding:32,maxWidth:400,textAlign:"center",border:"1px solid var(--border)"}}>
+            <div style={{fontSize:40,marginBottom:12}}>😔</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:8}}>Something went wrong</div>
+            <div style={{color:"var(--muted)",fontSize:14,marginBottom:20}}>Couldn't load this title. Please try again.</div>
+            <button onClick={this.props.onClose} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 24px",fontFamily:"var(--font-head)",fontWeight:800,cursor:"pointer"}}>Close</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 // ─── DEEP LINK HELPER ────────────────────────────────────────────────────────
@@ -2524,24 +2562,6 @@ export default function StreamHub() {
   const subscribed = SERVICES.filter(s=>userSubs.includes(s.id));
   const unsubscribed = SERVICES.filter(s=>!userSubs.includes(s.id));
 
-  const SkeletonCard = () => (
-    <div style={{borderRadius:"var(--radius)",overflow:"hidden",border:"1px solid var(--border)"}}>
-      <div className="skeleton" style={{height:200}} />
-      <div style={{padding:"10px 12px 12px",background:"var(--card)"}}>
-        <div className="skeleton" style={{height:14,marginBottom:8,width:"80%"}} />
-        <div className="skeleton" style={{height:11,width:"50%"}} />
-      </div>
-    </div>
-  );
-
-  const AvatarButton = () => (
-    <button onClick={()=>user?setShowProfile(true):setShowAuth(true)}
-      style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,transition:"all .2s"}}
-      title={user?"My Profile":"Sign In"}>
-      {user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}
-    </button>
-  );
-
   // ─── MOBILE LAYOUT ──────────────────────────────────────────────────────────
   if (isMobile) return (
     <>
@@ -2571,7 +2591,7 @@ export default function StreamHub() {
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
-            <AvatarButton />
+            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
           </div>
           {/* Search bar - full width, prominent */}
           <div style={{padding:"0 14px 10px",position:"relative"}}>
@@ -2693,7 +2713,7 @@ export default function StreamHub() {
       </div>
 
       {/* Modals */}
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -2735,7 +2755,7 @@ export default function StreamHub() {
               }
               {!user
                 ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
-                :<AvatarButton />
+                :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
               }
             </div>
           </div>
@@ -2856,7 +2876,7 @@ export default function StreamHub() {
         </div>
       </div>
 
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -2908,7 +2928,7 @@ export default function StreamHub() {
             }
             {!user
               ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
-              :<AvatarButton />
+              :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
             }
           </div>
         </header>
@@ -3130,7 +3150,7 @@ export default function StreamHub() {
         </div>
       </div>
 
-      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
