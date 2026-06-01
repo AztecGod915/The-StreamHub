@@ -1,60 +1,10 @@
-const CACHE_NAME = 'streamhub-v3';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/logo-clean.png',
-  '/logo.png',
-  '/manifest.json',
-];
-
-// Install — cache static assets
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate — clean old caches
+// Service worker disabled — app works fully without it
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => {
+  // Clear ALL caches to remove broken cached code
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-// Fetch — network first, fall back to cache
-self.addEventListener('fetch', event => {
-  // Skip non-GET and external API requests
-  if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('api.anthropic.com')) return;
-  if (event.request.url.includes('api.themoviedb.org')) return;
-  if (event.request.url.includes('supabase.co')) return;
-  if (event.request.url.includes('googletagmanager')) return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Cache successful responses
-        if (response.ok && response.type === 'basic') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fall back to cache when offline
-        return caches.match(event.request).then(cached => {
-          if (cached) return cached;
-          // Return offline page for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-        });
-      })
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
+// No fetch handler — all requests go straight to network

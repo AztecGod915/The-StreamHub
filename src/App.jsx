@@ -505,95 +505,84 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
 }
 
 // ─── MOVIE MODAL ──────────────────────────────────────────────────────────────
-function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onRate, onToggleWatchlist, onVote, showToast, onSelectSimilar }) {
-  // Safety check — should never happen but prevents any crash
-  if (!movie || movie.id === undefined || movie.id === null) {
-    if (onClose) onClose();
-    return null;
-  }
+function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onToggleWatchlist, showToast, onSelectSimilar }) {
   const [tab, setTab] = useState("overview");
   const [reviews, setReviews] = useState([]);
   const [details, setDetails] = useState(null);
-  const [rating, setRating] = useState(userRatings[movie.id]||0);
+  const [rating, setRating] = useState(0);
   const [revTitle, setRevTitle] = useState("");
   const [revContent, setRevContent] = useState("");
   const [revRating, setRevRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [allProviders, setAllProviders] = useState({flatrate:[],rent:[],buy:[],free:[]});
-  const inWL = watchlist.includes(movie.id);
-  const providers = movie.providers||[];
-  const mainProvider = providers[0];
-  const svc = SERVICES.find(s=>s.id===mainProvider);
-  const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
 
-  useEffect(()=>{
+  // All hooks must be called before any conditional
+  useEffect(() => {
+    if (!movie?.id) return;
+    setRating(userRatings?.[movie.id] || 0);
     const type = movie.first_air_date ? "tv" : "movie";
-    tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar`).then(d=>setDetails(d));
-    supabase.from("reviews").select("*,profiles(username)").eq("movie_id",movie.id).order("created_at",{ascending:false}).then(({data})=>setReviews(data||[]));
-    // Fetch full provider data including rent/buy
-    fetch(`${TMDB_BASE}/${type}/${movie.id}/watch/providers`, {headers:tmdbHeaders})
-      .then(r=>r.json()).then(data=>{
-        const res = data.results?.US || data.results?.GB || Object.values(data.results||{})[0] || {};
-        setAllProviders({
-          flatrate: res.flatrate||[],
-          rent:     res.rent||[],
-          buy:      res.buy||[],
-          free:     res.free||[],
-        });
-      }).catch(()=>{});
-  },[movie.id]);
+    tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar`).then(d => setDetails(d)).catch(()=>{});
+    supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at", {ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
+  }, [movie?.id]);
 
-  const handleRate = async(val) => {
-    if (!user) return showToast("Sign in to rate! 👤");
-    setRating(val); onRate(movie.id, val);
-    await supabase.from("ratings").upsert({user_id:user.id,movie_id:movie.id,rating:val},{onConflict:"user_id,movie_id"});
-    showToast(`Rated ${val}/10 ★`);
+  if (!movie) return null;
+
+  const inWL = (watchlist||[]).includes(movie.id);
+  const providers = movie.providers || [];
+  const mainProvider = providers[0];
+  const svc = SERVICES.find(s => s.id === mainProvider);
+  const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
+  const tmdbRating = movie.vote_average ? Number(movie.vote_average).toFixed(1) : "—";
+  const releaseYear = (movie.release_date || movie.first_air_date || "").slice(0, 4);
+  const genres = details?.genres?.slice(0, 3) || [];
+  const cast = details?.credits?.cast?.slice(0, 5) || [];
+  const similar = details?.similar?.results?.slice(0, 6) || [];
+  const gr = safeGR(movie.id);
+  const inp = {background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"10px 14px",width:"100%",fontSize:13,outline:"none"};
+
+  const handleRate = async (val) => {
+    if (!user) return showToast && showToast("Sign in to rate! 👤");
+    setRating(val);
+    if (onRate) onRate(movie.id, val);
+    try { await supabase.from("ratings").upsert({user_id:user.id, movie_id:movie.id, rating:val}, {onConflict:"user_id,movie_id"}); } catch(e){}
+    showToast && showToast(`Rated ${val}/10 ★`);
   };
 
-  const submitReview = async() => {
-    if (!user) return showToast("Sign in to review! 👤");
-    if (!revRating) return showToast("Add a star rating!");
-    if (!revTitle.trim()) return showToast("Add a title!");
-    if (revContent.trim().length < 10) return showToast("Review too short!");
+  const deleteReview = async (id) => {
+    try { await supabase.from("reviews").delete().eq("id", id); } catch(e){}
+    setReviews(prev => prev.filter(r => r.id !== id));
+    showToast && showToast("Review deleted");
+  };
+
+  const submitReview = async () => {
+    if (!user) return showToast && showToast("Sign in to review! 👤");
+    if (!revRating) return showToast && showToast("Add a star rating!");
+    if (!revTitle.trim()) return showToast && showToast("Add a title!");
+    if (revContent.trim().length < 10) return showToast && showToast("Review too short!");
     setSubmitting(true);
-    const { data, error } = await supabase.from("reviews").insert({user_id:user.id,movie_id:movie.id,title:revTitle,content:revContent,rating:revRating}).select("*,profiles(username)");
-    if (!error && data) { setReviews(prev=>[data[0],...prev]); setRevTitle(""); setRevContent(""); setRevRating(0); showToast("Review posted! ✍"); }
+    try {
+      const { data } = await supabase.from("reviews").insert({user_id:user.id, movie_id:movie.id, title:revTitle, content:revContent, rating:revRating}).select("*,profiles(username)");
+      if (data?.[0]) { setReviews(prev => [data[0], ...prev]); setRevTitle(""); setRevContent(""); setRevRating(0); showToast && showToast("Review posted! ✍"); }
+    } catch(e) { showToast && showToast("Error posting review"); }
     setSubmitting(false);
   };
-
-  const deleteReview = async(id) => {
-    await supabase.from("reviews").delete().eq("id",id);
-    setReviews(prev=>prev.filter(r=>r.id!==id));
-    showToast("Review deleted");
-  };
-
-  const tmdbRating = movie.vote_average ? (movie.vote_average).toFixed(1) : "—";
-  const releaseYear = (movie.release_date||movie.first_air_date||"").slice(0,4);
-  const genres = details?.genres?.slice(0,3)||[];
-  const cast = details?.credits?.cast?.slice(0,5)||[];
-  const similar = details?.similar?.results?.slice(0,6)||[];
-  const hasStreaming = providers.length > 0 || allProviders.flatrate.length > 0 || allProviders.free.length > 0;
-  const hasRentBuy = allProviders.rent.length > 0 || allProviders.buy.length > 0;
-
-  const inp = {background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"10px 14px",width:"100%",fontSize:13,outline:"none"};
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:780,maxHeight:"92vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         {/* Hero */}
-        <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${safeGR(movie.id)[0]},${safeGR(movie.id)[1]})`}}>
+        <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
           {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
           <div style={{position:"absolute",top:14,right:14,display:"flex",gap:8}}>
-            <button onClick={()=>onToggleWatchlist(movie.id)} style={{background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:inWL?"#000":"#fff",padding:"6px 14px",fontWeight:700,fontSize:13,backdropFilter:"blur(8px)"}}>{inWL?"♥ Saved":"♡ Watchlist"}</button>
-            <button onClick={onClose} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",width:36,height:36,fontSize:18,backdropFilter:"blur(8px)"}}>✕</button>
+            <button onClick={()=>onToggleWatchlist&&onToggleWatchlist(movie.id)} style={{background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:inWL?"#000":"#fff",padding:"6px 14px",fontWeight:700,fontSize:13,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Watchlist"}</button>
+            <button onClick={onClose} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",width:36,height:36,fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
           <div style={{position:"absolute",bottom:16,left:20,right:20}}>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name}</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name||""}</div>
             <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
               <span style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{releaseYear}</span>
               {genres.map(g=><span key={g.id} style={{background:"rgba(255,255,255,.12)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{g.name}</span>)}
-              {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p} />)}
+              {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p}/>)}
             </div>
           </div>
         </div>
@@ -604,201 +593,121 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
             <div style={{fontSize:11,color:"var(--muted)",marginBottom:3}}>TMDB Score</div>
             <div style={{display:"flex",alignItems:"center",gap:6}}>
               <span style={{color:"var(--gold)",fontSize:22,fontFamily:"var(--font-head)",fontWeight:800}}>{tmdbRating}</span>
-              <span style={{color:"var(--muted)",fontSize:13}}>/ 10 · {(movie.vote_count||0).toLocaleString()} votes</span>
+              <span style={{color:"var(--muted)",fontSize:13}}>/ 10</span>
             </div>
           </div>
-          <div style={{width:1,height:36,background:"var(--border)"}} />
+          <div style={{width:1,height:36,background:"var(--border)"}}/>
           <div>
             <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>Your Rating</div>
-            <StarPicker value={rating} onChange={handleRate} size={16} />
+            <StarPicker value={rating} onChange={handleRate} size={16}/>
           </div>
           {svc && (
-            <WatchButton serviceId={mainProvider} title={movie.title||movie.name} webUrl={svc.url} style={{marginLeft:"auto"}} />
+            <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} webUrl={svc.url} style={{marginLeft:"auto"}}/>
           )}
         </div>
 
         {/* Tabs */}
         <div style={{display:"flex",gap:4,padding:"12px 20px 0",borderBottom:"1px solid var(--border)",flexShrink:0}}>
-          {["overview","where to watch","cast","reviews"].map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"8px 12px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer",whiteSpace:"nowrap"}}>
-              {t}{t==="reviews"&&` (${reviews.length})`}
+          {["overview","cast","reviews"].map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"8px 12px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>
+              {t}{t==="reviews"?` (${reviews.length})`:""}
             </button>
           ))}
         </div>
 
-        {/* Tab Content */}
+        {/* Content */}
         <div style={{overflowY:"auto",flex:1,padding:20}}>
 
-          {/* Overview tab */}
           {tab==="overview" && (
             <div>
               <p style={{fontSize:14,lineHeight:1.75,color:"rgba(240,240,250,.8)",marginBottom:20}}>{movie.overview||details?.overview||"No description available."}</p>
               {similar.length>0 && (
-                <>
+                <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:12,color:"var(--muted)"}}>Similar Titles</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
                     {similar.map(sm=>{
-                      const sp=sm.poster_path?`${TMDB_IMG}${sm.poster_path}`:null;
+                      const sgr = safeGR(sm.id);
+                      const sp = sm.poster_path ? `${TMDB_IMG}${sm.poster_path}` : null;
                       return (
                         <div key={sm.id} onClick={()=>onSelectSimilar&&onSelectSimilar(sm)}
                           style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
                           onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}}
                           onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                          {sp
-                            ?<img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}} />
-                            :<div style={{height:100,background:`linear-gradient(135deg,${safeGR(sm.id)[0]},${safeGR(sm.id)[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
-                          <div style={{padding:"8px 10px"}}>
-                            <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{sm.title||sm.name}</div>
+                          {sp ? <img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>
+                               : <div style={{height:100,background:`linear-gradient(135deg,${sgr[0]},${sgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
+                          <div style={{padding:"6px 8px"}}>
+                            <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sm.title||sm.name||""}</div>
                             <div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                </>
+                </div>
               )}
             </div>
           )}
 
-          {/* Where to Watch tab */}
-          {tab==="where to watch" && (
-            <div>
-              {/* Streaming */}
-              {(allProviders.flatrate.length>0||allProviders.free.length>0) && (
-                <div style={{marginBottom:24}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <span style={{fontSize:18}}>📺</span>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--sports)"}}>Stream Free (Included with subscription)</div>
-                  </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-                    {[...allProviders.flatrate,...allProviders.free].map((p,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"8px 14px"}}>
-                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
-                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Rent */}
-              {allProviders.rent.length>0 && (
-                <div style={{marginBottom:24}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <span style={{fontSize:18}}>🎬</span>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--cyan)"}}>Rent</div>
-                  </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-                    {allProviders.rent.map((p,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(6,182,212,.08)",border:"1px solid rgba(6,182,212,.2)",borderRadius:10,padding:"8px 14px"}}>
-                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
-                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Buy */}
-              {allProviders.buy.length>0 && (
-                <div style={{marginBottom:24}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <span style={{fontSize:18}}>🛒</span>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,color:"var(--gold)"}}>Buy</div>
-                  </div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-                    {allProviders.buy.map((p,i)=>(
-                      <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"8px 14px"}}>
-                        {p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt="" style={{width:24,height:24,borderRadius:4,objectFit:"cover"}} />}
-                        <span style={{fontSize:13,fontWeight:600}}>{p.provider_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Nothing available */}
-              {!hasStreaming && !hasRentBuy && (
-                <div style={{textAlign:"center",padding:"40px 20px"}}>
-                  <div style={{fontSize:48,marginBottom:16}}>😔</div>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:18,marginBottom:8}}>Not Available for Streaming</div>
-                  <div style={{color:"var(--muted)",fontSize:14,lineHeight:1.7,marginBottom:20}}>This title isn't currently on any major streaming service. You may be able to find it on:</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:10,justifyContent:"center"}}>
-                    {[
-                      {name:"YouTube",url:`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title||movie.name)}`,color:"#FF0000"},
-                      {name:"Amazon",url:`https://www.amazon.com/s?k=${encodeURIComponent(movie.title||movie.name)}+dvd`,color:"#FF9900"},
-                      {name:"eBay",url:`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(movie.title||movie.name)}`,color:"#86B817"},
-                      {name:"Google",url:`https://www.google.com/search?q=${encodeURIComponent(movie.title||movie.name)}+where+to+watch`,color:"#4285F4"},
-                    ].map(s=>(
-                      <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
-                        style={{display:"inline-flex",alignItems:"center",gap:8,background:`${s.color}15`,border:`1px solid ${s.color}44`,borderRadius:10,padding:"10px 18px",color:"var(--text)",fontSize:13,fontWeight:700,textDecoration:"none"}}>
-                        🔗 Search on {s.name}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div style={{fontSize:11,color:"var(--muted)",marginTop:16,textAlign:"center"}}>
-                Streaming availability data provided by JustWatch via TMDB · May vary by region
-              </div>
-            </div>
-          )}
-
-          {/* Cast tab */}
           {tab==="cast" && (
             <div>
-              {cast.length===0?<div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>No cast info available.</div>:(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:14}}>
-                  {cast.map(c=>(
-                    <div key={c.id} style={{textAlign:"center"}}>
-                      <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${safeGR(c.id)[0]},${safeGR(c.id)[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
-                        {c.profile_path?<img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />:<span style={{opacity:.4}}>{c.name.slice(0,2)}</span>}
-                      </div>
-                      <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name}</div>
-                      <div style={{fontSize:11,color:"var(--muted)"}}>{c.character}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {cast.length===0
+                ? <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>No cast info available.</div>
+                : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:14}}>
+                    {cast.map(c=>{
+                      const cgr = safeGR(c.id);
+                      return (
+                        <div key={c.id} style={{textAlign:"center"}}>
+                          <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${cgr[0]},${cgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
+                            {c.profile_path ? <img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                                            : <span style={{opacity:.4}}>{(c.name||"").slice(0,2)}</span>}
+                          </div>
+                          <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name||""}</div>
+                          <div style={{fontSize:11,color:"var(--muted)"}}>{c.character||""}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+              }
             </div>
           )}
+
           {tab==="reviews" && (
             <div>
-              {/* Review form */}
               <div style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:"var(--radius)",padding:18,marginBottom:24}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:12,fontSize:15}}>{user?"Write a Review":"Sign in to Review"}</div>
                 {user ? (
-                  <>
+                  <div>
                     <div style={{marginBottom:10}}>
                       <div style={{fontSize:12,color:"var(--muted)",marginBottom:6}}>Your Rating</div>
-                      <StarPicker value={revRating} onChange={setRevRating} />
+                      <StarPicker value={revRating} onChange={setRevRating}/>
                     </div>
-                    <input value={revTitle} onChange={e=>setRevTitle(e.target.value)} placeholder="Review title..." style={{...inp,marginBottom:8}} />
-                    <textarea value={revContent} onChange={e=>setRevContent(e.target.value)} placeholder="Share your thoughts..." rows={3} style={{...inp,resize:"vertical",marginBottom:8}} />
-                    <button onClick={submitReview} disabled={submitting} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 20px",fontWeight:600,fontSize:13}}>
+                    <input value={revTitle} onChange={e=>setRevTitle(e.target.value)} placeholder="Review title..." style={{...inp,marginBottom:8}}/>
+                    <textarea value={revContent} onChange={e=>setRevContent(e.target.value)} placeholder="Share your thoughts..." rows={3} style={{...inp,resize:"vertical",marginBottom:8}}/>
+                    <button onClick={submitReview} disabled={submitting} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 20px",fontWeight:600,fontSize:13,cursor:"pointer"}}>
                       {submitting?"Posting…":"Post Review"}
                     </button>
-                  </>
-                ) : <div style={{fontSize:13,color:"var(--muted)"}}>Create a free account to leave reviews and ratings.</div>}
-              </div>
-              {/* Reviews list */}
-              {reviews.length===0?<div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>No reviews yet. Be the first!</div>
-                :reviews.map(rv=>(
-                  <div key={rv.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:16,marginBottom:12}}>
-                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                      <div style={{width:32,height:32,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13}}>{(rv.profiles?.username||"U")[0].toUpperCase()}</div>
-                      <div>
-                        <div style={{fontWeight:600,fontSize:13}}>{rv.profiles?.username||"User"}</div>
-                        <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString()}</div>
-                      </div>
-                      <span style={{marginLeft:"auto",background:"var(--gold-dim)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
-                      {user?.id===rv.user_id && <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"var(--danger)",padding:"4px 10px",fontSize:12}}>Delete</button>}
-                    </div>
-                    <div style={{fontWeight:700,fontSize:14,marginBottom:5}}>{rv.title}</div>
-                    <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content}</div>
                   </div>
-                ))
+                ) : <div style={{fontSize:13,color:"var(--muted)"}}>Create a free account to leave reviews.</div>}
+              </div>
+              {reviews.length===0
+                ? <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>No reviews yet. Be the first!</div>
+                : reviews.map(rv=>(
+                    <div key={rv.id||Math.random()} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:16,marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                        <div style={{width:32,height:32,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13}}>
+                          {((rv.profiles?.username||"U")[0]||"U").toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{fontWeight:600,fontSize:13}}>{rv.profiles?.username||"User"}</div>
+                          <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <span style={{marginLeft:"auto",background:"rgba(245,197,24,.15)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
+                        {user?.id===rv.user_id && <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"#ef4444",padding:"4px 10px",fontSize:12,cursor:"pointer"}}>Delete</button>}
+                      </div>
+                      <div style={{fontWeight:700,fontSize:14,marginBottom:5}}>{rv.title||""}</div>
+                      <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content||""}</div>
+                    </div>
+                  ))
               }
             </div>
           )}
@@ -807,6 +716,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
     </div>
   );
 }
+
 
 // ─── UPGRADE MODAL ────────────────────────────────────────────────────────────
 function UpgradeModal({ onClose, onComplete }) {
