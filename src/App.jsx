@@ -1765,7 +1765,7 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
   return (
     <div style={{
       position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
-      zIndex:300, width:"calc(100% - 28px)", maxWidth:460,
+      zIndex:290, width:"calc(100% - 28px)", maxWidth:460,
       background:"linear-gradient(135deg,rgba(10,8,26,.98),rgba(18,10,36,.98))",
       border:"1px solid rgba(245,197,24,.4)",
       borderRadius:20, padding:"20px",
@@ -2395,15 +2395,19 @@ export default function StreamHub() {
   // ── Smart Search ──
   useEffect(() => {
     if (!search.trim()) { setSearchResults([]); return; }
-    // Enforce search limit for non-logged-in users
-    if (!user) {
-      const count = getSearchCount();
-      if (count >= SEARCH_LIMIT) { setShowSearchLimit(true); return; }
-      incrementSearchCount();
-      setSearchesUsed(getSearchCount());
-    }
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
+      // Enforce search limit for non-logged-in users
+      if (!user) {
+        const count = getSearchCount();
+        if (count >= SEARCH_LIMIT) {
+          setShowSearchLimit(true);
+          setSearching(false);
+          return;
+        }
+        incrementSearchCount();
+        setSearchesUsed(getSearchCount());
+      }
       setSearching(true);
       track("search", { search_term: search.trim(), is_mood_search: !!isGenreSearch(search) });
       try {
@@ -2433,22 +2437,15 @@ export default function StreamHub() {
   // ── Watchlist ──
   const toggleWatchlist = async (movieId) => {
     if (!user) {
-      showToast("Sign in free to save your watchlist! 👤");
+      showToast("Sign up free to save your watchlist! 👤");
       track("watchlist_attempt_no_auth");
-      setShowSignupPrompt(true);
-      return;
+      return; // Just toast - don't show blocking prompt
     }
     const inWL = watchlist.includes(movieId);
-    // Free account limit: 50 titles
-    const FREE_WL_LIMIT = user ? 50 : 10;
+    const FREE_WL_LIMIT = 50;
     if (!inWL && tier !== "premium" && watchlist.length >= FREE_WL_LIMIT) {
-      if (!user) {
-        showToast("Sign up free to save up to 50 titles! 👤");
-        setShowSignupPrompt(true);
-      } else {
-        showToast("Upgrade to Premium for unlimited watchlist! ✦");
-        setShowUpgrade(true);
-      }
+      showToast("Upgrade to Premium for unlimited watchlist! ✦");
+      setShowUpgrade(true);
       return;
     }
     if (inWL) {
@@ -2488,6 +2485,7 @@ export default function StreamHub() {
 
   const handleSelectMovie = (movie) => {
     setSelectedMovie(movie);
+    setShowSignupPrompt(false); // Dismiss prompt when opening a movie
     track("movie_open", {
       movie_title: movie.title||movie.name||"",
       movie_type: movie.first_air_date ? "tv" : "movie",
