@@ -1,4 +1,4 @@
-const CACHE_NAME = 'streamhub-v1';
+const CACHE_NAME = 'streamhub-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
