@@ -2713,7 +2713,23 @@ export default function StreamHub() {
       </div>
 
       {/* Modals */}
-      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>
+        {selectedMovie && (
+          <MovieModal
+            movie={selectedMovie}
+            watchlist={watchlist}
+            userRatings={userRatings}
+            myVotes={{}}
+            user={user}
+            onClose={()=>setSelectedMovie(null)}
+            onRate={handleRate}
+            onToggleWatchlist={toggleWatchlist}
+            onVote={()=>{}}
+            showToast={showToast}
+            onSelectSimilar={(m)=>setSelectedMovie({...m, providers:[], category:'movie'})}
+          />
+        )}
+      </MovieErrorBoundary>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -2876,7 +2892,23 @@ export default function StreamHub() {
         </div>
       </div>
 
-      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>
+        {selectedMovie && (
+          <MovieModal
+            movie={selectedMovie}
+            watchlist={watchlist}
+            userRatings={userRatings}
+            myVotes={{}}
+            user={user}
+            onClose={()=>setSelectedMovie(null)}
+            onRate={handleRate}
+            onToggleWatchlist={toggleWatchlist}
+            onVote={()=>{}}
+            showToast={showToast}
+            onSelectSimilar={(m)=>setSelectedMovie({...m, providers:[], category:'movie'})}
+          />
+        )}
+      </MovieErrorBoundary>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
@@ -3150,7 +3182,23 @@ export default function StreamHub() {
         </div>
       </div>
 
-      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>{selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:"movie"})}/></MovieErrorBoundary>}
+      <MovieErrorBoundary key={selectedMovie?.id} onClose={()=>setSelectedMovie(null)}>
+        {selectedMovie && (
+          <MovieModal
+            movie={selectedMovie}
+            watchlist={watchlist}
+            userRatings={userRatings}
+            myVotes={{}}
+            user={user}
+            onClose={()=>setSelectedMovie(null)}
+            onRate={handleRate}
+            onToggleWatchlist={toggleWatchlist}
+            onVote={()=>{}}
+            showToast={showToast}
+            onSelectSimilar={(m)=>setSelectedMovie({...m, providers:[], category:'movie'})}
+          />
+        )}
+      </MovieErrorBoundary>
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
