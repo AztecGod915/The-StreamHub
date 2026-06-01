@@ -154,6 +154,8 @@ const GR = [
   ["#1f1200","#d97706"],["#001f0d","#10b981"],["#1a0a0a","#ef4444"],
   ["#0d0d1a","#6366f1"],["#1a1000","#eab308"],["#0a1a1a","#14b8a6"],
 ];
+// Safe gradient accessor — always returns a valid pair
+const safeGR = (id) => GR[((id||0) % GR.length + GR.length) % GR.length] || GR[0];
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
 function Logo({ size=32 }) {
@@ -216,7 +218,7 @@ function Toast({ msg, onDone }) {
 // ─── MOVIE CARD ───────────────────────────────────────────────────────────────
 function MovieCard({ movie, watchlist, userRatings, userSubs, onSelect, onToggleWatchlist }) {
   const [hov, setHov] = useState(false);
-  const idx = movie.id % GR.length;
+  const gr = safeGR(movie.id);
   const inWL = watchlist.includes(movie.id);
   const providers = movie.providers || [];
   const mainProvider = providers[0];
@@ -237,7 +239,7 @@ function MovieCard({ movie, watchlist, userRatings, userSubs, onSelect, onToggle
         WebkitTapHighlightColor:"transparent",
         touchAction:"manipulation",
       }}>      {/* Poster */}
-      <div style={{height:200,position:"relative",overflow:"hidden",background:`linear-gradient(135deg,${GR[idx][0]},${GR[idx][1]})`}}>
+      <div style={{height:200,position:"relative",overflow:"hidden",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
         {poster
           ? <img src={poster} alt={movie.title||movie.name} style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" />
           : <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,opacity:.15,fontFamily:"var(--font-head)",fontWeight:800,color:"#fff"}}>{(movie.title||movie.name||"").slice(0,2).toUpperCase()}</div>
@@ -504,6 +506,11 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
 
 // ─── MOVIE MODAL ──────────────────────────────────────────────────────────────
 function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onRate, onToggleWatchlist, onVote, showToast, onSelectSimilar }) {
+  // Safety check — should never happen but prevents any crash
+  if (!movie || movie.id === undefined || movie.id === null) {
+    if (onClose) onClose();
+    return null;
+  }
   const [tab, setTab] = useState("overview");
   const [reviews, setReviews] = useState([]);
   const [details, setDetails] = useState(null);
@@ -574,7 +581,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:780,maxHeight:"92vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         {/* Hero */}
-        <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${GR[movie.id%GR.length][0]},${GR[movie.id%GR.length][1]})`}}>
+        <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${safeGR(movie.id)[0]},${safeGR(movie.id)[1]})`}}>
           {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
           <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
           <div style={{position:"absolute",top:14,right:14,display:"flex",gap:8}}>
@@ -639,7 +646,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
                           onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
                           {sp
                             ?<img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}} />
-                            :<div style={{height:100,background:`linear-gradient(135deg,${GR[sm.id%GR.length][0]},${GR[sm.id%GR.length][1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
+                            :<div style={{height:100,background:`linear-gradient(135deg,${safeGR(sm.id)[0]},${safeGR(sm.id)[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
                           <div style={{padding:"8px 10px"}}>
                             <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:2}}>{sm.title||sm.name}</div>
                             <div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div>
@@ -745,7 +752,7 @@ function MovieModal({ movie, watchlist, userRatings, myVotes, user, onClose, onR
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:14}}>
                   {cast.map(c=>(
                     <div key={c.id} style={{textAlign:"center"}}>
-                      <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${GR[c.id%GR.length][0]},${GR[c.id%GR.length][1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
+                      <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${safeGR(c.id)[0]},${safeGR(c.id)[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
                         {c.profile_path?<img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />:<span style={{opacity:.4}}>{c.name.slice(0,2)}</span>}
                       </div>
                       <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name}</div>
@@ -1540,20 +1547,13 @@ function SkeletonCard() {
 class MovieErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError:false }; }
   static getDerivedStateFromError() { return { hasError:true }; }
-  componentDidCatch(err) { console.error("MovieModal error:", err); }
+  componentDidCatch(err, info) {
+    console.error("MovieModal error:", err, info);
+    // Auto-close after catching error
+    setTimeout(() => { if (this.props.onClose) this.props.onClose(); }, 100);
+  }
   render() {
-    if (this.state.hasError) {
-      return (
-        <div onClick={this.props.onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:16,padding:32,maxWidth:400,textAlign:"center",border:"1px solid var(--border)"}}>
-            <div style={{fontSize:40,marginBottom:12}}>😔</div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:8}}>Something went wrong</div>
-            <div style={{color:"var(--muted)",fontSize:14,marginBottom:20}}>Couldn't load this title. Please try again.</div>
-            <button onClick={this.props.onClose} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 24px",fontFamily:"var(--font-head)",fontWeight:800,cursor:"pointer"}}>Close</button>
-          </div>
-        </div>
-      );
-    }
+    if (this.state.hasError) return null; // Invisible — auto-closes via componentDidCatch
     return this.props.children;
   }
 }
