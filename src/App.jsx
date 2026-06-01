@@ -2675,7 +2675,10 @@ export default function StreamHub() {
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
-        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+
+        {/* Spacer so content scrolls fully above bottom nav + tagline */}
+        <div style={{height:160}} />
 
         {/* Mobile bottom tagline bar - above bottom nav */}
         <div style={{
@@ -2685,6 +2688,7 @@ export default function StreamHub() {
           fontFamily:"var(--font-head)", fontWeight:800,
           fontSize:11, letterSpacing:4, color:"#fff",
           boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
+          pointerEvents:"none",
         }}>SEARCH · FIND · ENJOY</div>
       </div>
 
@@ -2811,7 +2815,10 @@ export default function StreamHub() {
         </div>
 
         {/* Advanced Stats Section */}
-        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+
+        {/* Spacer so content scrolls fully above bottom nav + tagline */}
+        <div style={{height:180}} />
 
         {/* Tablet tagline banner - above bottom nav */}
         <div style={{
@@ -2821,6 +2828,7 @@ export default function StreamHub() {
           fontFamily:"var(--font-head)", fontWeight:800,
           fontSize:12, letterSpacing:5, color:"#fff",
           boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
+          pointerEvents:"none",
         }}>SEARCH · FIND · ENJOY</div>
 
         {/* Tablet Bottom Nav */}
