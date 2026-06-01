@@ -2423,6 +2423,10 @@ export default function StreamHub() {
 
   const handleSetView = (v) => { setView(v); track("tab_change", { tab: v }); };
 
+  const handleRate = (movieId, val) => {
+    setUserRatings(p=>({...p,[movieId]:val}));
+  };
+
   const markAsWatched = async (movie) => {
     if (!user) return showToast("Sign in to track history! 👤");
     await supabase.from("watch_history").upsert({
