@@ -768,9 +768,15 @@ function UpgradeModal({ onClose, onComplete }) {
     setLoading(true);
     try{
       const res=await fetch('/api/checkout',{method:"POST",headers:{"Content-Type":"application/json"}});
+      // Check if response is actually JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        throw new Error(`Server returned non-JSON response (${res.status}). The checkout API may not be deployed. Check Vercel logs.`);
+      }
       const data=await res.json();
-      if(data.url)window.location.href=data.url;
-      else throw new Error(data.error||"Error");
+      if(data.url) window.location.href=data.url;
+      else throw new Error(data.error||"Unknown error from checkout API");
     }catch(e){setLoading(false);alert("Payment error: "+e.message);}
   };
   return (
