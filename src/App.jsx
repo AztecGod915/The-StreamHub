@@ -1381,44 +1381,114 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   };
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(255,107,157,.08))"}}>
-          <div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>
-              🎭 Mood Search <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>PRO</span>
-            </div>
-            <div style={{fontSize:13,color:"var(--muted)"}}>Describe what you're in the mood for — AI finds it</div>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-            {tier !== "premium" && (
-              <div style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>
-                1 free search/day
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"linear-gradient(180deg,#100828 0%,#0d0520 100%)",
+        borderRadius:"28px 28px 0 0",
+        width:"100%", maxWidth:640,
+        maxHeight:"92vh", overflow:"hidden",
+        display:"flex", flexDirection:"column",
+        border:"1px solid rgba(124,58,237,.4)",
+        borderBottom:"none",
+        boxShadow:"0 -20px 80px rgba(124,58,237,.4)",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding:"20px 20px 16px",
+          background:"linear-gradient(135deg,rgba(124,58,237,.25),rgba(255,107,157,.1))",
+          borderBottom:"1px solid rgba(124,58,237,.2)",
+          position:"relative",
+        }}>
+          <div style={{position:"absolute",top:-40,left:-40,width:150,height:150,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(50px)",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",top:-40,right:-40,width:150,height:150,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,position:"relative"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{
+                width:40,height:40,borderRadius:12,
+                background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:20,boxShadow:"0 4px 20px rgba(124,58,237,.5)",
+              }}>🎭</div>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,display:"flex",alignItems:"center",gap:8}}>
+                  Mood Search
+                  <span style={{background:"linear-gradient(90deg,#F5C518,#f59e0b)",color:"#000",fontSize:9,fontWeight:900,padding:"2px 8px",borderRadius:99,letterSpacing:.5}}>✦ PRO</span>
+                </div>
+                <div style={{fontSize:12,color:"rgba(196,181,253,.8)"}}>Describe any vibe — AI finds the perfect match</div>
               </div>
-            )}
-            <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+              {tier !== "premium" && (
+                <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
+                  1 free / day
+                </div>
+              )}
+              <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+            </div>
+          </div>
+          {/* Example prompts as inspiration */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8,position:"relative"}}>
+            {['"scary but not gory"','"fun date night"','"mind-bending sci-fi"','"feel-good comedy"'].map(ex=>(
+              <button key={ex} onClick={()=>setMood(ex.replace(/"/g,""))}
+                style={{background:"rgba(124,58,237,.15)",border:"1px solid rgba(124,58,237,.3)",borderRadius:99,color:"#c4b5fd",padding:"4px 12px",fontSize:11,cursor:"pointer",fontStyle:"italic"}}>
+                {ex}
+              </button>
+            ))}
           </div>
         </div>
-        <div style={{overflowY:"auto",padding:20,flex:1}}>
+        <div style={{overflowY:"auto",padding:"16px 20px 24px",flex:1}}>
+          {/* Main input */}
+          <div style={{position:"relative",marginBottom:16}}>
+            <div style={{
+              position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",
+              fontSize:20,pointerEvents:"none",
+            }}>🎭</div>
+            <input
+              value={mood} onChange={e=>setMood(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&search()}
+              placeholder='Type anything... "cozy rainy day movie" or "action like John Wick"'
+              autoFocus
+              style={{
+                width:"100%", background:"rgba(124,58,237,.1)",
+                border:"1.5px solid rgba(124,58,237,.5)",
+                borderRadius:16, color:"var(--text)",
+                padding:"14px 16px 14px 46px",
+                fontSize:14, outline:"none",
+                boxShadow:"0 4px 20px rgba(124,58,237,.15)",
+              }}
+            />
+            <button onClick={search} disabled={loading||!mood.trim()}
+              style={{
+                position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
+                background:mood.trim()?"linear-gradient(135deg,#7C3AED,#FF6B9D)":"rgba(255,255,255,.1)",
+                border:"none",borderRadius:10,color:"#fff",
+                padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,
+                fontSize:12,cursor:mood.trim()?"pointer":"default",
+                display:"flex",alignItems:"center",gap:6,
+                transition:"all .2s",opacity:!mood.trim()?0.5:1,
+              }}>
+              {loading?<span style={{display:"inline-block",width:14,height:14,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:<>✦ Find</>}
+            </button>
+          </div>
+
           {/* Quick mood chips */}
           {!result && (
             <div style={{marginBottom:16}}>
-              <div style={{fontSize:12,color:"var(--muted)",marginBottom:10,letterSpacing:.5}}>QUICK PICKS</div>
+              <div style={{fontSize:10,color:"rgba(196,181,253,.6)",marginBottom:10,letterSpacing:1.5,fontWeight:700}}>QUICK PICKS — tap to try</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                 {moods.map(m=>(
-                  <button key={m} onClick={()=>setMood(m)} style={{background:mood===m?"rgba(124,58,237,.2)":"rgba(255,255,255,.05)",border:`1px solid ${mood===m?"var(--purple)":"var(--border)"}`,borderRadius:99,color:mood===m?"var(--purple)":"var(--muted)",padding:"6px 14px",fontSize:12,cursor:"pointer",transition:"all .2s"}}>{m}</button>
+                  <button key={m} onClick={()=>setMood(m)}
+                    style={{
+                      background:mood===m?"rgba(124,58,237,.3)":"rgba(255,255,255,.05)",
+                      border:`1px solid ${mood===m?"rgba(124,58,237,.7)":"rgba(255,255,255,.1)"}`,
+                      borderRadius:99,color:mood===m?"#c4b5fd":"var(--muted)",
+                      padding:"7px 14px",fontSize:12,cursor:"pointer",
+                      transition:"all .2s",
+                    }}>{m}</button>
                 ))}
               </div>
             </div>
           )}
-          {/* Custom input */}
-          <div style={{display:"flex",gap:10,marginBottom:20}}>
-            <input value={mood} onChange={e=>setMood(e.target.value)} onKeyDown={e=>e.key==="Enter"&&search()} placeholder="e.g. Something scary but not too gory..."
-              style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(124,58,237,.4)",borderRadius:12,color:"var(--text)",padding:"11px 16px",fontSize:14,outline:"none"}} />
-            <button onClick={search} disabled={loading||!mood.trim()} style={{background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"11px 20px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",gap:8,opacity:!mood.trim()?0.5:1}}>
-              {loading?<span style={{display:"inline-block",width:16,height:16,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:"✦"} Find
-            </button>
-          </div>
           {/* Results */}
           {result && (
             <div>
@@ -2519,11 +2589,7 @@ export default function StreamHub() {
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
               />
-              <div style={{
-                fontSize:9,fontWeight:700,fontFamily:"var(--font-head)",letterSpacing:1.5,
-                background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
-                WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-              }}>✦ YOUR AI STREAMING ASSISTANT</div>
+
             </div>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
@@ -2559,6 +2625,60 @@ export default function StreamHub() {
           </div>
         </div>
 
+        {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
+        {!search.trim() && view==="trending" && (
+          <div style={{
+            margin:"4px 14px 16px",
+            borderRadius:20,
+            overflow:"hidden",
+            position:"relative",
+            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
+            border:"1px solid rgba(124,58,237,.35)",
+            boxShadow:"0 8px 40px rgba(124,58,237,.25), inset 0 1px 0 rgba(255,255,255,.06)",
+            padding:"18px 16px 16px",
+            textAlign:"center",
+          }}>
+            {/* glow blobs */}
+            <div style={{position:"absolute",top:-30,left:-30,width:120,height:120,borderRadius:"50%",background:"rgba(124,58,237,.25)",filter:"blur(40px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,107,157,.2)",filter:"blur(40px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:160,height:80,borderRadius:"50%",background:"rgba(6,182,212,.12)",filter:"blur(30px)",pointerEvents:"none"}}/>
+            {/* tagline */}
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:800,
+              fontSize:20, letterSpacing:"-.02em", marginBottom:12,
+              background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite",
+              position:"relative",
+            }}>Your AI Streaming Assistant</div>
+            {/* pills */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+              {[
+                {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+              ].map((item,i)=>(
+                <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{
+                    background:item.bg, borderRadius:99,
+                    padding:"8px 16px",
+                    fontFamily:"var(--font-head)", fontWeight:900,
+                    fontSize:12, letterSpacing:2.5, color:"#000",
+                    boxShadow:`0 0 16px ${item.glow}, 0 0 32px ${item.glow}66`,
+                  }}>{item.word}</div>
+                  {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:14,fontWeight:700}}>—</span>}
+                </div>
+              ))}
+            </div>
+            {/* mood search CTA */}
+            <button onClick={()=>setShowMoodSearch(true)}
+              style={{marginTop:12,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5,position:"relative"}}>
+              🎭 Try Mood Search — describe any vibe
+            </button>
+          </div>
+        )}
+
         {/* Search status */}
         {search.trim() && (
           <div style={{padding:"12px 14px 0",fontSize:13,color:"var(--muted)"}}>
@@ -2573,6 +2693,7 @@ export default function StreamHub() {
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
               {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
+              {icon:"🎭",label:"Mood Search",sub:"Describe any vibe",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
               {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
               {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
               {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
@@ -2596,33 +2717,6 @@ export default function StreamHub() {
               <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
             )}
 
-            {/* Mobile AI Tagline + Search·Find·Enjoy pills */}
-            <div style={{padding:"20px 16px 4px",textAlign:"center"}}>
-              <div style={{
-                fontFamily:"var(--font-head)", fontWeight:800,
-                fontSize:22, letterSpacing:"-.01em", marginBottom:14,
-                background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
-                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-              }}>Your AI Streaming Assistant</div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                {[
-                  {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
-                  {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
-                  {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
-                ].map((item, i) => (
-                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{
-                      background:item.bg, borderRadius:99,
-                      padding:"9px 18px",
-                      fontFamily:"var(--font-head)", fontWeight:800,
-                      fontSize:13, letterSpacing:2, color:"#000",
-                      boxShadow:`0 0 18px ${item.shadow}, 0 0 36px ${item.shadow}55`,
-                    }}>{item.word}</div>
-                    {i < 2 && <span style={{color:"rgba(255,255,255,.4)",fontWeight:700,fontSize:16}}>-</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
             {/* Mobile Featured Rows */}
             {[
               {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
@@ -2726,52 +2820,76 @@ export default function StreamHub() {
           </div>
         </header>
 
+        {/* 🎭 AI BRAND BANNER — tablet, above hero */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{
+            margin:"12px 20px 0",
+            borderRadius:24,
+            overflow:"hidden",
+            position:"relative",
+            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
+            border:"1px solid rgba(124,58,237,.35)",
+            boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.07)",
+            padding:"24px 20px",
+            display:"flex", alignItems:"center", gap:0,
+          }}>
+            {/* glow blobs */}
+            <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
+            {/* Left glowing logo */}
+            <img src="/logo-clean.png" alt="" style={{
+              height:80, width:"auto", objectFit:"contain", flexShrink:0,
+              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+              marginRight:20,
+            }}/>
+            {/* Center content */}
+            <div style={{flex:1,textAlign:"center",position:"relative"}}>
+              <div style={{
+                fontFamily:"var(--font-head)", fontWeight:800,
+                fontSize:28, letterSpacing:"-.02em", marginBottom:14,
+                background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                backgroundSize:"200% auto",
+                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                animation:"gradientShift 3s linear infinite",
+              }}>Your AI Streaming Assistant</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12}}>
+                {[
+                  {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                  {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                  {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                ].map((item,i)=>(
+                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{
+                      background:item.bg, borderRadius:99,
+                      padding:"10px 24px",
+                      fontFamily:"var(--font-head)", fontWeight:900,
+                      fontSize:14, letterSpacing:3, color:"#000",
+                      boxShadow:`0 0 20px ${item.glow}, 0 0 40px ${item.glow}55`,
+                    }}>{item.word}</div>
+                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:18,fontWeight:700}}>—</span>}
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>setShowMoodSearch(true)}
+                style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"7px 20px",fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5}}>
+                🎭 Try Mood Search — describe any vibe
+              </button>
+            </div>
+            {/* Right glowing logo */}
+            <img src="/logo-clean.png" alt="" style={{
+              height:80, width:"auto", objectFit:"contain", flexShrink:0,
+              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
+              marginLeft:20,
+            }}/>
+          </div>
+        )}
+
         {/* Tablet Hero with Trailer */}
         {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         {view==="trending"&&!search.trim()&&heroMovie&&(
           <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
-        )}
-
-        {/* Tablet AI Tagline + glowing logo banner */}
-        {view==="trending"&&!search.trim()&&(
-          <div style={{
-            margin:"0 0 8px", padding:"28px 20px",
-            display:"flex", flexDirection:"column", alignItems:"center", gap:16,
-            background:"linear-gradient(180deg,rgba(7,7,14,0) 0%,rgba(12,8,28,.6) 100%)",
-          }}>
-            {/* Glowing animated logo */}
-            <img src="/logo-clean.png" alt="The StreamHub"
-              style={{
-                height:90, width:"auto", objectFit:"contain",
-                filter:"drop-shadow(0 0 18px rgba(245,197,24,.7)) drop-shadow(0 0 36px rgba(124,58,237,.5))",
-                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-              }}
-            />
-            <div style={{
-              fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:28, letterSpacing:"-.01em", textAlign:"center",
-              background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-            }}>Your AI Streaming Assistant</div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-              {[
-                {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
-                {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
-                {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
-              ].map((item,i)=>(
-                <div key={item.word} style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{
-                    background:item.bg, borderRadius:99,
-                    padding:"10px 24px",
-                    fontFamily:"var(--font-head)", fontWeight:800,
-                    fontSize:14, letterSpacing:2.5, color:"#000",
-                    boxShadow:`0 0 20px ${item.shadow}, 0 0 40px ${item.shadow}55`,
-                  }}>{item.word}</div>
-                  {i < 2 && <span style={{color:"rgba(255,255,255,.4)",fontWeight:700,fontSize:18}}>-</span>}
-                </div>
-              ))}
-            </div>
-          </div>
         )}
 
         {/* Tablet Grid */}
@@ -2952,55 +3070,78 @@ export default function StreamHub() {
             {view==="trending"&&!search.trim() ? (
               <div style={{margin:"0 -24px"}}>
                 {!user && <WelcomeBanner />}
-                <div style={{padding:"16px 16px 0"}}>
+                {/* 🎭 AI BRAND BANNER — desktop, above hero */}
+                <div style={{
+                  margin:"12px 16px 16px",
+                  borderRadius:28,
+                  overflow:"hidden",
+                  position:"relative",
+                  background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
+                  border:"1px solid rgba(124,58,237,.4)",
+                  boxShadow:"0 16px 80px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.08)",
+                  padding:"28px 24px",
+                  display:"flex", alignItems:"center", gap:0,
+                }}>
+                  {/* glow blobs */}
+                  <div style={{position:"absolute",top:-60,left:-60,width:280,height:280,borderRadius:"50%",background:"rgba(124,58,237,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
+                  <div style={{position:"absolute",bottom:-60,right:-60,width:280,height:280,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
+                  <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:300,height:120,background:"rgba(6,182,212,.08)",filter:"blur(60px)",pointerEvents:"none"}}/>
+                  {/* Left glowing logo */}
+                  <img src="/logo-clean.png" alt="" style={{
+                    height:100, width:"auto", objectFit:"contain", flexShrink:0,
+                    filter:"drop-shadow(0 0 22px rgba(245,197,24,.9)) drop-shadow(0 0 44px rgba(124,58,237,.7))",
+                    animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+                    marginRight:28,
+                  }}/>
+                  {/* Center */}
+                  <div style={{flex:1,textAlign:"center",position:"relative"}}>
+                    <div style={{
+                      fontFamily:"var(--font-head)", fontWeight:800,
+                      fontSize:36, letterSpacing:"-.02em", marginBottom:16,
+                      background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                      backgroundSize:"200% auto",
+                      WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                      animation:"gradientShift 3s linear infinite",
+                    }}>Your AI Streaming Assistant</div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14,marginBottom:14}}>
+                      {[
+                        {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                        {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                        {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                      ].map((item,i)=>(
+                        <div key={item.word} style={{display:"flex",alignItems:"center",gap:14}}>
+                          <div style={{
+                            background:item.bg, borderRadius:99,
+                            padding:"12px 30px",
+                            fontFamily:"var(--font-head)", fontWeight:900,
+                            fontSize:16, letterSpacing:3.5, color:"#000",
+                            boxShadow:`0 0 24px ${item.glow}, 0 0 48px ${item.glow}55`,
+                          }}>{item.word}</div>
+                          {i<2 && <span style={{color:"rgba(255,255,255,.3)",fontSize:22,fontWeight:700}}>—</span>}
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={()=>setShowMoodSearch(true)}
+                      style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"8px 22px",fontSize:13,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5,transition:"all .2s"}}
+                      onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.35)";}}
+                      onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.2)";}}>
+                      🎭 Try Mood Search — describe any vibe, AI finds the perfect match
+                    </button>
+                  </div>
+                  {/* Right glowing logo */}
+                  <img src="/logo-clean.png" alt="" style={{
+                    height:100, width:"auto", objectFit:"contain", flexShrink:0,
+                    filter:"drop-shadow(0 0 22px rgba(245,197,24,.9)) drop-shadow(0 0 44px rgba(124,58,237,.7))",
+                    animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
+                    marginLeft:28,
+                  }}/>
+                </div>
+                <div style={{padding:"0 16px"}}>
                   <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
                     <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
                   </div>
                 </div>
                 <div style={{paddingTop:24}}>
-                  {/* Desktop brand hero strip - glowing logo + tagline */}
-                  <div style={{
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    gap:28, padding:"28px 24px 32px",
-                    background:"linear-gradient(135deg,rgba(124,58,237,.08),rgba(245,197,24,.04),rgba(255,107,157,.06))",
-                    borderRadius:20, marginBottom:28,
-                    border:"1px solid rgba(255,255,255,.05)",
-                  }}>
-                    <img src="/logo-clean.png" alt="The StreamHub"
-                      style={{
-                        height:100, width:"auto", objectFit:"contain",
-                        filter:"drop-shadow(0 0 20px rgba(245,197,24,.8)) drop-shadow(0 0 40px rgba(124,58,237,.6))",
-                        animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-                        flexShrink:0,
-                      }}
-                    />
-                    <div>
-                      <div style={{
-                        fontFamily:"var(--font-head)", fontWeight:800,
-                        fontSize:36, letterSpacing:"-.02em", marginBottom:12,
-                        background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
-                        WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-                      }}>Your AI Streaming Assistant</div>
-                      <div style={{display:"flex",alignItems:"center",gap:12}}>
-                        {[
-                          {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
-                          {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
-                          {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
-                        ].map((item,i)=>(
-                          <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
-                            <div style={{
-                              background:item.bg, borderRadius:99,
-                              padding:"11px 28px",
-                              fontFamily:"var(--font-head)", fontWeight:800,
-                              fontSize:15, letterSpacing:3, color:"#000",
-                              boxShadow:`0 0 22px ${item.shadow}, 0 0 44px ${item.shadow}55`,
-                            }}>{item.word}</div>
-                            {i < 2 && <span style={{color:"rgba(255,255,255,.35)",fontWeight:700,fontSize:20}}>-</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
