@@ -1556,22 +1556,30 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
     setLoading(true);
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model:"claude-sonnet-4-20250514", max_tokens:600,
-          messages:[{role:"user",content:`You are a streaming recommendation expert. The user wants: "${mood}". Suggest 6 movies or TV shows that perfectly match this mood. Return ONLY valid JSON: {"title":"Search Results","items":[{"title":"...","year":2023,"type":"movie or tv","reason":"why it matches the mood in one sentence","genre":"...","tmdb_search":"exact title to search on TMDB"}]}`}]
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          system:`You are an expert film and TV critic who knows every movie and show across ALL streaming platforms — Netflix, Disney+, Max, Hulu, Prime Video, Apple TV+, Peacock, Paramount+, Crunchyroll, ESPN+, and Tubi. When given a mood or vibe description, suggest 8 highly specific, varied titles that genuinely match. Include a mix of movies and shows. Include different genres, eras, and streaming platforms. Be specific — don't give generic blockbusters unless they truly fit. IMPORTANT: Each recommendation must be UNIQUE and genuinely match the described mood. Return ONLY valid JSON in this exact format with no markdown: {"items":[{"title":"exact title","year":2019,"type":"movie","reason":"one specific sentence why this matches the mood","genre":"Genre","platform":"Netflix","tmdb_search":"exact title for searching"}]}`,
+          messages:[{
+            role:"user",
+            content:`Find me 8 titles that match this mood/vibe: "${mood}"\n\nMake sure they are all different from each other, span different genres and platforms, and truly match what I described. No generic suggestions — be specific and creative.`
+          }]
         })
       });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
-      const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
-      const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
+      const txt = data.content?.find(b=>b.type==="text")?.text||"";
+      if (!txt) throw new Error("Empty response from AI");
+      const clean = txt.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
+      if (!parsed.items?.length) throw new Error("No results returned");
       setResult(parsed);
-      if (tier !== "premium") incrementMoodSearchCount(); // Only count on success
+      if (tier !== "premium") incrementMoodSearchCount();
     } catch(e) {
-      setResult({items:[
-        {title:"Get Out",year:2017,type:"movie",reason:"Psychological horror that's terrifying without being gory",genre:"Horror",tmdb_search:"Get Out"},
-        {title:"A Quiet Place",year:2018,type:"movie",reason:"Suspenseful and scary with minimal gore",genre:"Horror",tmdb_search:"A Quiet Place"},
-      ]});
+      console.error("Mood search error:", e);
+      setResult({ error: e.message, items:[] });
     }
     setLoading(false);
   };
@@ -1688,20 +1696,176 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
           {/* Results */}
           {result && (
             <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12,color:"var(--muted)"}}>AI PICKS FOR YOU</div>
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {result.items?.map((item,i)=>(
-                  <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
-                    <div style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{item.title.slice(0,2)}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
-                      <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0"}}>{item.reason}</div>
-                      <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"var(--purple)",border:"none",borderRadius:8,color:"#fff",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",marginTop:4}}>Search StreamHub →</button>
-                    </div>
+              {result.error ? (
+                <div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:12,padding:20,textAlign:"center"}}>
+                  <div style={{fontSize:28,marginBottom:8}}>😕</div>
+                  <div style={{fontWeight:700,marginBottom:4}}>Couldn't get results</div>
+                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>{result.error}</div>
+                  <button onClick={()=>{setResult(null);search();}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>Try Again</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:11,color:"rgba(196,181,253,.6)",marginBottom:12,letterSpacing:1.2,fontWeight:700}}>
+                    {result.items?.length || 0} RESULTS FOR "{mood.toUpperCase()}"
                   </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {result.items?.map((item,i)=>(
+                      <div key={i} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:14,padding:"12px 14px",animation:`fadeUp .3s ${i*0.06}s both`,transition:"border-color .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.5)"}
+                        onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.2)"}>
+                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10,marginBottom:5}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>
+                              {item.title} <span style={{fontSize:12,color:"var(--muted)",fontWeight:400}}>({item.year})</span>
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                              <span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.type==="tv"?"📺 TV":"🎬 Movie"}</span>
+                              {item.genre&&<span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.genre}</span>}
+                              {item.platform&&<span style={{background:"rgba(124,58,237,.25)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#c4b5fd",fontWeight:700}}>{item.platform}</span>}
+                            </div>
+                          </div>
+                          <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
+                            style={{background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                            Search →
+                          </button>
+                        </div>
+                        <div style={{fontSize:12,color:"rgba(196,181,253,.8)",lineHeight:1.5,fontStyle:"italic"}}>"{item.reason}"</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={()=>{setResult(null);setMood("");}} style={{marginTop:12,width:"100%",background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>
+                    🔄 Try a different mood
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── NEW RELEASES MODAL ───────────────────────────────────────────────────────
+function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }) {
+  const [releases, setReleases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+
+  const myServices = SERVICES.filter(s => userSubs.includes(s.id));
+
+  useEffect(() => {
+    const fetchNewReleases = async () => {
+      setLoading(true);
+      try {
+        // Fetch new releases from TMDB - movies and TV
+        const [movies, tv] = await Promise.all([
+          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
+          tmdbFetch("/tv/on_the_air?language=en-US&page=1"),
+        ]);
+        const movieItems = (movies.results||[]).slice(0,10).map(m=>({...m,mediaType:"movie"}));
+        const tvItems = (tv.results||[]).slice(0,10).map(t=>({...t,mediaType:"tv"}));
+        // Merge and sort by popularity
+        const all = [...movieItems,...tvItems].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+        setReleases(all);
+      } catch(e) { setReleases([]); }
+      setLoading(false);
+    };
+    fetchNewReleases();
+  }, []);
+
+  if (tier !== "premium") return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(6,182,212,.3)",padding:32,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:12}}>🆕</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>New Releases</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
+          See what just dropped on your streaming services — movies, shows, and series premieres, updated daily.
+        </div>
+        <button onClick={()=>{onUpgrade&&onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10}}>
+          Upgrade to Premium ✦
+        </button>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:13,cursor:"pointer"}}>Maybe later</button>
+      </div>
+    </div>
+  );
+
+  const filtered = filter === "all" ? releases : releases.filter(r => r.mediaType === filter);
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(6,182,212,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+
+        {/* Header */}
+        <div style={{padding:"20px 24px 14px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(124,58,237,.06))",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>🆕 New Releases</div>
+              <div style={{fontSize:12,color:"var(--muted)"}}>Latest drops across all streaming services</div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+          {/* Filter tabs */}
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"all",label:"All"},{ id:"movie",label:"🎬 Movies"},{id:"tv",label:"📺 Shows"}].map(f=>(
+              <button key={f.id} onClick={()=>setFilter(f.id)}
+                style={{background:filter===f.id?"rgba(6,182,212,.2)":"rgba(255,255,255,.05)",border:`1px solid ${filter===f.id?"rgba(6,182,212,.5)":"transparent"}`,borderRadius:99,color:filter===f.id?"#06B6D4":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
+                {f.label}
+              </button>
+            ))}
+            {myServices.length > 0 && (
+              <div style={{marginLeft:"auto",display:"flex",gap:4,alignItems:"center"}}>
+                <div style={{fontSize:10,color:"var(--muted)"}}>YOUR SERVICES:</div>
+                {myServices.slice(0,4).map(s=>(
+                  <div key={s.id} style={{background:s.color,borderRadius:6,width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff"}}>{s.logo}</div>
                 ))}
               </div>
-              <button onClick={()=>setResult(null)} style={{marginTop:16,width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>← Try a different mood</button>
+            )}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div style={{overflowY:"auto",flex:1,padding:20}}>
+          {loading ? (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
+              {[...Array(8)].map((_,i)=><div key={i} className="skeleton" style={{height:200,borderRadius:12}}/>)}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{textAlign:"center",padding:"40px 0",color:"var(--muted)"}}>No releases found.</div>
+          ) : (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:12}}>
+              {filtered.map(item=>{
+                const gr = safeGR(item.id);
+                const poster = item.poster_path ? `${TMDB_IMG}${item.poster_path}` : null;
+                const title = item.title || item.name || "";
+                const date = item.release_date || item.first_air_date || "";
+                const daysAgo = date ? Math.floor((Date.now()-new Date(date))/86400000) : null;
+                return (
+                  <div key={item.id} onClick={()=>{onSelect({...item,providers:[],category:item.mediaType});onClose();}}
+                    style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid var(--border)",background:"var(--card)",transition:"all .2s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(6,182,212,.5)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
+                    <div style={{height:180,position:"relative",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
+                      {poster && <img src={poster} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                      <div style={{position:"absolute",top:6,left:6,background:item.mediaType==="tv"?"rgba(124,58,237,.9)":"rgba(245,197,24,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:item.mediaType==="tv"?"#fff":"#000"}}>
+                        {item.mediaType==="tv"?"TV":"MOVIE"}
+                      </div>
+                      {daysAgo !== null && daysAgo <= 7 && (
+                        <div style={{position:"absolute",top:6,right:6,background:"rgba(16,185,129,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>
+                          {daysAgo === 0 ? "TODAY" : `${daysAgo}d ago`}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{padding:"8px 10px 10px"}}>
+                      <div style={{fontSize:12,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title}</div>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div style={{fontSize:10,color:"var(--muted)"}}>{date.slice(0,4)}</div>
+                        <div style={{fontSize:10,color:"var(--gold)"}}>★ {item.vote_average?.toFixed(1)||"—"}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -1988,7 +2152,7 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
             {icon:"🔍", title:"Unlimited searches", desc:"Search as much as you want"},
             {icon:"♥",  title:"Save to Watchlist", desc:"Up to 50 titles across all devices"},
             {icon:"✦",  title:"AI Picks for you",  desc:"Personalized recommendations"},
-            {icon:"📺", title:"Watch History",      desc:"Track everything you watch"},
+            {icon:"🆕", title:"New Releases",       desc:"Fresh drops on your services"},
             {icon:"⭐", title:"Ratings & Reviews",  desc:"Rate and review any title"},
           ].map((b,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<4?14:0}}>
@@ -2051,7 +2215,7 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
           {icon:"♥",  text:"Save your Watchlist",   color:"var(--danger)"},
           {icon:"✦",  text:"Get AI Picks for you",  color:"var(--gold)"},
           {icon:"🔍", text:"Unlimited searches",     color:"var(--cyan)"},
-          {icon:"📺", text:"Track Watch History",    color:"var(--purple)"},
+          {icon:"🆕", text:"New Releases Alert",     color:"var(--purple)"},
         ].map((b,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:"9px 10px"}}>
             <span style={{fontSize:16,color:b.color}}>{b.icon}</span>
@@ -2510,6 +2674,7 @@ export default function StreamHub() {
   const [filterPlat, setFilterPlat] = useState(null);
   const [showLeavingSoon, setShowLeavingSoon] = useState(false);
   const [showWatchHistory, setShowWatchHistory] = useState(false);
+  const [showNewReleases, setShowNewReleases] = useState(false);
   const [showCostCalc, setShowCostCalc] = useState(false);
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
@@ -2952,7 +3117,7 @@ export default function StreamHub() {
               {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
               {icon:"🎭",label:"Mood Search",sub:"Describe any vibe",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
               {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-              {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+              {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
               {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
             ].map(item=>(
               <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:100,transition:"all .2s"}}
@@ -3026,7 +3191,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
-      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
@@ -3159,7 +3324,7 @@ export default function StreamHub() {
               {[
                 {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
                 {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these titles",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-                {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+                {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
                 {icon:"💰",label:"Cost Calculator",sub:"See your streaming spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
               ].map(item=>(
                 <button key={item.label} onClick={item.onClick}
@@ -3245,7 +3410,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
-      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
@@ -3463,7 +3628,7 @@ export default function StreamHub() {
                 {[
                   {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
                   {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-                  {icon:"📺",label:"Watch History",sub:"Track what you watch",onClick:()=>setShowWatchHistory(true),color:"var(--cyan)"},
+                  {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
                   {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
                 ].map(item=>(
                   <button key={item.label} onClick={item.onClick}
@@ -3566,7 +3731,7 @@ export default function StreamHub() {
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
-      {showWatchHistory&&<WatchHistoryModal onClose={()=>setShowWatchHistory(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
