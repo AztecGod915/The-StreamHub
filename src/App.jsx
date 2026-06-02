@@ -764,20 +764,8 @@ function UpgradeModal({ onClose, onComplete }) {
   const fmtCard=v=>v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
   const fmtExp=v=>{const d=v.replace(/\D/g,"").slice(0,4);return d.length>2?d.slice(0,2)+"/"+d.slice(2):d;};
   const inp={background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"11px 14px",width:"100%",fontSize:14,outline:"none",fontFamily:"var(--font-body)"};
-  const handlePay=async()=>{
-    setLoading(true);
-    try{
-      const res=await fetch('/api/checkout',{method:"POST",headers:{"Content-Type":"application/json"}});
-      // Check if response is actually JSON
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        throw new Error(`Server returned non-JSON response (${res.status}). The checkout API may not be deployed. Check Vercel logs.`);
-      }
-      const data=await res.json();
-      if(data.url) window.location.href=data.url;
-      else throw new Error(data.error||"Unknown error from checkout API");
-    }catch(e){setLoading(false);alert("Payment error: "+e.message);}
+  const handlePay=()=>{
+    window.location.href="https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00";
   };
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
