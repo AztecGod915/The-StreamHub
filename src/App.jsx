@@ -1252,7 +1252,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
       bestValue: bestValue ? `${bestValue.name} at $${bestValue.cpw?.toFixed(2)}/watch` : "none",
     };
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/ai", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -1555,7 +1555,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
     if (!mood.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/ai", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -2260,7 +2260,7 @@ function PersonalizedRecsModal({ onClose, user, tier, onUpgrade, watchlist, user
 Suggest ${recCount} highly personalized movie or TV show recommendations. Focus on variety — mix genres but match the quality level of their rated titles. Return ONLY valid JSON:
 {"items":[{"title":"...","year":2023,"type":"movie or tv","reason":"personalized reason based on their taste in one sentence","genre":"...","tmdb_search":"exact title"}]}`;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/ai", {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:800, messages:[{role:"user",content:prompt}] })
       });
