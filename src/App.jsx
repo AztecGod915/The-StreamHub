@@ -3005,8 +3005,7 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)"}}>
         {/* Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:72,display:"flex",alignItems:"center",gap:12}}>
-          <Logo size={30} />
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
@@ -3038,7 +3037,91 @@ export default function StreamHub() {
           </div>
         </header>
 
-        <div style={{display:"flex",padding:"20px 24px",gap:20,maxWidth:1440,margin:"0 auto"}}>
+        {/* 🎭 AI BRAND BANNER — full width, above all three columns */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{
+            margin:"0",
+            padding:"0 24px 0",
+            maxWidth:1440,
+            marginLeft:"auto",
+            marginRight:"auto",
+          }}>
+            {!user && <WelcomeBanner />}
+            <div style={{
+              borderRadius:24,
+              overflow:"hidden",
+              position:"relative",
+              background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
+              border:"1px solid rgba(124,58,237,.4)",
+              boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.08)",
+              padding:"24px 32px",
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              marginBottom:20,
+            }}>
+              {/* glow blobs */}
+              <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"rgba(124,58,237,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
+              <div style={{position:"absolute",bottom:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
+              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:100,background:"rgba(6,182,212,.07)",filter:"blur(60px)",pointerEvents:"none"}}/>
+              {/* Left glowing logo */}
+              <img src="/logo-clean.png" alt="" style={{
+                height:90, width:"auto", objectFit:"contain", flexShrink:0,
+                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+              }}/>
+              {/* Center content — absolutely centered in the banner */}
+              <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",textAlign:"center",width:"60%",pointerEvents:"none"}}>
+                <div style={{
+                  fontFamily:"var(--font-head)", fontWeight:800,
+                  fontSize:30, letterSpacing:"-.02em", marginBottom:14,
+                  background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                  backgroundSize:"200% auto",
+                  WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                  animation:"gradientShift 3s linear infinite",
+                  whiteSpace:"nowrap",
+                }}>Your AI Streaming Assistant</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12,pointerEvents:"all"}}>
+                  {[
+                    {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                    {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                    {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                  ].map((item,i)=>(
+                    <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{
+                        background:item.bg, borderRadius:99,
+                        padding:"10px 26px",
+                        fontFamily:"var(--font-head)", fontWeight:900,
+                        fontSize:14, letterSpacing:3, color:"#000",
+                        boxShadow:`0 0 20px ${item.glow}, 0 0 40px ${item.glow}55`,
+                        whiteSpace:"nowrap",
+                      }}>{item.word}</div>
+                      {i<2 && <span style={{color:"rgba(255,255,255,.3)",fontSize:20,fontWeight:700}}>—</span>}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={()=>setShowMoodSearch(true)}
+                  style={{
+                    background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",
+                    borderRadius:99,color:"#c4b5fd",padding:"7px 20px",
+                    fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",
+                    cursor:"pointer",letterSpacing:.5,pointerEvents:"all",
+                    transition:"all .2s",whiteSpace:"nowrap",
+                  }}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.4)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
+                  🎭 Try Mood Search — describe any vibe, AI finds the match
+                </button>
+              </div>
+              {/* Right glowing logo */}
+              <img src="/logo-clean.png" alt="" style={{
+                height:90, width:"auto", objectFit:"contain", flexShrink:0,
+                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
+              }}/>
+            </div>
+          </div>
+        )}
+
+        <div style={{display:"flex",padding:`${(view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
           {/* Left Sidebar */}
           <aside style={{width:168,flexShrink:0}}>
             <div style={{marginBottom:20}}>
@@ -3068,78 +3151,9 @@ export default function StreamHub() {
           <main style={{flex:1,minWidth:0}}>
             {/* Homepage hero + rows */}
             {view==="trending"&&!search.trim() ? (
-              <div style={{margin:"0 -24px"}}>
-                {!user && <WelcomeBanner />}
-                {/* 🎭 AI BRAND BANNER — desktop, above hero */}
-                <div style={{
-                  margin:"12px 16px 16px",
-                  borderRadius:28,
-                  overflow:"hidden",
-                  position:"relative",
-                  background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
-                  border:"1px solid rgba(124,58,237,.4)",
-                  boxShadow:"0 16px 80px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.08)",
-                  padding:"28px 24px",
-                  display:"flex", alignItems:"center", gap:0,
-                }}>
-                  {/* glow blobs */}
-                  <div style={{position:"absolute",top:-60,left:-60,width:280,height:280,borderRadius:"50%",background:"rgba(124,58,237,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
-                  <div style={{position:"absolute",bottom:-60,right:-60,width:280,height:280,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
-                  <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:300,height:120,background:"rgba(6,182,212,.08)",filter:"blur(60px)",pointerEvents:"none"}}/>
-                  {/* Left glowing logo */}
-                  <img src="/logo-clean.png" alt="" style={{
-                    height:100, width:"auto", objectFit:"contain", flexShrink:0,
-                    filter:"drop-shadow(0 0 22px rgba(245,197,24,.9)) drop-shadow(0 0 44px rgba(124,58,237,.7))",
-                    animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-                    marginRight:28,
-                  }}/>
-                  {/* Center */}
-                  <div style={{flex:1,textAlign:"center",position:"relative"}}>
-                    <div style={{
-                      fontFamily:"var(--font-head)", fontWeight:800,
-                      fontSize:36, letterSpacing:"-.02em", marginBottom:16,
-                      background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
-                      backgroundSize:"200% auto",
-                      WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-                      animation:"gradientShift 3s linear infinite",
-                    }}>Your AI Streaming Assistant</div>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14,marginBottom:14}}>
-                      {[
-                        {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
-                        {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
-                        {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
-                      ].map((item,i)=>(
-                        <div key={item.word} style={{display:"flex",alignItems:"center",gap:14}}>
-                          <div style={{
-                            background:item.bg, borderRadius:99,
-                            padding:"12px 30px",
-                            fontFamily:"var(--font-head)", fontWeight:900,
-                            fontSize:16, letterSpacing:3.5, color:"#000",
-                            boxShadow:`0 0 24px ${item.glow}, 0 0 48px ${item.glow}55`,
-                          }}>{item.word}</div>
-                          {i<2 && <span style={{color:"rgba(255,255,255,.3)",fontSize:22,fontWeight:700}}>—</span>}
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={()=>setShowMoodSearch(true)}
-                      style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"8px 22px",fontSize:13,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5,transition:"all .2s"}}
-                      onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.35)";}}
-                      onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.2)";}}>
-                      🎭 Try Mood Search — describe any vibe, AI finds the perfect match
-                    </button>
-                  </div>
-                  {/* Right glowing logo */}
-                  <img src="/logo-clean.png" alt="" style={{
-                    height:100, width:"auto", objectFit:"contain", flexShrink:0,
-                    filter:"drop-shadow(0 0 22px rgba(245,197,24,.9)) drop-shadow(0 0 44px rgba(124,58,237,.7))",
-                    animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
-                    marginLeft:28,
-                  }}/>
-                </div>
-                <div style={{padding:"0 16px"}}>
-                  <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
-                    <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
-                  </div>
+              <div>
+                <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
+                  <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
                 </div>
                 <div style={{paddingTop:24}}>
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
@@ -3208,11 +3222,6 @@ export default function StreamHub() {
               </div>
             </div>
 
-            {/* Brand logo in sidebar bottom */}
-            <div style={{marginTop:24,textAlign:"center"}}>
-              <img src="/logo-clean.png" alt="The StreamHub" style={{width:"70%",objectFit:"contain",filter:"drop-shadow(0 0 16px rgba(245,197,24,.4))",animation:"logoPulse 3s ease-in-out infinite"}} />
-              <div style={{fontSize:10,color:"var(--gold)",marginTop:8,letterSpacing:2,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
-            </div>
           </aside>
         </div>
 
