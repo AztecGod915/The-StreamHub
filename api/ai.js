@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 function anthropicRequest(body, apiKey) {
   return new Promise((resolve, reject) => {
@@ -30,7 +30,7 @@ function anthropicRequest(body, apiKey) {
   });
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -42,11 +42,10 @@ module.exports = async (req, res) => {
   if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set in Vercel env vars' });
 
   try {
-    // Parse body if it's a string
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { status, body: responseBody } = await anthropicRequest(body, apiKey);
     return res.status(status).json(responseBody);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-};
+}
