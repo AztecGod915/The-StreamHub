@@ -2829,15 +2829,15 @@ export default function StreamHub() {
             background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
             border:"1px solid rgba(124,58,237,.35)",
             boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.07)",
-            padding:"24px 120px",
+            padding:"22px 106px",
           }}>
             {/* glow blobs */}
             <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
             {/* Left glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
-              position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
-              height:80, width:"auto", objectFit:"contain",
+              position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
+              height:72, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
             }}/>
@@ -2845,41 +2845,40 @@ export default function StreamHub() {
             <div style={{textAlign:"center"}}>
               <div style={{
                 fontFamily:"var(--font-head)", fontWeight:800,
-                fontSize:26, letterSpacing:"-.02em", marginBottom:14,
+                fontSize:22, letterSpacing:"-.02em", marginBottom:12, lineHeight:1.2,
                 background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
                 backgroundSize:"200% auto",
                 WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
                 animation:"gradientShift 3s linear infinite",
-                whiteSpace:"nowrap",
               }}>Your AI Streaming Assistant</div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"nowrap"}}>
                 {[
                   {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
                   {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                   {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
                 ].map((item,i)=>(
-                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
                     <div style={{
                       background:item.bg, borderRadius:99,
-                      padding:"9px 20px",
+                      padding:"8px 16px",
                       fontFamily:"var(--font-head)", fontWeight:900,
-                      fontSize:13, letterSpacing:2.5, color:"#000",
-                      boxShadow:`0 0 18px ${item.glow}, 0 0 36px ${item.glow}55`,
+                      fontSize:12, letterSpacing:2, color:"#000",
+                      boxShadow:`0 0 16px ${item.glow}, 0 0 32px ${item.glow}55`,
                       whiteSpace:"nowrap",
                     }}>{item.word}</div>
-                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:16,fontWeight:700}}>—</span>}
+                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:14,fontWeight:700}}>—</span>}
                   </div>
                 ))}
               </div>
               <button onClick={()=>setShowMoodSearch(true)}
-                style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"7px 20px",fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5}}>
+                style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5}}>
                 🎭 Try Mood Search — describe any vibe
               </button>
             </div>
             {/* Right glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
-              position:"absolute", right:16, top:"50%", transform:"translateY(-50%)",
-              height:80, width:"auto", objectFit:"contain",
+              position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
+              height:72, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
             }}/>
