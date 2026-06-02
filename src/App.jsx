@@ -124,18 +124,18 @@ const GlobalStyles = () => {
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 const SERVICES = [
-  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  deal:null,                  url:"https://www.netflix.com/search?q=",           price:15.49 },
-  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", deal:null,                  url:"https://www.disneyplus.com/search/",           price:7.99  },
-  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  deal:null,                  url:"https://www.max.com/search?q=",               price:9.99  },
-  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  deal:"2 months free",       url:"https://www.hulu.com/search?q=",              price:7.99  },
-  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=",           price:9.99  },
+  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  deal:null,                  url:"https://www.netflix.com/search?q=",           price:17.99 },
+  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", deal:null,                  url:"https://www.disneyplus.com/search/",           price:13.99 },
+  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  deal:null,                  url:"https://www.max.com/search?q=",               price:16.99 },
+  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  deal:"2 months free",       url:"https://www.hulu.com/search?q=",              price:17.99 },
+  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=",           price:13.99 },
   { id:"prime",       name:"Prime",       color:"#00A8E1", logo:"P",  deal:null,                  url:"https://www.amazon.com/s?k=",                 price:8.99  },
-  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=",         price:5.99  },
-  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=",    price:5.99  },
+  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=",         price:10.99 },
+  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=",    price:8.99  },
   { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=",       price:7.99  },
-  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:10.99 },
+  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:11.99 },
   { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"Cancel anytime, no PPV fees",   url:"https://www.dazn.com/search?q=",              price:19.99 },
-  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"5-day free trial + $30 off",    url:"https://www.fubo.tv/welcome",                 price:79.99 },
+  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"5-day free trial + $30 off",    url:"https://www.fubo.tv/welcome",                 price:82.99 },
   { id:"tubi",        name:"Tubi",        color:"#FA4343", logo:"Tu", deal:"Always Free! 🎉",      url:"https://tubitv.com/search/",                  price:0     },
 ];
 
@@ -1313,7 +1313,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const freeMoodUsed = tier !== "premium" && getMoodSearchCount() >= 1;
+  const freeMoodUsed = tier !== "premium" && getMoodSearchCount() >= 2;
 
   // Soft gate for non-premium users who used their daily free search
   if (freeMoodUsed) return (
@@ -1322,7 +1322,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
         <div style={{fontSize:52,marginBottom:12}}>🎭</div>
         <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used your free Mood Search today</div>
         <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
-          Free accounts get <strong style={{color:"var(--gold)"}}>1 Mood Search per day</strong>.<br/>
+          Free accounts get <strong style={{color:"var(--gold)"}}>2 Mood Searches per day</strong>.<br/>
           Upgrade to Premium for unlimited AI mood matching.
         </div>
         <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
@@ -1420,7 +1420,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
               {tier !== "premium" && (
                 <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
-                  1 free / day
+                  2 free / day
                 </div>
               )}
               <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
@@ -2789,7 +2789,6 @@ export default function StreamHub() {
         {/* Tablet Header */}
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)",paddingTop:"env(safe-area-inset-top)"}}>
           <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
-            <Logo size={28} />
             <div style={{flex:1,position:"relative",maxWidth:400}}>
               <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
@@ -2830,44 +2829,45 @@ export default function StreamHub() {
             background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
             border:"1px solid rgba(124,58,237,.35)",
             boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.07)",
-            padding:"24px 20px",
-            display:"flex", alignItems:"center", gap:0,
+            padding:"24px 120px",
           }}>
             {/* glow blobs */}
             <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
-            {/* Left glowing logo */}
+            {/* Left glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
-              height:80, width:"auto", objectFit:"contain", flexShrink:0,
+              position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
+              height:80, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-              marginRight:20,
             }}/>
             {/* Center content */}
-            <div style={{flex:1,textAlign:"center",position:"relative"}}>
+            <div style={{textAlign:"center"}}>
               <div style={{
                 fontFamily:"var(--font-head)", fontWeight:800,
-                fontSize:28, letterSpacing:"-.02em", marginBottom:14,
+                fontSize:26, letterSpacing:"-.02em", marginBottom:14,
                 background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
                 backgroundSize:"200% auto",
                 WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
                 animation:"gradientShift 3s linear infinite",
+                whiteSpace:"nowrap",
               }}>Your AI Streaming Assistant</div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:12}}>
                 {[
                   {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
                   {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                   {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
                 ].map((item,i)=>(
-                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
+                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{
                       background:item.bg, borderRadius:99,
-                      padding:"10px 24px",
+                      padding:"9px 20px",
                       fontFamily:"var(--font-head)", fontWeight:900,
-                      fontSize:14, letterSpacing:3, color:"#000",
-                      boxShadow:`0 0 20px ${item.glow}, 0 0 40px ${item.glow}55`,
+                      fontSize:13, letterSpacing:2.5, color:"#000",
+                      boxShadow:`0 0 18px ${item.glow}, 0 0 36px ${item.glow}55`,
+                      whiteSpace:"nowrap",
                     }}>{item.word}</div>
-                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:18,fontWeight:700}}>—</span>}
+                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:16,fontWeight:700}}>—</span>}
                   </div>
                 ))}
               </div>
@@ -2876,12 +2876,12 @@ export default function StreamHub() {
                 🎭 Try Mood Search — describe any vibe
               </button>
             </div>
-            {/* Right glowing logo */}
+            {/* Right glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
-              height:80, width:"auto", objectFit:"contain", flexShrink:0,
+              position:"absolute", right:16, top:"50%", transform:"translateY(-50%)",
+              height:80, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
-              marginLeft:20,
             }}/>
           </div>
         )}
