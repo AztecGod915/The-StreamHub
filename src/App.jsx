@@ -2551,6 +2551,42 @@ export default function StreamHub() {
       if (session?.user) loadUserData(session.user);
       else { setWatchlist([]); setUserRatings({}); }
     });
+
+    // ── Handle Stripe payment success ──────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
+      // Clean the URL
+      window.history.replaceState({}, "", "/");
+      // Wait for auth to load then upgrade
+      const upgradeUser = async () => {
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from("profiles").update({ tier:"premium" }).eq("id", session.user.id);
+          setTier("premium");
+          showToast("🎉 Welcome to Premium! All features unlocked.");
+        } else {
+          // Store flag so we can upgrade after they sign in
+          localStorage.setItem("streamhub_pending_upgrade", "true");
+          showToast("Payment received! Sign in to activate Premium.");
+        }
+      };
+      setTimeout(upgradeUser, 1500);
+    }
+
+    // ── Upgrade pending from before sign-in ─────────────────────────
+    if (localStorage.getItem("streamhub_pending_upgrade") === "true") {
+      const tryPendingUpgrade = async () => {
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from("profiles").update({ tier:"premium" }).eq("id", session.user.id);
+          setTier("premium");
+          localStorage.removeItem("streamhub_pending_upgrade");
+          showToast("🎉 Premium activated! Welcome.");
+        }
+      };
+      setTimeout(tryPendingUpgrade, 2000);
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
