@@ -1673,20 +1673,41 @@ function WelcomeBanner() {
         <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,197,24,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
 
         {/* Badge */}
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:1}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:16,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:1}}>
           ✦ FREE TO START — NO CREDIT CARD REQUIRED
         </div>
 
-        {/* Headline */}
-        <div style={{
-          fontFamily:"var(--font-head)", fontWeight:800,
-          fontSize:"clamp(20px,3vw,36px)",
-          lineHeight:1.15, marginBottom:10,
-          background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#F5C518)",
-          backgroundSize:"250% auto",
-          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-          animation:"gradientShift 4s linear infinite",
-        }}>Your AI Streaming Assistant</div>
+        {/* THE STREAMHUB — main headline */}
+        <div style={{marginBottom:12}}>
+          <div style={{
+            fontFamily:"var(--font-head)", fontWeight:900,
+            fontSize:"clamp(38px,5.5vw,72px)",
+            lineHeight:1, letterSpacing:"-.03em",
+            marginBottom:4,
+          }}>
+            <span style={{
+              background:"linear-gradient(90deg,rgba(255,255,255,.7),rgba(255,255,255,.9))",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              fontSize:"clamp(22px,3vw,42px)", fontWeight:800, letterSpacing:".02em",
+              display:"block", marginBottom:-4,
+            }}>THE</span>
+            <span style={{
+              background:"linear-gradient(90deg,#F5C518 0%,#FFD700 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite",
+              filter:"drop-shadow(0 0 30px rgba(245,197,24,.6)) drop-shadow(0 0 60px rgba(6,182,212,.3))",
+              display:"inline",
+            }}>Stream</span><span style={{
+              background:"linear-gradient(90deg,#7C3AED,#a78bfa,#7C3AED)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite reverse",
+              filter:"drop-shadow(0 0 30px rgba(124,58,237,.8)) drop-shadow(0 0 60px rgba(124,58,237,.4))",
+              display:"inline",
+            }}>Hub</span>
+          </div>
+        </div>
 
         {/* Subtext */}
         <div style={{fontSize:"clamp(12px,1.5vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 18px",lineHeight:1.7}}>
@@ -2625,6 +2646,9 @@ export default function StreamHub() {
           </div>
         </div>
 
+        {/* WelcomeBanner for new users — above brand banner */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
+
         {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
         {!search.trim() && view==="trending" && (
           <div style={{
@@ -2687,7 +2711,6 @@ export default function StreamHub() {
         )}
 
         {/* Mobile Premium Tools Strip */}
-        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         <div style={{padding:"0 14px 16px"}}>
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
@@ -2819,6 +2842,9 @@ export default function StreamHub() {
           </div>
         </header>
 
+        {/* Tablet Hero with Trailer */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
+
         {/* 🎭 AI BRAND BANNER — tablet, above hero */}
         {view==="trending"&&!search.trim()&&(
           <div style={{
@@ -2886,7 +2912,6 @@ export default function StreamHub() {
         )}
 
         {/* Tablet Hero with Trailer */}
-        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         {view==="trending"&&!search.trim()&&heroMovie&&(
           <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
         )}
