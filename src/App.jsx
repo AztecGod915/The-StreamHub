@@ -2595,6 +2595,34 @@ export default function StreamHub() {
             {heroMovie && (
               <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
             )}
+
+            {/* Mobile AI Tagline + Search·Find·Enjoy pills */}
+            <div style={{padding:"20px 16px 4px",textAlign:"center"}}>
+              <div style={{
+                fontFamily:"var(--font-head)", fontWeight:800,
+                fontSize:22, letterSpacing:"-.01em", marginBottom:14,
+                background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
+                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              }}>Your AI Streaming Assistant</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                {[
+                  {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
+                  {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
+                  {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
+                ].map((item, i) => (
+                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{
+                      background:item.bg, borderRadius:99,
+                      padding:"9px 18px",
+                      fontFamily:"var(--font-head)", fontWeight:800,
+                      fontSize:13, letterSpacing:2, color:"#000",
+                      boxShadow:`0 0 18px ${item.shadow}, 0 0 36px ${item.shadow}55`,
+                    }}>{item.word}</div>
+                    {i < 2 && <span style={{color:"rgba(255,255,255,.4)",fontWeight:700,fontSize:16}}>-</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
             {/* Mobile Featured Rows */}
             {[
               {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
@@ -2702,6 +2730,48 @@ export default function StreamHub() {
         {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
         {view==="trending"&&!search.trim()&&heroMovie&&(
           <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
+        )}
+
+        {/* Tablet AI Tagline + glowing logo banner */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{
+            margin:"0 0 8px", padding:"28px 20px",
+            display:"flex", flexDirection:"column", alignItems:"center", gap:16,
+            background:"linear-gradient(180deg,rgba(7,7,14,0) 0%,rgba(12,8,28,.6) 100%)",
+          }}>
+            {/* Glowing animated logo */}
+            <img src="/logo-clean.png" alt="The StreamHub"
+              style={{
+                height:90, width:"auto", objectFit:"contain",
+                filter:"drop-shadow(0 0 18px rgba(245,197,24,.7)) drop-shadow(0 0 36px rgba(124,58,237,.5))",
+                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+              }}
+            />
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:800,
+              fontSize:28, letterSpacing:"-.01em", textAlign:"center",
+              background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+            }}>Your AI Streaming Assistant</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+              {[
+                {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
+                {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
+                {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
+              ].map((item,i)=>(
+                <div key={item.word} style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{
+                    background:item.bg, borderRadius:99,
+                    padding:"10px 24px",
+                    fontFamily:"var(--font-head)", fontWeight:800,
+                    fontSize:14, letterSpacing:2.5, color:"#000",
+                    boxShadow:`0 0 20px ${item.shadow}, 0 0 40px ${item.shadow}55`,
+                  }}>{item.word}</div>
+                  {i < 2 && <span style={{color:"rgba(255,255,255,.4)",fontWeight:700,fontSize:18}}>-</span>}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Tablet Grid */}
@@ -2888,6 +2958,49 @@ export default function StreamHub() {
                   </div>
                 </div>
                 <div style={{paddingTop:24}}>
+                  {/* Desktop brand hero strip - glowing logo + tagline */}
+                  <div style={{
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    gap:28, padding:"28px 24px 32px",
+                    background:"linear-gradient(135deg,rgba(124,58,237,.08),rgba(245,197,24,.04),rgba(255,107,157,.06))",
+                    borderRadius:20, marginBottom:28,
+                    border:"1px solid rgba(255,255,255,.05)",
+                  }}>
+                    <img src="/logo-clean.png" alt="The StreamHub"
+                      style={{
+                        height:100, width:"auto", objectFit:"contain",
+                        filter:"drop-shadow(0 0 20px rgba(245,197,24,.8)) drop-shadow(0 0 40px rgba(124,58,237,.6))",
+                        animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+                        flexShrink:0,
+                      }}
+                    />
+                    <div>
+                      <div style={{
+                        fontFamily:"var(--font-head)", fontWeight:800,
+                        fontSize:36, letterSpacing:"-.02em", marginBottom:12,
+                        background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9)",
+                        WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                      }}>Your AI Streaming Assistant</div>
+                      <div style={{display:"flex",alignItems:"center",gap:12}}>
+                        {[
+                          {word:"SEARCH", bg:"#F5C518", shadow:"rgba(245,197,24,.6)"},
+                          {word:"FIND",   bg:"#06B6D4", shadow:"rgba(6,182,212,.6)"},
+                          {word:"ENJOY",  bg:"#FF6B9D", shadow:"rgba(255,107,157,.6)"},
+                        ].map((item,i)=>(
+                          <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
+                            <div style={{
+                              background:item.bg, borderRadius:99,
+                              padding:"11px 28px",
+                              fontFamily:"var(--font-head)", fontWeight:800,
+                              fontSize:15, letterSpacing:3, color:"#000",
+                              boxShadow:`0 0 22px ${item.shadow}, 0 0 44px ${item.shadow}55`,
+                            }}>{item.word}</div>
+                            {i < 2 && <span style={{color:"rgba(255,255,255,.35)",fontWeight:700,fontSize:20}}>-</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                   <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
