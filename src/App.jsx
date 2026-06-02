@@ -1286,14 +1286,14 @@ function CostCalculatorModal({ onClose, userSubs }) {
 // ─── MOOD SEARCH LIMIT (1 free per day) ──────────────────────────────────────
 function getMoodSearchCount() {
   const today = new Date().toDateString();
-  const stored = JSON.parse(localStorage.getItem("streamhub_mood_data") || "{}");
+  const stored = JSON.parse(localStorage.getItem("streamhub_mood_v3") || "{}");
   if (stored.date !== today) return 0;
   return stored.count || 0;
 }
 function incrementMoodSearchCount() {
   const today = new Date().toDateString();
   const count = getMoodSearchCount();
-  localStorage.setItem("streamhub_mood_data", JSON.stringify({ date: today, count: count + 1 }));
+  localStorage.setItem("streamhub_mood_v3", JSON.stringify({ date: today, count: count + 1 }));
 }
 
 // ─── AI PICKS LIMIT (weekly reset) ───────────────────────────────────────────
@@ -1320,7 +1320,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,197,24,.3)",padding:32,textAlign:"center"}}>
         <div style={{fontSize:52,marginBottom:12}}>🎭</div>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used your free Mood Search today</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used both free Mood Searches today</div>
         <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
           Free accounts get <strong style={{color:"var(--gold)"}}>2 Mood Searches per day</strong>.<br/>
           Upgrade to Premium for unlimited AI mood matching.
@@ -1358,7 +1358,6 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const search = async () => {
     if (!mood.trim()) return;
     setLoading(true);
-    if (tier !== "premium") incrementMoodSearchCount();
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -1371,6 +1370,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
       const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
       const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
       setResult(parsed);
+      if (tier !== "premium") incrementMoodSearchCount(); // Only count on success
     } catch(e) {
       setResult({items:[
         {title:"Get Out",year:2017,type:"movie",reason:"Psychological horror that's terrifying without being gory",genre:"Horror",tmdb_search:"Get Out"},
