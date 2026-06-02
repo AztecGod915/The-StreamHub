@@ -342,12 +342,34 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
   const [wlMovies, setWlMovies] = useState([]);
   const [loadingWl, setLoadingWl] = useState(false);
   const [loadingRev, setLoadingRev] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url||null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarLetter = username[0]?.toUpperCase()||"U";
   const totalRatings = Object.keys(userRatings).length;
+  const isPremium = tier === "premium";
 
   const saveUsername = async () => {
     const { error } = await supabase.from("profiles").update({ username }).eq("id", user.id);
     if (!error) { showToast("Username updated!"); setEditing(false); }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return showToast("Image must be under 2MB");
+    setUploadingAvatar(true);
+    try {
+      // Convert to base64 and store in profile
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64 = ev.target.result;
+        const { error } = await supabase.from("profiles").update({ avatar_url: base64 }).eq("id", user.id);
+        if (!error) { setAvatarUrl(base64); showToast("Profile picture updated! 🎉"); }
+        else showToast("Failed to update picture");
+        setUploadingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch(e) { showToast("Failed to upload"); setUploadingAvatar(false); }
   };
 
   // Load watchlist movies from TMDB when tab opens
@@ -389,7 +411,40 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
         <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.3),rgba(245,197,24,.1))",padding:"24px 24px 20px",position:"relative",flexShrink:0}}>
           <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
-            <div style={{width:60,height:60,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,border:"3px solid rgba(245,197,24,.4)",flexShrink:0}}>{avatarLetter}</div>
+            {/* Avatar with upload */}
+            <div style={{position:"relative",flexShrink:0}}>
+              <div style={{
+                width:70, height:70, borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontFamily:"var(--font-head)", fontWeight:800, fontSize:26,
+                border: isPremium
+                  ? "3px solid #F5C518"
+                  : "3px solid rgba(124,58,237,.4)",
+                boxShadow: isPremium
+                  ? "0 0 20px rgba(245,197,24,.6), 0 0 40px rgba(245,197,24,.3)"
+                  : "none",
+                overflow:"hidden", flexShrink:0,
+                transition:"all .3s",
+              }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : avatarLetter
+                }
+              </div>
+              {/* Upload button */}
+              <label style={{
+                position:"absolute", bottom:-2, right:-2,
+                width:24, height:24, borderRadius:"50%",
+                background:"var(--gold)", border:"2px solid var(--surface)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                cursor:"pointer", fontSize:11,
+                boxShadow:"0 2px 8px rgba(0,0,0,.5)",
+              }} title="Change profile picture">
+                {uploadingAvatar ? "⏳" : "📷"}
+                <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
+              </label>
+            </div>
             <div>
               {editing
                 ? <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -3126,7 +3181,22 @@ export default function StreamHub() {
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
-            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
+            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
           </div>
           {/* Search bar - full width, prominent */}
           <div style={{padding:"0 14px 10px",position:"relative"}}>
@@ -3338,7 +3408,22 @@ export default function StreamHub() {
               }
               {!user
                 ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
-                :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
+                :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
               }
             </div>
           </div>
@@ -3567,7 +3652,22 @@ export default function StreamHub() {
             }
             {!user
               ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
-              :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{width:36,height:36,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,border:"none",color:"#fff",flexShrink:0,cursor:"pointer"}}>{user?(profile?.username||user.email||"U")[0].toUpperCase():"?"}</button>
+              :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
             }
           </div>
         </header>
