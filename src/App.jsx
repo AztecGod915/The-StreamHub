@@ -1256,7 +1256,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model:"claude-haiku-4-5-20251001",
+          model:"claude-sonnet-4-6",
           max_tokens:800,
           system:`You are a smart streaming advisor for The StreamHub app. Analyze this user's streaming data and give brutally honest, personalized recommendations. Be specific with dollar amounts. Be direct — if they're wasting money, say so. Use emojis sparingly. Format as JSON with keys: summary (2 sentences), keep (array of {service, reason}), drop (array of {service, reason, savings}), tip (one power tip about maximizing value). Return ONLY valid JSON.`,
           messages:[{role:"user",content:`My streaming data: ${JSON.stringify(dataSnapshot)}`}]
@@ -1559,7 +1559,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          model:"claude-haiku-4-5-20251001",
+          model:"claude-sonnet-4-6",
           max_tokens:1000,
           system:`You are an expert film and TV critic who knows every movie and show across ALL streaming platforms — Netflix, Disney+, Max, Hulu, Prime Video, Apple TV+, Peacock, Paramount+, Crunchyroll, ESPN+, and Tubi. When given a mood or vibe description, suggest 8 highly specific, varied titles that genuinely match. Include a mix of movies and shows. Include different genres, eras, and streaming platforms. Be specific — don't give generic blockbusters unless they truly fit. IMPORTANT: Each recommendation must be UNIQUE and genuinely match the described mood. Return ONLY valid JSON in this exact format with no markdown: {"items":[{"title":"exact title","year":2019,"type":"movie","reason":"one specific sentence why this matches the mood","genre":"Genre","platform":"Netflix","tmdb_search":"exact title for searching"}]}`,
           messages:[{
@@ -1568,7 +1568,10 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
           }]
         })
       });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        throw new Error(errData.error?.message || errData.error || `API error ${res.status}`);
+      }
       const data = await res.json();
       const txt = data.content?.find(b=>b.type==="text")?.text||"";
       if (!txt) throw new Error("Empty response from AI");
@@ -2262,7 +2265,7 @@ Suggest ${recCount} highly personalized movie or TV show recommendations. Focus 
 
       const res = await fetch("/api/ai", {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:800, messages:[{role:"user",content:prompt}] })
+        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:800, messages:[{role:"user",content:prompt}] })
       });
       const data = await res.json();
       const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
