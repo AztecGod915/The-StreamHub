@@ -514,13 +514,20 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
   const [revContent, setRevContent] = useState("");
   const [revRating, setRevRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
 
-  // All hooks must be called before any conditional
   useEffect(() => {
     if (!movie?.id) return;
     setRating(userRatings?.[movie.id] || 0);
+    setTrailerKey(null); setShowTrailer(false);
     const type = movie.first_air_date ? "tv" : "movie";
-    tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar`).then(d => setDetails(d)).catch(()=>{});
+    tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar,videos`).then(d => {
+      setDetails(d);
+      const vids = d?.videos?.results || [];
+      const t = vids.find(v=>v.type==="Trailer"&&v.site==="YouTube") || vids.find(v=>v.site==="YouTube");
+      if (t) setTrailerKey(t.key);
+    }).catch(()=>{});
     supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at", {ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
   }, [movie?.id]);
 
@@ -571,20 +578,45 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:780,maxHeight:"92vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         {/* Hero */}
         <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
-          {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
-          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
+          {showTrailer && trailerKey ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              style={{width:"100%",height:"100%",border:"none",position:"absolute",inset:0}}
+            />
+          ) : (
+            <>
+              {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
+              {trailerKey && (
+                <button onClick={()=>setShowTrailer(true)}
+                  style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",
+                    background:"rgba(0,0,0,.7)",border:"2px solid rgba(255,255,255,.8)",borderRadius:"50%",
+                    width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",
+                    cursor:"pointer",backdropFilter:"blur(4px)",transition:"all .2s"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,197,24,.9)";e.currentTarget.style.borderColor="var(--gold)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,.7)";e.currentTarget.style.borderColor="rgba(255,255,255,.8)";}}>
+                  <span style={{fontSize:22,marginLeft:4}}>▶</span>
+                </button>
+              )}
+            </>
+          )}
           <div style={{position:"absolute",top:14,right:14,display:"flex",gap:8}}>
+            {showTrailer && <button onClick={()=>setShowTrailer(false)} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",padding:"6px 12px",fontSize:12,cursor:"pointer",backdropFilter:"blur(8px)"}}>✕ Close</button>}
             <button onClick={()=>onToggleWatchlist&&onToggleWatchlist(movie.id)} style={{background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:inWL?"#000":"#fff",padding:"6px 14px",fontWeight:700,fontSize:13,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Watchlist"}</button>
             <button onClick={onClose} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",width:36,height:36,fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
-          <div style={{position:"absolute",bottom:16,left:20,right:20}}>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name||""}</div>
-            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-              <span style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{releaseYear}</span>
-              {genres.map(g=><span key={g.id} style={{background:"rgba(255,255,255,.12)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{g.name}</span>)}
-              {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p}/>)}
+          {!showTrailer && (
+            <div style={{position:"absolute",bottom:16,left:20,right:20}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name||""}</div>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <span style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{releaseYear}</span>
+                {genres.map(g=><span key={g.id} style={{background:"rgba(255,255,255,.12)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{g.name}</span>)}
+                {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p}/>)}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Rating bar */}
@@ -603,6 +635,12 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
           </div>
           {svc && (
             <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} webUrl={svc.url} style={{marginLeft:"auto"}}/>
+          )}
+          {trailerKey && !showTrailer && (
+            <button onClick={()=>setShowTrailer(true)}
+              style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,color:"var(--text)",padding:"9px 16px",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6,marginLeft:svc?"0":"auto"}}>
+              🎬 Trailer
+            </button>
           )}
         </div>
 
@@ -2467,20 +2505,25 @@ export default function StreamHub() {
           {/* Top row - logo + buttons */}
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             {/* Logo - wider to fill space */}
-            <div style={{flex:1,display:"flex",alignItems:"center"}}>
+            <div style={{flex:1,display:"flex",flexDirection:"column",gap:2}}>
               <img
                 src="/logo-clean.png"
                 alt="The StreamHub"
                 onError={e=>e.target.style.display="none"}
                 style={{
-                  height:72,
+                  height:64,
                   width:"auto",
-                  maxWidth:240,
+                  maxWidth:200,
                   objectFit:"contain",
                   filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
               />
+              <div style={{
+                fontSize:9,fontWeight:700,fontFamily:"var(--font-head)",letterSpacing:1.5,
+                background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
+                WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+              }}>✦ YOUR AI STREAMING ASSISTANT</div>
             </div>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
@@ -2595,16 +2638,6 @@ export default function StreamHub() {
         {/* Spacer so content scrolls fully above bottom nav + tagline */}
         <div style={{height:160}} />
 
-        {/* Mobile bottom tagline bar - above bottom nav */}
-        <div style={{
-          position:"fixed", bottom:64, left:0, right:0, zIndex:150,
-          background:"linear-gradient(90deg,#7C3AED,#F5C518,#FF6B9D)",
-          padding:"7px 0", textAlign:"center",
-          fontFamily:"var(--font-head)", fontWeight:800,
-          fontSize:11, letterSpacing:4, color:"#fff",
-          boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
-          pointerEvents:"none",
-        }}>SEARCH · FIND · ENJOY</div>
       </div>
 
       {/* Modals */}
@@ -2732,19 +2765,8 @@ export default function StreamHub() {
         {/* Advanced Stats Section */}
         <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
 
-        {/* Spacer so content scrolls fully above bottom nav + tagline */}
-        <div style={{height:180}} />
-
-        {/* Tablet tagline banner - above bottom nav */}
-        <div style={{
-          position:"fixed", bottom:72, left:0, right:0, zIndex:150,
-          background:"linear-gradient(90deg,#7C3AED,#F5C518,#FF6B9D)",
-          padding:"7px 0", textAlign:"center",
-          fontFamily:"var(--font-head)", fontWeight:800,
-          fontSize:12, letterSpacing:5, color:"#fff",
-          boxShadow:"0 -2px 20px rgba(124,58,237,.5)",
-          pointerEvents:"none",
-        }}>SEARCH · FIND · ENJOY</div>
+        {/* Spacer so content scrolls above bottom nav */}
+        <div style={{height:100}} />
 
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
@@ -2935,7 +2957,7 @@ export default function StreamHub() {
             {/* Brand logo in sidebar bottom */}
             <div style={{marginTop:24,textAlign:"center"}}>
               <img src="/logo-clean.png" alt="The StreamHub" style={{width:"70%",objectFit:"contain",filter:"drop-shadow(0 0 16px rgba(245,197,24,.4))",animation:"logoPulse 3s ease-in-out infinite"}} />
-              <div style={{fontSize:10,color:"var(--muted)",marginTop:8,letterSpacing:.5}}>Search · Find · Enjoy</div>
+              <div style={{fontSize:10,color:"var(--gold)",marginTop:8,letterSpacing:2,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
             </div>
           </aside>
         </div>
@@ -2951,7 +2973,6 @@ export default function StreamHub() {
             background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)",
             textAlign:"center",position:"relative",
           }}>
-            {/* Big decorative tagline */}
             <div style={{
               fontFamily:"var(--font-head)", fontWeight:800,
               fontSize:"clamp(24px,3vw,42px)",
@@ -2960,14 +2981,14 @@ export default function StreamHub() {
               backgroundSize:"300% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 4s linear infinite",
-            }}>Search · Find · Enjoy</div>
+            }}>Your AI Streaming Assistant</div>
             <div style={{
               fontSize:12, letterSpacing:4, marginBottom:36,
               color:"rgba(240,240,250,.55)", display:"inline-block",
               background:"rgba(255,255,255,.05)",
               padding:"6px 20px", borderRadius:99,
               border:"1px solid rgba(255,255,255,.1)",
-            }}>YOUR AI STREAMING ASSISTANT</div>
+            }}>THE STREAMHUB</div>
 
             {/* Word pills */}
             <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
@@ -3001,7 +3022,7 @@ export default function StreamHub() {
                     <span style={{color:"#F5C518"}}>The Stream</span>
                     <span style={{color:"#7C3AED"}}>Hub</span>
                   </div>
-                  <div style={{fontSize:10,color:"var(--muted)",letterSpacing:1}}>SEARCH · FIND · ENJOY</div>
+                  <div style={{fontSize:10,color:"var(--gold)",letterSpacing:1,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
                 </div>
               </div>
               <div style={{fontSize:11,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
@@ -3014,35 +3035,8 @@ export default function StreamHub() {
           </div>
         </div>
 
-        {/* Left side tagline banner - desktop only, fully visible */}
-        <div className="desktop-only" style={{
-          position:"fixed", left:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(calc(-50% + 40px)) rotate(-90deg)",
-          transformOrigin:"center center",
-        }}>
-          <div style={{
-            background:"linear-gradient(90deg,#7C3AED,#F5C518)",
-            padding:"6px 28px", borderRadius:"0 0 10px 10px",
-            fontFamily:"var(--font-head)", fontWeight:800, fontSize:10,
-            letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 20px rgba(124,58,237,.6)",
-          }}>SEARCH · FIND · ENJOY</div>
-        </div>
-
-        {/* Right side tagline banner - desktop only, fully visible */}
-        <div className="desktop-only" style={{
-          position:"fixed", right:0, top:"50%", zIndex:50, pointerEvents:"none",
-          transform:"translateY(-50%) translateX(calc(50% - 40px)) rotate(90deg)",
-          transformOrigin:"center center",
-        }}>
-          <div style={{
-            background:"linear-gradient(90deg,#F5C518,#FF6B9D)",
-            padding:"6px 28px", borderRadius:"0 0 10px 10px",
-            fontFamily:"var(--font-head)", fontWeight:800, fontSize:10,
-            letterSpacing:4, color:"#fff", whiteSpace:"nowrap",
-            boxShadow:"0 4px 20px rgba(255,107,157,.6)",
-          }}>SEARCH · FIND · ENJOY</div>
-        </div>
+        {/* Left side tagline banner removed */}
+        {/* Right side tagline banner removed */}
       </div>
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
