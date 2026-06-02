@@ -30,6 +30,7 @@ async function tmdbFetch(path) {
 const PROVIDER_MAP = {
   8:"netflix", 337:"disney", 1899:"max", 15:"hulu", 350:"apple",
   9:"prime", 386:"peacock", 531:"paramount", 283:"crunchyroll", 149:"espnplus",
+  192:"youtube", 1969:"youtubetv", 73:"tubi", 257:"fubo",
 };
 
 function getProviders(watchProviders) {
@@ -124,19 +125,21 @@ const GlobalStyles = () => {
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 const SERVICES = [
-  { id:"netflix",     name:"Netflix",     color:"#E50914", logo:"N",  deal:null,                  url:"https://www.netflix.com/search?q=",           price:17.99 },
-  { id:"disney",      name:"Disney+",     color:"#0063E5", logo:"D+", deal:null,                  url:"https://www.disneyplus.com/search/",           price:13.99 },
-  { id:"max",         name:"Max",         color:"#002BE7", logo:"M",  deal:null,                  url:"https://www.max.com/search?q=",               price:16.99 },
-  { id:"hulu",        name:"Hulu",        color:"#1CE783", logo:"H",  deal:"2 months free",       url:"https://www.hulu.com/search?q=",              price:17.99 },
-  { id:"apple",       name:"Apple TV+",   color:"#555",    logo:"A",  deal:"$2.99/mo first year", url:"https://tv.apple.com/search?term=",           price:13.99 },
-  { id:"prime",       name:"Prime",       color:"#00A8E1", logo:"P",  deal:null,                  url:"https://www.amazon.com/s?k=",                 price:8.99  },
-  { id:"peacock",     name:"Peacock",     color:"#E81C2E", logo:"Pk", deal:"50% off annual",      url:"https://www.peacocktv.com/search?q=",         price:10.99 },
-  { id:"paramount",   name:"Paramount+",  color:"#0064FF", logo:"P+", deal:"30-day trial",        url:"https://www.paramountplus.com/search/?q=",    price:8.99  },
-  { id:"crunchyroll", name:"Crunchyroll", color:"#F47521", logo:"CR", deal:"14-day free trial",   url:"https://www.crunchyroll.com/search?q=",       price:7.99  },
-  { id:"espnplus",    name:"ESPN+",       color:"#E31837", logo:"E+", deal:null,                  url:"https://www.espn.com/espnplus/player/",       price:11.99 },
-  { id:"dazn",        name:"DAZN",        color:"#C8A900", logo:"DZ", deal:"Cancel anytime, no PPV fees",   url:"https://www.dazn.com/search?q=",              price:19.99 },
-  { id:"fubo",        name:"Fubo",        color:"#FF6B00", logo:"F",  deal:"5-day free trial + $30 off",    url:"https://www.fubo.tv/welcome",                 price:82.99 },
-  { id:"tubi",        name:"Tubi",        color:"#FA4343", logo:"Tu", deal:"Always Free! 🎉",      url:"https://tubitv.com/search/",                  price:0     },
+  { id:"netflix",     name:"Netflix",      color:"#E50914", logo:"N",   deal:null,                         url:"https://www.netflix.com/search?q=",          price:17.99 },
+  { id:"disney",      name:"Disney+",      color:"#0063E5", logo:"D+",  deal:null,                         url:"https://www.disneyplus.com/search/",          price:13.99 },
+  { id:"max",         name:"Max",          color:"#002BE7", logo:"M",   deal:null,                         url:"https://www.max.com/search?q=",              price:16.99 },
+  { id:"hulu",        name:"Hulu",         color:"#1CE783", logo:"H",   deal:"2 months free",              url:"https://www.hulu.com/search?q=",             price:17.99 },
+  { id:"apple",       name:"Apple TV+",    color:"#555",    logo:"A",   deal:"$2.99/mo first year",        url:"https://tv.apple.com/search?term=",          price:13.99 },
+  { id:"prime",       name:"Prime",        color:"#00A8E1", logo:"P",   deal:null,                         url:"https://www.amazon.com/s?k=",                price:8.99  },
+  { id:"peacock",     name:"Peacock",      color:"#E81C2E", logo:"Pk",  deal:"50% off annual",             url:"https://www.peacocktv.com/search?q=",        price:10.99 },
+  { id:"paramount",   name:"Paramount+",   color:"#0064FF", logo:"P+",  deal:"30-day trial",               url:"https://www.paramountplus.com/search/?q=",   price:8.99  },
+  { id:"crunchyroll", name:"Crunchyroll",  color:"#F47521", logo:"CR",  deal:"14-day free trial",          url:"https://www.crunchyroll.com/search?q=",      price:7.99  },
+  { id:"espnplus",    name:"ESPN+",        color:"#E31837", logo:"E+",  deal:null,                         url:"https://www.espn.com/espnplus/player/",      price:11.99 },
+  { id:"dazn",        name:"DAZN",         color:"#C8A900", logo:"DZ",  deal:"Cancel anytime",             url:"https://www.dazn.com/search?q=",             price:19.99 },
+  { id:"fubo",        name:"Fubo",         color:"#FF6B00", logo:"F",   deal:"5-day free trial",           url:"https://www.fubo.tv/welcome",                price:82.99 },
+  { id:"youtube",     name:"YouTube",      color:"#FF0000", logo:"YT",  deal:"Free with ads",              url:"https://www.youtube.com/results?search_query=", price:0  },
+  { id:"youtubetv",   name:"YouTube TV",   color:"#FF0000", logo:"YTV", deal:"Free trial",                 url:"https://tv.youtube.com/",                    price:72.99 },
+  { id:"tubi",        name:"Tubi",         color:"#FA4343", logo:"Tu",  deal:"Always Free! 🎉",            url:"https://tubitv.com/search/",                 price:0     },
 ];
 
 const CATEGORY_TABS = [
@@ -516,11 +519,13 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
   const [submitting, setSubmitting] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [allProviders, setAllProviders] = useState({flatrate:[],rent:[],buy:[],free:[]});
 
   useEffect(() => {
     if (!movie?.id) return;
     setRating(userRatings?.[movie.id] || 0);
     setTrailerKey(null); setShowTrailer(false);
+    setAllProviders({flatrate:[],rent:[],buy:[],free:[]});
     const type = movie.first_air_date ? "tv" : "movie";
     tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar,videos`).then(d => {
       setDetails(d);
@@ -528,6 +533,17 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
       const t = vids.find(v=>v.type==="Trailer"&&v.site==="YouTube") || vids.find(v=>v.site==="YouTube");
       if (t) setTrailerKey(t.key);
     }).catch(()=>{});
+    // Fetch watch providers (rent/buy/stream/free)
+    fetch(`${TMDB_BASE}/${type}/${movie.id}/watch/providers`,{headers:tmdbHeaders})
+      .then(r=>r.json()).then(data=>{
+        const res = data.results?.US || data.results?.GB || Object.values(data.results||{})[0] || {};
+        setAllProviders({
+          flatrate: res.flatrate||[],
+          rent:     res.rent||[],
+          buy:      res.buy||[],
+          free:     res.free||[],
+        });
+      }).catch(()=>{});
     supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at", {ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
   }, [movie?.id]);
 
@@ -659,6 +675,99 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
           {tab==="overview" && (
             <div>
               <p style={{fontSize:14,lineHeight:1.75,color:"rgba(240,240,250,.8)",marginBottom:20}}>{movie.overview||details?.overview||"No description available."}</p>
+
+              {/* Where to Watch / Find It */}
+              {(allProviders.flatrate.length>0 || allProviders.free.length>0 || allProviders.rent.length>0 || allProviders.buy.length>0) && (
+                <div style={{marginBottom:20}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--muted)",letterSpacing:1.2,marginBottom:10}}>WHERE TO WATCH</div>
+
+                  {/* Streaming (included) */}
+                  {allProviders.flatrate.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"var(--sports)",fontWeight:700,marginBottom:6}}>✅ INCLUDED IN SUBSCRIPTION</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.flatrate.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            <div style={{width:20,height:20,borderRadius:5,background:p.logo_path?"transparent":"#333",overflow:"hidden",flexShrink:0}}>
+                              {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                            </div>
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Free */}
+                  {allProviders.free.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"var(--gold)",fontWeight:700,marginBottom:6}}>🆓 FREE WITH ADS</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.free.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rent */}
+                  {allProviders.rent.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>💳 RENT</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.rent.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Buy */}
+                  {allProviders.buy.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>🛒 BUY</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.buy.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Not available anywhere — show search options */}
+              {allProviders.flatrate.length===0 && allProviders.free.length===0 && allProviders.rent.length===0 && allProviders.buy.length===0 && details && (
+                <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.08)",borderRadius:14,padding:16,marginBottom:20}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:4}}>🔍 Not on streaming right now</div>
+                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:12}}>This title may be available to rent, buy, or find for free elsewhere:</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                    {[
+                      {name:"YouTube",    url:`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title||movie.name)}`,    color:"#FF0000"},
+                      {name:"Amazon",     url:`https://www.amazon.com/s?k=${encodeURIComponent(movie.title||movie.name)}+movie`,                color:"#00A8E1"},
+                      {name:"Apple TV",   url:`https://tv.apple.com/search?term=${encodeURIComponent(movie.title||movie.name)}`,                color:"#555"},
+                      {name:"Vudu",       url:`https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(movie.title||movie.name)}`, color:"#3399FF"},
+                      {name:"Google Play",url:`https://play.google.com/store/search?q=${encodeURIComponent(movie.title||movie.name)}&c=movies`, color:"#4285F4"},
+                    ].map(s=>(
+                      <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                        style={{display:"flex",alignItems:"center",gap:6,background:`${s.color}15`,border:`1px solid ${s.color}40`,borderRadius:10,padding:"7px 12px",fontSize:12,fontWeight:700,color:"var(--text)",textDecoration:"none",transition:"all .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.background=`${s.color}30`}
+                        onMouseLeave={e=>e.currentTarget.style.background=`${s.color}15`}>
+                        🔗 {s.name}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               {similar.length>0 && (
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:12,color:"var(--muted)"}}>Similar Titles</div>
