@@ -1657,12 +1657,12 @@ function WatchButton({ serviceId, title, webUrl, style }) {
 // ─── WELCOME BANNER ───────────────────────────────────────────────────────────
 function WelcomeBanner() {
   return (
-    <div style={{padding:"20px 24px 4px"}}>
+    <div style={{padding:"12px 14px 4px"}}>
       <div style={{
         background:"linear-gradient(135deg,rgba(124,58,237,.25) 0%,rgba(7,7,14,.9) 40%,rgba(245,197,24,.12) 100%)",
         border:"1px solid rgba(245,197,24,.25)",
         borderRadius:20,
-        padding:"28px 36px",
+        padding:"20px 20px",
         textAlign:"center",
         position:"relative",
         overflow:"hidden",
@@ -1673,7 +1673,7 @@ function WelcomeBanner() {
         <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,197,24,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
 
         {/* Badge */}
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:16,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:1}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:.8}}>
           ✦ FREE TO START — NO CREDIT CARD REQUIRED
         </div>
 
@@ -1681,41 +1681,42 @@ function WelcomeBanner() {
         <div style={{marginBottom:12}}>
           <div style={{
             fontFamily:"var(--font-head)", fontWeight:900,
-            fontSize:"clamp(38px,5.5vw,72px)",
             lineHeight:1, letterSpacing:"-.03em",
             marginBottom:4,
           }}>
             <span style={{
               background:"linear-gradient(90deg,rgba(255,255,255,.7),rgba(255,255,255,.9))",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-              fontSize:"clamp(22px,3vw,42px)", fontWeight:800, letterSpacing:".02em",
-              display:"block", marginBottom:-4,
+              fontSize:"clamp(16px,3.5vw,32px)", fontWeight:800, letterSpacing:".05em",
+              display:"block", marginBottom:-2,
             }}>THE</span>
             <span style={{
+              fontSize:"clamp(32px,8vw,72px)",
               background:"linear-gradient(90deg,#F5C518 0%,#FFD700 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite",
-              filter:"drop-shadow(0 0 30px rgba(245,197,24,.6)) drop-shadow(0 0 60px rgba(6,182,212,.3))",
+              filter:"drop-shadow(0 0 20px rgba(245,197,24,.6))",
               display:"inline",
             }}>Stream</span><span style={{
+              fontSize:"clamp(32px,8vw,72px)",
               background:"linear-gradient(90deg,#7C3AED,#a78bfa,#7C3AED)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite reverse",
-              filter:"drop-shadow(0 0 30px rgba(124,58,237,.8)) drop-shadow(0 0 60px rgba(124,58,237,.4))",
+              filter:"drop-shadow(0 0 20px rgba(124,58,237,.8))",
               display:"inline",
             }}>Hub</span>
           </div>
         </div>
 
         {/* Subtext */}
-        <div style={{fontSize:"clamp(12px,1.5vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 18px",lineHeight:1.7}}>
+        <div style={{fontSize:"clamp(11px,2vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 16px",lineHeight:1.7}}>
           Searches Netflix, Disney+, Max, Hulu, Crunchyroll, ESPN+, Tubi and more — all at once.
         </div>
 
         {/* Service dots */}
-        <div style={{display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
+        <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
           {[
             {name:"Netflix",color:"#E50914"},
             {name:"Disney+",color:"#0063E5"},
@@ -2677,21 +2678,22 @@ export default function StreamHub() {
               position:"relative",
             }}>Your AI Streaming Assistant</div>
             {/* pills */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,position:"relative"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",width:"100%"}}>
               {[
                 {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
                 {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                 {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
               ].map((item,i)=>(
-                <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
+                <div key={item.word} style={{display:"flex",alignItems:"center",gap:5}}>
                   <div style={{
                     background:item.bg, borderRadius:99,
-                    padding:"8px 16px",
+                    padding:"7px 11px",
                     fontFamily:"var(--font-head)", fontWeight:900,
-                    fontSize:12, letterSpacing:2.5, color:"#000",
-                    boxShadow:`0 0 16px ${item.glow}, 0 0 32px ${item.glow}66`,
+                    fontSize:11, letterSpacing:1.5, color:"#000",
+                    boxShadow:`0 0 14px ${item.glow}, 0 0 28px ${item.glow}66`,
+                    whiteSpace:"nowrap",
                   }}>{item.word}</div>
-                  {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:14,fontWeight:700}}>—</span>}
+                  {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:12,fontWeight:700}}>—</span>}
                 </div>
               ))}
             </div>
