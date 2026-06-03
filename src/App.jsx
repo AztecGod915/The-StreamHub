@@ -124,6 +124,86 @@ const GlobalStyles = () => {
 };
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
+// ─── SPORTS STREAMING GUIDE ───────────────────────────────────────────────────
+const SPORTS_GUIDE = [
+  { sport:"WWE",             icon:"💪", services:["peacock"],                        note:"Peacock exclusive — all Raw, SmackDown & PPVs" },
+  { sport:"UFC",             icon:"🥊", services:["espnplus"],                       note:"ESPN+ exclusive — all Fight Nights & PPVs" },
+  { sport:"NFL",             icon:"🏈", services:["peacock","prime","espnplus","youtubetv","netflix"], note:"Sunday Night: Peacock · Thursday: Prime · Monday: ESPN+" },
+  { sport:"NBA",             icon:"🏀", services:["max","espnplus","youtubetv"],      note:"TNT games on Max · ESPN/ABC games on ESPN+" },
+  { sport:"MLB",             icon:"⚾", services:["apple","espnplus","peacock"],      note:"Friday Night Baseball: Apple TV+ · Others: ESPN+/Peacock" },
+  { sport:"NHL",             icon:"🏒", services:["espnplus","max","peacock"],        note:"ESPN+ · TNT/TBS games on Max · Some on Peacock" },
+  { sport:"Premier League",  icon:"⚽", services:["peacock"],                        note:"Peacock exclusive in the US" },
+  { sport:"Champions League",icon:"🏆", services:["paramount","peacock"],            note:"Paramount+ & CBS Sports" },
+  { sport:"MLS",             icon:"⚽", services:["apple"],                          note:"Apple TV+ exclusive — MLS Season Pass" },
+  { sport:"Formula 1",       icon:"🏎️", services:["espnplus","youtubetv"],           note:"ESPN & ESPN+ — all races live" },
+  { sport:"College Football", icon:"🏈", services:["espnplus","max","peacock","youtubetv"], note:"Split across ESPN+, ABC, CBS, NBC" },
+  { sport:"Boxing / DAZN",   icon:"🥊", services:["dazn"],                           note:"DAZN — major boxing events" },
+];
+
+const SPORT_SEARCHES = [
+  { label:"🥊 WWE",        query:"WWE wrestling" },
+  { label:"🥊 UFC",        query:"UFC mixed martial arts" },
+  { label:"🏈 NFL",        query:"NFL football" },
+  { label:"🏀 NBA",        query:"NBA basketball" },
+  { label:"⚾ MLB",        query:"MLB baseball" },
+  { label:"🏒 NHL",        query:"NHL hockey" },
+  { label:"⚽ Soccer",     query:"soccer football" },
+  { label:"🏎️ Formula 1", query:"Formula 1 racing" },
+  { label:"🏈 College",   query:"college football NCAA" },
+  { label:"🏊 Olympics",   query:"Olympics sports" },
+];
+
+function SportsStreamingGuide({ onSearch }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? SPORTS_GUIDE : SPORTS_GUIDE.slice(0, 6);
+  return (
+    <div style={{
+      background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05))",
+      border:"1px solid rgba(16,185,129,.2)",
+      borderRadius:16, padding:"16px", marginBottom:20,
+    }}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"var(--sports)"}}>📺 Where To Watch Sports</div>
+          <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Updated guide — click any sport to search</div>
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {shown.map(s=>{
+          const svcs = s.services.map(id=>SERVICES.find(sv=>sv.id===id)).filter(Boolean);
+          return (
+            <div key={s.sport} onClick={()=>onSearch(s.sport)}
+              style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:"10px 12px",cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.4)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.06)"}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                  <span style={{fontSize:18,flexShrink:0}}>{s.icon}</span>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13}}>{s.sport}</div>
+                    <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{s.note}</div>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap",flexShrink:0}}>
+                  {svcs.map(sv=>(
+                    <div key={sv.id} style={{background:sv.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>
+                      {sv.logo}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={()=>setExpanded(!expanded)}
+        style={{marginTop:10,width:"100%",background:"none",border:"1px solid rgba(16,185,129,.2)",borderRadius:8,color:"var(--sports)",padding:"7px 0",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+        {expanded ? "Show Less ▲" : `Show All ${SPORTS_GUIDE.length} Sports ▼`}
+      </button>
+    </div>
+  );
+}
+
 const SERVICES = [
   { id:"netflix",     name:"Netflix",      color:"#E50914", logo:"N",   deal:null,                         url:"https://www.netflix.com/search?q=",          price:17.99 },
   { id:"disney",      name:"Disney+",      color:"#0063E5", logo:"D+",  deal:null,                         url:"https://www.disneyplus.com/search/",          price:13.99 },
@@ -3130,6 +3210,11 @@ export default function StreamHub() {
     setSelectedMovie(movie);
   };
 
+  const handleSportSearch = (query) => {
+    setSearch(query);
+    setView("sports");
+  };
+
   const handleSetView = (v) => { setView(v); track("tab_change", { tab: v }); };
 
   const handleRate = (movieId, val) => {
@@ -3361,13 +3446,31 @@ export default function StreamHub() {
           </div>
         ) : (
           /* Regular grid */
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
-            {loading&&!search
-              ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
-              : filtered.length===0
-                ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
-                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
-            }
+          <div style={{padding:"0 0 12px"}}>
+            {/* Sports quick-pick buttons + guide */}
+            {view==="sports" && !search.trim() && (
+              <div style={{padding:"12px 14px 4px"}}>
+                {/* Sport quick search chips */}
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"var(--sports)",marginBottom:10}}>🔍 Search By Sport</div>
+                <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:10,scrollbarWidth:"none"}}>
+                  {SPORT_SEARCHES.map(s=>(
+                    <button key={s.label} onClick={()=>handleSportSearch(s.query)}
+                      style={{flexShrink:0,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"var(--font-head)"}}>
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <SportsStreamingGuide onSearch={(q)=>handleSportSearch(q)}/>
+              </div>
+            )}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"0 14px"}}>
+              {loading&&!search
+                ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
+                : filtered.length===0
+                  ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
+                  : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
+              }
+            </div>
           </div>
         )}
 
@@ -3573,6 +3676,20 @@ export default function StreamHub() {
                 {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
                 {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
               </div>
+              {/* Sports quick picks + guide */}
+              {view==="sports" && !search.trim() && (
+                <div style={{marginBottom:16}}>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+                    {SPORT_SEARCHES.map(s=>(
+                      <button key={s.label} onClick={()=>handleSportSearch(s.query)}
+                        style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                  <SportsStreamingGuide onSearch={handleSportSearch}/>
+                </div>
+              )}
               {loading&&!search
                 ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                 :filtered.length===0
@@ -3825,6 +3942,22 @@ export default function StreamHub() {
                   </div>
                   {!user&&<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
                 </div>
+                {/* Sports quick picks + guide */}
+                {view==="sports" && !search.trim() && (
+                  <div style={{marginBottom:20}}>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
+                      {SPORT_SEARCHES.map(s=>(
+                        <button key={s.label} onClick={()=>handleSportSearch(s.query)}
+                          style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)",transition:"all .2s"}}
+                          onMouseEnter={e=>e.currentTarget.style.background="rgba(16,185,129,.25)"}
+                          onMouseLeave={e=>e.currentTarget.style.background="rgba(16,185,129,.1)"}>
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                    <SportsStreamingGuide onSearch={handleSportSearch}/>
+                  </div>
+                )}
                 {loading&&!search
                   ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                   : filtered.length===0
