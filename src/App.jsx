@@ -154,9 +154,9 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [polling, setPolling] = useState(false);
-  const intervalRef = React.useRef(null);
+  const intervalRef = useRef(null);
 
-  const fetchEvents = React.useCallback(async (sport, silent=false) => {
+  const fetchEvents = useCallback(async (sport, silent=false) => {
     if (!sport) return;
     if (!silent) setLoading(true);
     try {
