@@ -126,34 +126,156 @@ const GlobalStyles = () => {
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
 // ─── ESPN SPORT ENDPOINT MAP ─────────────────────────────────────────────────
 const ESPN_SPORT_MAP = {
-  "nfl":            { path:"football/nfl",             display:"NFL",             icon:"🏈" },
-  "nba":            { path:"basketball/nba",           display:"NBA",             icon:"🏀" },
-  "mlb":            { path:"baseball/mlb",             display:"MLB",             icon:"⚾" },
-  "nhl":            { path:"hockey/nhl",               display:"NHL",             icon:"🏒" },
-  "soccer":         { path:"soccer/eng.1",             display:"Premier League",  icon:"⚽" },
-  "ufc":            { path:"mma/ufc",                  display:"UFC",             icon:"🥊" },
-  "mma":            { path:"mma/ufc",                  display:"UFC",             icon:"🥊" },
-  "formula":        { path:"racing/f1",                display:"Formula 1",       icon:"🏎️" },
-  "college":        { path:"football/college-football",display:"College Football",icon:"🏈" },
-  "ncaa":           { path:"football/college-football",display:"College Football",icon:"🏈" },
+  "nfl":            { path:"football/nfl",             display:"NFL",                  icon:"🏈" },
+  "nba":            { path:"basketball/nba",           display:"NBA",                  icon:"🏀" },
+  "mlb":            { path:"baseball/mlb",             display:"MLB",                  icon:"⚾" },
+  "nhl":            { path:"hockey/nhl",               display:"NHL",                  icon:"🏒" },
+  "soccer":         { path:"soccer/eng.1",             display:"Premier League",        icon:"⚽" },
+  "world cup":      { path:"soccer/fifa.world",        display:"FIFA World Cup 2026",   icon:"🏆" },
+  "fifa":           { path:"soccer/fifa.world",        display:"FIFA World Cup 2026",   icon:"🏆" },
+  "ufc":            { path:"mma/ufc",                  display:"UFC",                  icon:"🥊" },
+  "mma":            { path:"mma/ufc",                  display:"UFC",                  icon:"🥊" },
+  "formula":        { path:"racing/f1",                display:"Formula 1",            icon:"🏎️" },
+  "college":        { path:"football/college-football",display:"College Football",      icon:"🏈" },
+  "ncaa":           { path:"football/college-football",display:"College Football",      icon:"🏈" },
 };
 
 function getEspnSport(query) {
   const q = (query||"").toLowerCase();
-  for (const [key, val] of Object.entries(ESPN_SPORT_MAP)) {
+  // Check longer keys first to avoid "soccer" matching before "world cup soccer"
+  const sorted = Object.entries(ESPN_SPORT_MAP).sort((a,b)=>b[0].length-a[0].length);
+  for (const [key, val] of sorted) {
     if (q.includes(key)) return val;
   }
   return null;
 }
 
+// ─── WORLD CUP 2026 TEAMS ────────────────────────────────────────────────────
+const WC_TEAMS = [
+  {name:"United States",   flag:"🇺🇸", conf:"CONCACAF"},
+  {name:"Mexico",          flag:"🇲🇽", conf:"CONCACAF"},
+  {name:"Canada",          flag:"🇨🇦", conf:"CONCACAF"},
+  {name:"Brazil",          flag:"🇧🇷", conf:"CONMEBOL"},
+  {name:"Argentina",       flag:"🇦🇷", conf:"CONMEBOL"},
+  {name:"France",          flag:"🇫🇷", conf:"UEFA"},
+  {name:"England",         flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", conf:"UEFA"},
+  {name:"Germany",         flag:"🇩🇪", conf:"UEFA"},
+  {name:"Spain",           flag:"🇪🇸", conf:"UEFA"},
+  {name:"Portugal",        flag:"🇵🇹", conf:"UEFA"},
+  {name:"Netherlands",     flag:"🇳🇱", conf:"UEFA"},
+  {name:"Italy",           flag:"🇮🇹", conf:"UEFA"},
+  {name:"Belgium",         flag:"🇧🇪", conf:"UEFA"},
+  {name:"Croatia",         flag:"🇭🇷", conf:"UEFA"},
+  {name:"Switzerland",     flag:"🇨🇭", conf:"UEFA"},
+  {name:"Denmark",         flag:"🇩🇰", conf:"UEFA"},
+  {name:"Austria",         flag:"🇦🇹", conf:"UEFA"},
+  {name:"Poland",          flag:"🇵🇱", conf:"UEFA"},
+  {name:"Serbia",          flag:"🇷🇸", conf:"UEFA"},
+  {name:"Turkey",          flag:"🇹🇷", conf:"UEFA"},
+  {name:"Scotland",        flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", conf:"UEFA"},
+  {name:"Ukraine",         flag:"🇺🇦", conf:"UEFA"},
+  {name:"Morocco",         flag:"🇲🇦", conf:"CAF"},
+  {name:"Senegal",         flag:"🇸🇳", conf:"CAF"},
+  {name:"Egypt",           flag:"🇪🇬", conf:"CAF"},
+  {name:"Nigeria",         flag:"🇳🇬", conf:"CAF"},
+  {name:"South Africa",    flag:"🇿🇦", conf:"CAF"},
+  {name:"Cameroon",        flag:"🇨🇲", conf:"CAF"},
+  {name:"Japan",           flag:"🇯🇵", conf:"AFC"},
+  {name:"South Korea",     flag:"🇰🇷", conf:"AFC"},
+  {name:"Australia",       flag:"🇦🇺", conf:"AFC"},
+  {name:"Iran",            flag:"🇮🇷", conf:"AFC"},
+  {name:"Saudi Arabia",    flag:"🇸🇦", conf:"AFC"},
+  {name:"Uruguay",         flag:"🇺🇾", conf:"CONMEBOL"},
+  {name:"Colombia",        flag:"🇨🇴", conf:"CONMEBOL"},
+  {name:"Ecuador",         flag:"🇪🇨", conf:"CONMEBOL"},
+  {name:"Chile",           flag:"🇨🇱", conf:"CONMEBOL"},
+  {name:"Venezuela",       flag:"🇻🇪", conf:"CONMEBOL"},
+  {name:"Peru",            flag:"🇵🇪", conf:"CONMEBOL"},
+  {name:"Panama",          flag:"🇵🇦", conf:"CONCACAF"},
+  {name:"Costa Rica",      flag:"🇨🇷", conf:"CONCACAF"},
+  {name:"Jamaica",         flag:"🇯🇲", conf:"CONCACAF"},
+  {name:"Honduras",        flag:"🇭🇳", conf:"CONCACAF"},
+  {name:"New Zealand",     flag:"🇳🇿", conf:"OFC"},
+  {name:"Qatar",           flag:"🇶🇦", conf:"AFC"},
+  {name:"Algeria",         flag:"🇩🇿", conf:"CAF"},
+  {name:"Tunisia",         flag:"🇹🇳", conf:"CAF"},
+  {name:"Ghana",           flag:"🇬🇭", conf:"CAF"},
+];
+
+// ─── FAVORITE TEAMS MODAL ────────────────────────────────────────────────────
+function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) {
+  const [search, setSearch] = useState("");
+  const isWC = sport?.toLowerCase().includes("world cup") || sport?.toLowerCase().includes("fifa");
+
+  // Build team list from events or World Cup list
+  const teams = isWC
+    ? WC_TEAMS.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
+    : [...new Set([
+        ...events.map(e=>e.home.name),
+        ...events.map(e=>e.away.name),
+      ])].filter(t=>t && (!search || t.toLowerCase().includes(search.toLowerCase())))
+        .sort().map(name=>({name, flag:"⚽"}));
+
+  const currentFav = favoriteTeams[sport||""];
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:600,maxHeight:"80vh",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.2)"}}>
+        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid var(--border)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>⭐ Pick Your Team</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} — your games will be highlighted</div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search team..."
+            style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none"}}/>
+          {currentFav && (
+            <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.25)",borderRadius:10,padding:"8px 12px"}}>
+              <span style={{fontSize:13,fontWeight:700}}>⭐ Currently following: <strong>{currentFav}</strong></span>
+              <button onClick={()=>onToggle(sport,"_clear")} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Clear</button>
+            </div>
+          )}
+        </div>
+        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8}}>
+          {teams.map(t=>{
+            const isFav = currentFav===t.name;
+            return (
+              <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
+                style={{
+                  background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.03)",
+                  border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,
+                  borderRadius:12, padding:"10px 8px",
+                  display:"flex",alignItems:"center",gap:8,
+                  cursor:"pointer",textAlign:"left",transition:"all .15s",
+                  color:"var(--text)",
+                }}
+                onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(245,197,24,.4)"}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}>
+                <span style={{fontSize:20,flexShrink:0}}>{t.flag||"🏅"}</span>
+                <span style={{fontSize:12,fontWeight:isFav?700:500,lineHeight:1.3}}>{t.name}</span>
+                {isFav && <span style={{marginLeft:"auto",color:"var(--gold)",fontSize:14}}>⭐</span>}
+              </button>
+            );
+          })}
+          {teams.length===0 && <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
-function LiveSportsSection({ sportQuery, onSportChange }) {
+function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sportInfo, setSportInfo] = useState(null);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [polling, setPolling] = useState(false);
+  const [showTeamPicker, setShowTeamPicker] = useState(false);
   const intervalRef = useRef(null);
 
   const fetchEvents = useCallback(async (sport, silent=false) => {
@@ -222,10 +344,19 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
   const sport = getEspnSport(sportQuery);
   if (!sport && !loading) return null;
 
+  const favTeam = favoriteTeams?.[sportInfo?.display||""];
   const liveEvents = events.filter(e=>e.isLive);
-  const upcomingEvents = events.filter(e=>!e.isLive&&!e.isOver).slice(0,8);
+  const upcomingEvents = events.filter(e=>!e.isLive&&!e.isOver);
   const recentEvents = events.filter(e=>e.isOver).slice(-4).reverse();
   const hasLive = liveEvents.length > 0;
+
+  // Sort: favorite team's games first
+  const sortByFav = (evts) => {
+    if (!favTeam) return evts.slice(0,8);
+    const fav = evts.filter(e=>e.home.name===favTeam||e.away.name===favTeam);
+    const rest = evts.filter(e=>e.home.name!==favTeam&&e.away.name!==favTeam);
+    return [...fav,...rest].slice(0,8);
+  };
 
   return (
     <div style={{marginBottom:20}}>
@@ -236,13 +367,32 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:hasLive?"#ef4444":"var(--sports)"}}>
             {hasLive?"🔴 LIVE NOW":"📅 SCHEDULE"} — {sportInfo?.display||""}
           </div>
-          {polling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700,letterSpacing:.5}}>AUTO-UPDATING</div>}
+          {polling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700}}>AUTO-UPDATING</div>}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          {favTeam && (
+            <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>
+              ⭐ {favTeam}
+            </div>
+          )}
+          <button onClick={()=>setShowTeamPicker(true)}
+            style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+            {favTeam ? "⭐ Change Team" : "⭐ Follow a Team"}
+          </button>
           {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
-          <button onClick={()=>fetchEvents(sportInfo,false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻ Refresh</button>
+          <button onClick={()=>fetchEvents(sportInfo,false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
         </div>
       </div>
+
+      {showTeamPicker && (
+        <FavoriteTeamModal
+          sport={sportInfo?.display}
+          events={events}
+          favoriteTeams={favoriteTeams||{}}
+          onToggle={onToggleFavorite}
+          onClose={()=>setShowTeamPicker(false)}
+        />
+      )}
 
       {loading ? (
         <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4}}>
@@ -257,14 +407,14 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
         <div>
           {liveEvents.length>0 && (
             <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
-              {liveEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={true}/>)}
+              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
             </div>
           )}
           {upcomingEvents.length>0 && (
             <>
               {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING</div>}
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {upcomingEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={false}/>)}
+                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
               </div>
             </>
           )}
@@ -272,7 +422,7 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
             <>
               <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {recentEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true}/>)}
+                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
               </div>
             </>
           )}
@@ -287,23 +437,26 @@ function LiveSportsSection({ sportQuery, onSportChange }) {
   );
 }
 
-function GameCard({ evt, isLive, isOver }) {
+function GameCard({ evt, isLive, isOver, favTeam, onFav }) {
   const hasTeams = evt.home?.name && evt.away?.name;
+  const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
   return (
     <div style={{
       flexShrink:0, width:210,
-      background:"rgba(255,255,255,.04)",
-      border:`1px solid ${isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+      background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
+      border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
       borderRadius:14, overflow:"hidden",
-      boxShadow:isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+      boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+      position:"relative",
     }}>
+      {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
       {/* Top bar */}
       <div style={{
         padding:"6px 10px",
-        background:isLive?"rgba(239,68,68,.15)":"rgba(255,255,255,.03)",
+        background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",
         display:"flex",alignItems:"center",justifyContent:"space-between",
       }}>
-        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":"var(--muted)"}}>
+        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
           {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
         </div>
         {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px"}}>{evt.broadcast}</div>}
@@ -315,25 +468,25 @@ function GameCard({ evt, isLive, isOver }) {
           <>
             {/* Away team */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
                 {evt.away.logo
-                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain"}}/>
-                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff"}}>{evt.away.abbr?.slice(0,3)}</div>
+                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>
                 }
-                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.9:1}}>{evt.away.name}</span>
+                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
               </div>
-              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.score}</span>}
+              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
             </div>
             {/* Home team */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
                 {evt.home.logo
-                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain"}}/>
-                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff"}}>{evt.home.abbr?.slice(0,3)}</div>
+                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>
                 }
-                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.9:1}}>{evt.home.name}</span>
+                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
               </div>
-              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.score}</span>}
+              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
             </div>
           </>
         ) : (
@@ -367,9 +520,38 @@ const SPORT_CARDS = [
   { label:"🏊 Olympics",   query:"Olympics sports",        color:"#0085C7", bg:"rgba(0,133,199,.15)",   service:"Peacock" },
 ];
 
-function SportCategoryGrid({ onSearch }) {
+function SportCategoryGrid({ onSearch, favoriteTeams }) {
   return (
     <div style={{marginBottom:20}}>
+      {/* World Cup Hero Card */}
+      <div onClick={()=>onSearch("FIFA World Cup 2026")}
+        style={{
+          background:"linear-gradient(135deg,#1a2a0a 0%,#0d4a1a 40%,#1a3a0a 100%)",
+          border:"2px solid rgba(245,197,24,.5)",
+          borderRadius:16, padding:"16px 18px", marginBottom:12,
+          cursor:"pointer", position:"relative", overflow:"hidden",
+          boxShadow:"0 8px 32px rgba(245,197,24,.15)",
+          transition:"all .2s",
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.8)";e.currentTarget.style.transform="scale(1.01)";}}
+        onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.5)";e.currentTarget.style.transform="scale(1)";}}>
+        <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.1,pointerEvents:"none"}}>🏆</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+              <div style={{background:"#ef4444",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:900,color:"#fff",letterSpacing:.8}}>🔴 STARTS JUNE 11</div>
+              <div style={{background:"rgba(245,197,24,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:900,color:"var(--gold)",letterSpacing:.8}}>48 TEAMS</div>
+            </div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,color:"var(--gold)",lineHeight:1.1}}>🏆 FIFA World Cup 2026</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,.6)",marginTop:4}}>🇺🇸 USA · 🇲🇽 Mexico · 🇨🇦 Canada</div>
+          </div>
+          <div style={{background:"rgba(245,197,24,.15)",border:"1px solid rgba(245,197,24,.3)",borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"var(--gold)",fontWeight:700,marginBottom:2}}>LIVE SCORES</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,.6)"}}>Pick your team →</div>
+          </div>
+        </div>
+      </div>
+
       <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--sports)",marginBottom:12,letterSpacing:.5}}>
         🏆 SELECT A SPORT
       </div>
@@ -389,7 +571,9 @@ function SportCategoryGrid({ onSearch }) {
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>{s.label}</div>
               <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
             </div>
-            <span style={{fontSize:8,fontWeight:700,background:`${s.color}25`,color:s.color,borderRadius:6,padding:"3px 7px",border:`1px solid ${s.color}40`,letterSpacing:.5}}>WATCH</span>
+            {favoriteTeams?.[s.label] && (
+              <div style={{fontSize:10,color:"var(--gold)",background:"rgba(245,197,24,.1)",borderRadius:6,padding:"2px 7px",fontWeight:700}}>⭐</div>
+            )}
           </button>
         ))}
       </div>
@@ -3227,6 +3411,20 @@ export default function StreamHub() {
   const [showWatchHistory, setShowWatchHistory] = useState(false);
   const [showNewReleases, setShowNewReleases] = useState(false);
   const [showCostCalc, setShowCostCalc] = useState(false);
+
+  const [favoriteTeams, setFavoriteTeams] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); }
+    catch { return {}; }
+  });
+  const toggleFavoriteTeam = (sport, teamName) => {
+    setFavoriteTeams(prev => {
+      const updated = { ...prev };
+      if (teamName === "_clear" || updated[sport] === teamName) delete updated[sport];
+      else updated[sport] = teamName;
+      localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
+      return updated;
+    });
+  };
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [watchHistory, setWatchHistory] = useState([]);
@@ -3739,13 +3937,13 @@ export default function StreamHub() {
             {!search.trim() ? (
               <>
                 <SportsTabHeader onSearch={handleSportSearch}/>
-                <SportCategoryGrid onSearch={handleSportSearch}/>
+                <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
               </>
             ) : (
               <>
                 <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
-                <LiveSportsSection sportQuery={search}/>
+                <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
                   {loading ? Array.from({length:4}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                 </div>
@@ -3966,13 +4164,13 @@ export default function StreamHub() {
               {!search.trim() ? (
                 <>
                   <SportsTabHeader onSearch={handleSportSearch}/>
-                  <SportCategoryGrid onSearch={handleSportSearch}/>
+                  <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
                 </>
               ) : (
                 <>
                   <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
-                  <LiveSportsSection sportQuery={search}/>
+                  <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
                     {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                   </div>
@@ -4231,13 +4429,13 @@ export default function StreamHub() {
                 {!search.trim() ? (
                   <>
                     <SportsTabHeader onSearch={handleSportSearch}/>
-                    <SportCategoryGrid onSearch={handleSportSearch}/>
+                    <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
                   </>
                 ) : (
                   <>
                     <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
-                    <LiveSportsSection sportQuery={search}/>
+                    <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
                       {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                     </div>
