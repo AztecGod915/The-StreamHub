@@ -138,6 +138,23 @@ const ESPN_SPORT_MAP = {
   "formula":        { path:"racing/f1",                display:"Formula 1",            icon:"🏎️" },
   "college":        { path:"football/college-football",display:"College Football",      icon:"🏈" },
   "ncaa":           { path:"football/college-football",display:"College Football",      icon:"🏈" },
+  // ── Soccer leagues by ID ───
+  "eng.1":          { path:"soccer/eng.1",          display:"Premier League",     icon:"⚽" },
+  "esp.1":          { path:"soccer/esp.1",          display:"La Liga",            icon:"⚽" },
+  "ger.1":          { path:"soccer/ger.1",          display:"Bundesliga",         icon:"⚽" },
+  "ita.1":          { path:"soccer/ita.1",          display:"Serie A",            icon:"⚽" },
+  "fra.1":          { path:"soccer/fra.1",          display:"Ligue 1",            icon:"⚽" },
+  "uefa.champions": { path:"soccer/uefa.champions", display:"Champions League",   icon:"🏆" },
+  "uefa.europa":    { path:"soccer/uefa.europa",    display:"Europa League",      icon:"🇪🇺" },
+  "usa.1":          { path:"soccer/usa.1",          display:"MLS",                icon:"⚽" },
+  "mex.1":          { path:"soccer/mex.1",          display:"Liga MX",            icon:"⚽" },
+  "ned.1":          { path:"soccer/ned.1",          display:"Eredivisie",         icon:"⚽" },
+  "por.1":          { path:"soccer/por.1",          display:"Primeira Liga",      icon:"⚽" },
+  "sco.1":          { path:"soccer/sco.1",          display:"Scottish Prem",      icon:"⚽" },
+  "bra.1":          { path:"soccer/bra.1",          display:"Brasileirão",        icon:"⚽" },
+  "arg.1":          { path:"soccer/arg.1",          display:"Liga Argentina",     icon:"⚽" },
+  "eng.2":          { path:"soccer/eng.2",          display:"Championship",       icon:"⚽" },
+  "tur.1":          { path:"soccer/tur.1",          display:"Süper Lig",          icon:"⚽" },
 };
 
 function getEspnSport(query) {
@@ -205,17 +222,41 @@ const WC_TEAMS = [
 // ─── FAVORITE TEAMS MODAL ────────────────────────────────────────────────────
 function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) {
   const [search, setSearch] = useState("");
+  const [espnTeams, setEspnTeams] = useState([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
   const isWC = sport?.toLowerCase().includes("world cup") || sport?.toLowerCase().includes("fifa");
+  const isSoccer = sport && (SOCCER_LEAGUES.some(l=>l.name===sport||l.id===sport) || isWC);
 
-  // Build team list from events or World Cup list
-  const teams = isWC
-    ? WC_TEAMS.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()))
-    : [...new Set([
-        ...events.map(e=>e.home.name),
-        ...events.map(e=>e.away.name),
-      ])].filter(t=>t && (!search || t.toLowerCase().includes(search.toLowerCase())))
-        .sort().map(name=>({name, flag:"⚽"}));
+  // Find league ID from sport display name
+  const leagueEntry = SOCCER_LEAGUES.find(l=>l.name===sport);
+  const leagueId = leagueEntry?.id;
 
+  // Fetch all teams from ESPN for soccer leagues
+  useEffect(() => {
+    if (!leagueId) return;
+    setLoadingTeams(true);
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/teams?limit=100`)
+      .then(r=>r.json())
+      .then(data=>{
+        const teams = (data.sports?.[0]?.leagues?.[0]?.teams||[])
+          .map(t=>({name:t.team.displayName||t.team.name, flag:"⚽", abbr:t.team.abbreviation}));
+        setEspnTeams(teams);
+        setLoadingTeams(false);
+      })
+      .catch(()=>setLoadingTeams(false));
+  }, [leagueId]);
+
+  // Build full team list
+  const baseTeams = isWC
+    ? WC_TEAMS
+    : espnTeams.length > 0
+      ? espnTeams
+      : [...new Set([
+          ...events.map(e=>e.home.name),
+          ...events.map(e=>e.away.name),
+        ])].filter(Boolean).sort().map(name=>({name, flag:"🏅"}));
+
+  const teams = baseTeams.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()));
   const currentFav = favoriteTeams[sport||""];
 
   return (
@@ -231,16 +272,20 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
           </div>
           <input value={search} onChange={e=>setSearch(e.target.value)}
             placeholder="Search team..."
-            style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none"}}/>
+            style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none",boxSizing:"border-box"}}/>
           {currentFav && (
             <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.25)",borderRadius:10,padding:"8px 12px"}}>
-              <span style={{fontSize:13,fontWeight:700}}>⭐ Currently following: <strong>{currentFav}</strong></span>
-              <button onClick={()=>onToggle(sport,"_clear")} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Clear</button>
+              <span style={{fontSize:13,fontWeight:700}}>⭐ Following: <strong>{currentFav}</strong></span>
+              <button onClick={()=>{onToggle(sport,"_clear");onClose();}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Unfollow</button>
             </div>
           )}
         </div>
-        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:8}}>
-          {teams.map(t=>{
+        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
+          {loadingTeams ? (
+            Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:56,borderRadius:10}}/>)
+          ) : teams.length===0 ? (
+            <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div>
+          ) : teams.map(t=>{
             const isFav = currentFav===t.name;
             return (
               <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
@@ -249,18 +294,16 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
                   border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,
                   borderRadius:12, padding:"10px 8px",
                   display:"flex",alignItems:"center",gap:8,
-                  cursor:"pointer",textAlign:"left",transition:"all .15s",
-                  color:"var(--text)",
+                  cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)",
                 }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(245,197,24,.4)"}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}>
-                <span style={{fontSize:20,flexShrink:0}}>{t.flag||"🏅"}</span>
-                <span style={{fontSize:12,fontWeight:isFav?700:500,lineHeight:1.3}}>{t.name}</span>
-                {isFav && <span style={{marginLeft:"auto",color:"var(--gold)",fontSize:14}}>⭐</span>}
+                <span style={{fontSize:18,flexShrink:0}}>{t.flag||"🏅"}</span>
+                <span style={{fontSize:12,fontWeight:isFav?700:500,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis"}}>{t.name}</span>
+                {isFav && <span style={{marginLeft:"auto",color:"var(--gold)",fontSize:12,flexShrink:0}}>⭐</span>}
               </button>
             );
           })}
-          {teams.length===0 && <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div>}
         </div>
       </div>
     </div>
@@ -507,6 +550,65 @@ function GameCard({ evt, isLive, isOver, favTeam, onFav }) {
 }
 
 // ─── SPORT CATEGORY CARDS ────────────────────────────────────────────────────
+// ─── SOCCER LEAGUES ──────────────────────────────────────────────────────────
+const SOCCER_LEAGUES = [
+  { id:"eng.1",          name:"Premier League",     flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England"     },
+  { id:"esp.1",          name:"La Liga",            flag:"🇪🇸", country:"Spain"       },
+  { id:"ger.1",          name:"Bundesliga",         flag:"🇩🇪", country:"Germany"     },
+  { id:"ita.1",          name:"Serie A",            flag:"🇮🇹", country:"Italy"       },
+  { id:"fra.1",          name:"Ligue 1",            flag:"🇫🇷", country:"France"      },
+  { id:"uefa.champions", name:"Champions League",   flag:"🏆", country:"Europe"      },
+  { id:"uefa.europa",    name:"Europa League",      flag:"🇪🇺", country:"Europe"      },
+  { id:"usa.1",          name:"MLS",                flag:"🇺🇸", country:"USA"         },
+  { id:"mex.1",          name:"Liga MX",            flag:"🇲🇽", country:"Mexico"      },
+  { id:"ned.1",          name:"Eredivisie",         flag:"🇳🇱", country:"Netherlands" },
+  { id:"por.1",          name:"Primeira Liga",      flag:"🇵🇹", country:"Portugal"    },
+  { id:"sco.1",          name:"Scottish Prem",      flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", country:"Scotland"    },
+  { id:"bra.1",          name:"Brasileirão",        flag:"🇧🇷", country:"Brazil"      },
+  { id:"arg.1",          name:"Liga Argentina",     flag:"🇦🇷", country:"Argentina"   },
+  { id:"eng.2",          name:"Championship",       flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England 2"   },
+  { id:"tur.1",          name:"Süper Lig",          flag:"🇹🇷", country:"Turkey"      },
+];
+
+function SoccerHub({ onSearch, favoriteTeams }) {
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+        <span style={{fontSize:22}}>⚽</span>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:"#1CE783"}}>Soccer Hub</div>
+          <div style={{fontSize:11,color:"var(--muted)"}}>Pick a league for live scores & schedules</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+        {SOCCER_LEAGUES.map(league=>{
+          const hasFav = favoriteTeams?.[league.id];
+          return (
+            <button key={league.id} onClick={()=>onSearch(league.id)}
+              style={{
+                background:"rgba(26,110,60,.12)",
+                border:"1px solid rgba(28,231,131,.2)",
+                borderRadius:12, padding:"10px 12px",
+                display:"flex",alignItems:"center",gap:10,
+                cursor:"pointer", textAlign:"left", transition:"all .2s",
+                color:"var(--text)",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(26,110,60,.25)";e.currentTarget.style.borderColor="rgba(28,231,131,.5)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(26,110,60,.12)";e.currentTarget.style.borderColor="rgba(28,231,131,.2)";}}>
+              <span style={{fontSize:20,flexShrink:0}}>{league.flag}</span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{league.name}</div>
+                <div style={{fontSize:10,color:"var(--muted)"}}>{league.country}</div>
+              </div>
+              {hasFav && <span style={{fontSize:12,flexShrink:0}}>⭐</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const SPORT_CARDS = [
   { label:"💪 WWE",        query:"WWE wrestling",          color:"#CC0000", bg:"rgba(204,0,0,.15)",     service:"Peacock" },
   { label:"🥊 UFC",        query:"UFC mixed martial arts", color:"#D20A0A", bg:"rgba(210,10,10,.15)",   service:"ESPN+" },
@@ -514,7 +616,7 @@ const SPORT_CARDS = [
   { label:"🏀 NBA",        query:"NBA basketball",         color:"#C9082A", bg:"rgba(201,8,42,.15)",    service:"Max/ESPN+" },
   { label:"⚾ MLB",        query:"MLB baseball",           color:"#002D72", bg:"rgba(0,45,114,.2)",     service:"Apple TV+" },
   { label:"🏒 NHL",        query:"NHL hockey",             color:"#000000", bg:"rgba(100,100,130,.2)",  service:"ESPN+" },
-  { label:"⚽ Soccer",     query:"soccer football",        color:"#1A6E3C", bg:"rgba(26,110,60,.2)",    service:"Peacock" },
+  { label:"⚽ Soccer",     query:"soccer_hub",             color:"#1A6E3C", bg:"rgba(26,110,60,.2)",    service:"All Leagues" },
   { label:"🏎️ F1",        query:"Formula 1 racing",       color:"#E8002D", bg:"rgba(232,0,45,.15)",    service:"ESPN+" },
   { label:"🏈 College",   query:"college football NCAA",  color:"#FF6B00", bg:"rgba(255,107,0,.15)",   service:"Multi" },
   { label:"🏊 Olympics",   query:"Olympics sports",        color:"#0085C7", bg:"rgba(0,133,199,.15)",   service:"Peacock" },
@@ -3943,7 +4045,7 @@ export default function StreamHub() {
             ) : (
               <>
                 <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
-                <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
+                {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
                   {loading ? Array.from({length:4}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                 </div>
@@ -4170,7 +4272,7 @@ export default function StreamHub() {
               ) : (
                 <>
                   <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
-                  <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
+                  {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
                     {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                   </div>
@@ -4435,7 +4537,7 @@ export default function StreamHub() {
                 ) : (
                   <>
                     <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
-                    <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>
+                    {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
                     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
                       {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                     </div>
