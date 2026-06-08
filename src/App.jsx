@@ -147,50 +147,77 @@ function getEspnSport(query) {
 }
 
 // ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
-function LiveSportsSection({ sportQuery }) {
+function LiveSportsSection({ sportQuery, onSportChange }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sportInfo, setSportInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [polling, setPolling] = useState(false);
+  const intervalRef = React.useRef(null);
 
+  const fetchEvents = React.useCallback(async (sport, silent=false) => {
+    if (!sport) return;
+    if (!silent) setLoading(true);
+    try {
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`);
+      const data = await res.json();
+      const evts = (data.events||[]).map(evt => {
+        const comp = evt.competitions?.[0];
+        const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
+        const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
+        const st = evt.status?.type;
+        return {
+          id: evt.id,
+          name: evt.name||evt.shortName||"",
+          shortName: evt.shortName||evt.name||"",
+          date: evt.date,
+          localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
+          localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
+          isLive: st?.name==="STATUS_IN_PROGRESS",
+          isOver: st?.completed||false,
+          period: evt.status?.period||0,
+          displayClock: evt.status?.displayClock||"",
+          periodText: evt.status?.type?.shortDetail||"",
+          home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
+          away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
+          broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
+          venue: comp?.venue?.fullName||"",
+          city: comp?.venue?.address?.city||"",
+          isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
+        };
+      });
+      setEvents(evts);
+      setLastUpdated(new Date());
+      setError(null);
+      // Start/stop polling based on whether any games are live
+      const hasLive = evts.some(e=>e.isLive);
+      setPolling(hasLive);
+    } catch(e) {
+      if (!silent) setError("Could not load schedule");
+    }
+    setLoading(false);
+  }, []);
+
+  // Initial fetch + set up polling
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
     if (!sport) { setLoading(false); return; }
     setSportInfo(sport);
-    setLoading(true); setError(null);
-    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`)
-      .then(r => r.json())
-      .then(data => {
-        const evts = (data.events||[]).map(evt => {
-          const comp = evt.competitions?.[0];
-          const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
-          const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
-          const st = evt.status?.type;
-          return {
-            id: evt.id,
-            name: evt.name||evt.shortName||"",
-            shortName: evt.shortName||evt.name||"",
-            date: evt.date,
-            localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
-            localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
-            isLive: st?.name==="STATUS_IN_PROGRESS",
-            isOver: st?.completed||false,
-            period: evt.status?.period||0,
-            displayClock: evt.status?.displayClock||"",
-            periodText: evt.status?.type?.shortDetail||"",
-            home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
-            away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
-            broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
-            venue: comp?.venue?.fullName||"",
-            city: comp?.venue?.address?.city||"",
-            isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
-          };
-        });
-        setEvents(evts);
-        setLoading(false);
-      })
-      .catch(e => { setError("Could not load schedule"); setLoading(false); });
+    setEvents([]);
+    setLastUpdated(null);
+    fetchEvents(sport);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [sportQuery]);
+
+  // Live polling — refetch every 30s when games are live
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (polling && sportInfo) {
+      intervalRef.current = setInterval(() => fetchEvents(sportInfo, true), 30000);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [polling, sportInfo]);
 
   const sport = getEspnSport(sportQuery);
   if (!sport && !loading) return null;
@@ -202,59 +229,57 @@ function LiveSportsSection({ sportQuery }) {
 
   return (
     <div style={{marginBottom:20}}>
-      {/* Section header */}
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          {hasLive && <div style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"pulse 1.5s infinite",boxShadow:"0 0 8px #ef4444"}}/>}
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {hasLive && <div style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"pulse 1.5s infinite",boxShadow:"0 0 8px #ef4444",flexShrink:0}}/>}
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:hasLive?"#ef4444":"var(--sports)"}}>
-            {hasLive ? "🔴 LIVE NOW" : "📅 SCHEDULE"} — {sportInfo?.display||""}
+            {hasLive?"🔴 LIVE NOW":"📅 SCHEDULE"} — {sportInfo?.display||""}
           </div>
+          {polling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700,letterSpacing:.5}}>AUTO-UPDATING</div>}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
+          <button onClick={()=>fetchEvents(sportInfo,false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻ Refresh</button>
         </div>
       </div>
 
       {loading ? (
         <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4}}>
-          {[1,2,3].map(i=><div key={i} className="skeleton" style={{flexShrink:0,width:200,height:90,borderRadius:12}}/>)}
+          {[1,2,3].map(i=><div key={i} className="skeleton" style={{flexShrink:0,width:200,height:110,borderRadius:12}}/>)}
         </div>
       ) : error ? (
-        <div style={{fontSize:12,color:"var(--muted)",padding:"12px 0"}}>{error}</div>
+        <div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,padding:16,textAlign:"center"}}>
+          <div style={{fontSize:13,color:"var(--muted)",marginBottom:8}}>{error}</div>
+          <button onClick={()=>fetchEvents(sportInfo)} style={{background:"var(--sports)",border:"none",borderRadius:8,color:"#fff",padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Try Again</button>
+        </div>
       ) : (
         <div>
-          {/* Live games */}
           {liveEvents.length>0 && (
             <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
-              {liveEvents.map(evt=>(
-                <GameCard key={evt.id} evt={evt} isLive={true}/>
-              ))}
+              {liveEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={true}/>)}
             </div>
           )}
-
-          {/* Upcoming */}
           {upcomingEvents.length>0 && (
             <>
               {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING</div>}
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {upcomingEvents.map(evt=>(
-                  <GameCard key={evt.id} evt={evt} isLive={false}/>
-                ))}
+                {upcomingEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={false}/>)}
               </div>
             </>
           )}
-
-          {/* Recent results */}
           {recentEvents.length>0 && upcomingEvents.length===0 && (
             <>
               <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {recentEvents.map(evt=>(
-                  <GameCard key={evt.id} evt={evt} isLive={false} isOver={true}/>
-                ))}
+                {recentEvents.map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true}/>)}
               </div>
             </>
           )}
-
           {events.length===0 && (
-            <div style={{fontSize:13,color:"var(--muted)",textAlign:"center",padding:"20px 0"}}>No games currently scheduled. Check back soon!</div>
+            <div style={{fontSize:13,color:"var(--muted)",textAlign:"center",padding:"24px 0",background:"rgba(255,255,255,.02)",borderRadius:12}}>
+              No games scheduled right now. Season may be on break.
+            </div>
           )}
         </div>
       )}
@@ -3708,30 +3733,34 @@ export default function StreamHub() {
               </div>
             ))}
           </div>
-        ) : (
-          /* Regular grid */
-          <div style={{padding:"0 0 12px"}}>
-            {/* Sports Hub — mobile */}
-            {view==="sports" && !search.trim() && (
-              <div style={{padding:"12px 14px 4px"}}>
+        ) : view==="sports" ? (
+          /* ── DEDICATED SPORTS HUB ── */
+          <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
+            {!search.trim() ? (
+              <>
                 <SportsTabHeader onSearch={handleSportSearch}/>
                 <SportCategoryGrid onSearch={handleSportSearch}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
-              </div>
-            )}
-            {view==="sports" && search.trim() && (
-              <div style={{padding:"0 14px"}}>
+              </>
+            ) : (
+              <>
+                <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
                 <LiveSportsSection sportQuery={search}/>
-              </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+                  {loading ? Array.from({length:4}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                </div>
+              </>
             )}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"0 14px"}}>
-              {loading&&!search
-                ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
-                : filtered.length===0
-                  ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
-                  : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
-              }
-            </div>
+          </div>
+        ) : (
+          /* Regular grid */
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
+            {loading&&!search
+              ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
+              : filtered.length===0
+                ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
+                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
+            }
           </div>
         )}
 
@@ -3931,23 +3960,31 @@ export default function StreamHub() {
                 </div>
               ))}
             </div>
+          ) : view==="sports" ? (
+            /* ── DEDICATED SPORTS HUB — tablet ── */
+            <div>
+              {!search.trim() ? (
+                <>
+                  <SportsTabHeader onSearch={handleSportSearch}/>
+                  <SportCategoryGrid onSearch={handleSportSearch}/>
+                  <SportsStreamingGuide onSearch={handleSportSearch}/>
+                </>
+              ) : (
+                <>
+                  <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
+                  <LiveSportsSection sportQuery={search}/>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:16}}>
                 {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
                 {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
               </div>
-              {/* Sports Hub */}
-              {view==="sports" && !search.trim() && (
-                <div style={{marginBottom:16}}>
-                  <SportsTabHeader onSearch={handleSportSearch}/>
-                  <SportCategoryGrid onSearch={handleSportSearch}/>
-                  <SportsStreamingGuide onSearch={handleSportSearch}/>
-                </div>
-              )}
-              {view==="sports" && search.trim() && (
-                <LiveSportsSection sportQuery={search}/>
-              )}
               {loading&&!search
                 ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                 :filtered.length===0
@@ -4188,6 +4225,25 @@ export default function StreamHub() {
                   <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
+            ) : view==="sports" ? (
+              /* ── DEDICATED SPORTS HUB — desktop ── */
+              <div>
+                {!search.trim() ? (
+                  <>
+                    <SportsTabHeader onSearch={handleSportSearch}/>
+                    <SportCategoryGrid onSearch={handleSportSearch}/>
+                    <SportsStreamingGuide onSearch={handleSportSearch}/>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
+                    <LiveSportsSection sportQuery={search}/>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
+                      {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                    </div>
+                  </>
+                )}
+              </div>
             ) : (
               <>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
@@ -4200,17 +4256,6 @@ export default function StreamHub() {
                   </div>
                   {!user&&<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
                 </div>
-                {/* Sports Hub */}
-                {view==="sports" && !search.trim() && (
-                  <div style={{marginBottom:20}}>
-                    <SportsTabHeader onSearch={handleSportSearch}/>
-                    <SportCategoryGrid onSearch={handleSportSearch}/>
-                    <SportsStreamingGuide onSearch={handleSportSearch}/>
-                  </div>
-                )}
-                {view==="sports" && search.trim() && (
-                  <LiveSportsSection sportQuery={search}/>
-                )}
                 {loading&&!search
                   ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                   : filtered.length===0
