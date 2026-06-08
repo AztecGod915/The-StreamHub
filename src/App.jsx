@@ -124,6 +124,283 @@ const GlobalStyles = () => {
 };
 
 // ─── SERVICES ─────────────────────────────────────────────────────────────────
+// ─── ESPN SPORT ENDPOINT MAP ─────────────────────────────────────────────────
+const ESPN_SPORT_MAP = {
+  "nfl":            { path:"football/nfl",             display:"NFL",             icon:"🏈" },
+  "nba":            { path:"basketball/nba",           display:"NBA",             icon:"🏀" },
+  "mlb":            { path:"baseball/mlb",             display:"MLB",             icon:"⚾" },
+  "nhl":            { path:"hockey/nhl",               display:"NHL",             icon:"🏒" },
+  "soccer":         { path:"soccer/eng.1",             display:"Premier League",  icon:"⚽" },
+  "ufc":            { path:"mma/ufc",                  display:"UFC",             icon:"🥊" },
+  "mma":            { path:"mma/ufc",                  display:"UFC",             icon:"🥊" },
+  "formula":        { path:"racing/f1",                display:"Formula 1",       icon:"🏎️" },
+  "college":        { path:"football/college-football",display:"College Football",icon:"🏈" },
+  "ncaa":           { path:"football/college-football",display:"College Football",icon:"🏈" },
+};
+
+function getEspnSport(query) {
+  const q = (query||"").toLowerCase();
+  for (const [key, val] of Object.entries(ESPN_SPORT_MAP)) {
+    if (q.includes(key)) return val;
+  }
+  return null;
+}
+
+// ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
+function LiveSportsSection({ sportQuery }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sportInfo, setSportInfo] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const sport = getEspnSport(sportQuery);
+    if (!sport) { setLoading(false); return; }
+    setSportInfo(sport);
+    setLoading(true); setError(null);
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`)
+      .then(r => r.json())
+      .then(data => {
+        const evts = (data.events||[]).map(evt => {
+          const comp = evt.competitions?.[0];
+          const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
+          const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
+          const st = evt.status?.type;
+          return {
+            id: evt.id,
+            name: evt.name||evt.shortName||"",
+            shortName: evt.shortName||evt.name||"",
+            date: evt.date,
+            localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
+            localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
+            isLive: st?.name==="STATUS_IN_PROGRESS",
+            isOver: st?.completed||false,
+            period: evt.status?.period||0,
+            displayClock: evt.status?.displayClock||"",
+            periodText: evt.status?.type?.shortDetail||"",
+            home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
+            away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
+            broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
+            venue: comp?.venue?.fullName||"",
+            city: comp?.venue?.address?.city||"",
+            isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
+          };
+        });
+        setEvents(evts);
+        setLoading(false);
+      })
+      .catch(e => { setError("Could not load schedule"); setLoading(false); });
+  }, [sportQuery]);
+
+  const sport = getEspnSport(sportQuery);
+  if (!sport && !loading) return null;
+
+  const liveEvents = events.filter(e=>e.isLive);
+  const upcomingEvents = events.filter(e=>!e.isLive&&!e.isOver).slice(0,8);
+  const recentEvents = events.filter(e=>e.isOver).slice(-4).reverse();
+  const hasLive = liveEvents.length > 0;
+
+  return (
+    <div style={{marginBottom:20}}>
+      {/* Section header */}
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          {hasLive && <div style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"pulse 1.5s infinite",boxShadow:"0 0 8px #ef4444"}}/>}
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:hasLive?"#ef4444":"var(--sports)"}}>
+            {hasLive ? "🔴 LIVE NOW" : "📅 SCHEDULE"} — {sportInfo?.display||""}
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4}}>
+          {[1,2,3].map(i=><div key={i} className="skeleton" style={{flexShrink:0,width:200,height:90,borderRadius:12}}/>)}
+        </div>
+      ) : error ? (
+        <div style={{fontSize:12,color:"var(--muted)",padding:"12px 0"}}>{error}</div>
+      ) : (
+        <div>
+          {/* Live games */}
+          {liveEvents.length>0 && (
+            <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
+              {liveEvents.map(evt=>(
+                <GameCard key={evt.id} evt={evt} isLive={true}/>
+              ))}
+            </div>
+          )}
+
+          {/* Upcoming */}
+          {upcomingEvents.length>0 && (
+            <>
+              {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING</div>}
+              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
+                {upcomingEvents.map(evt=>(
+                  <GameCard key={evt.id} evt={evt} isLive={false}/>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Recent results */}
+          {recentEvents.length>0 && upcomingEvents.length===0 && (
+            <>
+              <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
+              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
+                {recentEvents.map(evt=>(
+                  <GameCard key={evt.id} evt={evt} isLive={false} isOver={true}/>
+                ))}
+              </div>
+            </>
+          )}
+
+          {events.length===0 && (
+            <div style={{fontSize:13,color:"var(--muted)",textAlign:"center",padding:"20px 0"}}>No games currently scheduled. Check back soon!</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GameCard({ evt, isLive, isOver }) {
+  const hasTeams = evt.home?.name && evt.away?.name;
+  return (
+    <div style={{
+      flexShrink:0, width:210,
+      background:"rgba(255,255,255,.04)",
+      border:`1px solid ${isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+      borderRadius:14, overflow:"hidden",
+      boxShadow:isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+    }}>
+      {/* Top bar */}
+      <div style={{
+        padding:"6px 10px",
+        background:isLive?"rgba(239,68,68,.15)":"rgba(255,255,255,.03)",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
+      }}>
+        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":"var(--muted)"}}>
+          {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
+        </div>
+        {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px"}}>{evt.broadcast}</div>}
+      </div>
+
+      {/* Teams / Fighters */}
+      <div style={{padding:"10px 12px"}}>
+        {hasTeams ? (
+          <>
+            {/* Away team */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:7}}>
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain"}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff"}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?.0.9:1}}>{evt.away.name}</span>
+              </div>
+              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.score}</span>}
+            </div>
+            {/* Home team */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:7}}>
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain"}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff"}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.9:1}}>{evt.home.name}</span>
+              </div>
+              {(isLive||isOver) && <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.score}</span>}
+            </div>
+          </>
+        ) : (
+          <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>
+        )}
+
+        {/* Time & Venue */}
+        {!isLive && !isOver && (
+          <div style={{marginTop:8,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
+            <span>🕐 {evt.localTime}</span>
+            {evt.city && <span>📍 {evt.city}</span>}
+          </div>
+        )}
+        {evt.isTitleFight && <div style={{marginTop:6,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── SPORT CATEGORY CARDS ────────────────────────────────────────────────────
+const SPORT_CARDS = [
+  { label:"💪 WWE",        query:"WWE wrestling",          color:"#CC0000", bg:"rgba(204,0,0,.15)",     service:"Peacock" },
+  { label:"🥊 UFC",        query:"UFC mixed martial arts", color:"#D20A0A", bg:"rgba(210,10,10,.15)",   service:"ESPN+" },
+  { label:"🏈 NFL",        query:"NFL football",           color:"#013369", bg:"rgba(1,51,105,.2)",     service:"Multi" },
+  { label:"🏀 NBA",        query:"NBA basketball",         color:"#C9082A", bg:"rgba(201,8,42,.15)",    service:"Max/ESPN+" },
+  { label:"⚾ MLB",        query:"MLB baseball",           color:"#002D72", bg:"rgba(0,45,114,.2)",     service:"Apple TV+" },
+  { label:"🏒 NHL",        query:"NHL hockey",             color:"#000000", bg:"rgba(100,100,130,.2)",  service:"ESPN+" },
+  { label:"⚽ Soccer",     query:"soccer football",        color:"#1A6E3C", bg:"rgba(26,110,60,.2)",    service:"Peacock" },
+  { label:"🏎️ F1",        query:"Formula 1 racing",       color:"#E8002D", bg:"rgba(232,0,45,.15)",    service:"ESPN+" },
+  { label:"🏈 College",   query:"college football NCAA",  color:"#FF6B00", bg:"rgba(255,107,0,.15)",   service:"Multi" },
+  { label:"🏊 Olympics",   query:"Olympics sports",        color:"#0085C7", bg:"rgba(0,133,199,.15)",   service:"Peacock" },
+];
+
+function SportCategoryGrid({ onSearch }) {
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--sports)",marginBottom:12,letterSpacing:.5}}>
+        🏆 SELECT A SPORT
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+        {SPORT_CARDS.map(s=>(
+          <button key={s.label} onClick={()=>onSearch(s.query)}
+            style={{
+              background:s.bg, border:`1px solid ${s.color}40`,
+              borderRadius:14, padding:"12px 14px",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              cursor:"pointer", textAlign:"left",
+              transition:"all .2s",
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform="scale(1.02)";}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}40`;e.currentTarget.style.transform="scale(1)";}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>{s.label}</div>
+              <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
+            </div>
+            <span style={{fontSize:8,fontWeight:700,background:`${s.color}25`,color:s.color,borderRadius:6,padding:"3px 7px",border:`1px solid ${s.color}40`,letterSpacing:.5}}>WATCH</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── SPORTS TAB HEADER ───────────────────────────────────────────────────────
+function SportsTabHeader({ onSearch }) {
+  return (
+    <div style={{
+      background:"linear-gradient(135deg,#0a1628 0%,#1a0a2e 50%,#0a2010 100%)",
+      borderRadius:18, padding:"20px 16px", marginBottom:16,
+      border:"1px solid rgba(16,185,129,.2)",
+      position:"relative", overflow:"hidden",
+    }}>
+      <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:"rgba(16,185,129,.1)",filter:"blur(40px)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",bottom:-20,left:-20,width:120,height:120,borderRadius:"50%",background:"rgba(239,68,68,.08)",filter:"blur(30px)",pointerEvents:"none"}}/>
+      <div style={{position:"relative"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+          <div style={{fontSize:28}}>🏆</div>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,lineHeight:1,background:"linear-gradient(90deg,#10b981,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Sports Hub</div>
+            <div style={{fontSize:11,color:"rgba(240,240,250,.5)",marginTop:2}}>Live scores · Schedules · Where to watch</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}>
+          {["🔴 Live Scores","📅 Schedules","📺 Stream Guide","🥊 WWE & UFC"].map(tag=>(
+            <div key={tag} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.2)",borderRadius:99,padding:"3px 10px",fontSize:10,color:"var(--sports)",fontWeight:700}}>{tag}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── SPORTS STREAMING GUIDE ───────────────────────────────────────────────────
 const SPORTS_GUIDE = [
   { sport:"WWE",             icon:"💪", services:["peacock"],                        note:"Peacock exclusive — all Raw, SmackDown & PPVs" },
@@ -153,56 +430,212 @@ const SPORT_SEARCHES = [
   { label:"🏊 Olympics",   query:"Olympics sports" },
 ];
 
-function SportsStreamingGuide({ onSearch }) {
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? SPORTS_GUIDE : SPORTS_GUIDE.slice(0, 6);
+const SPORT_SEARCHES = [
+  { label:"💪 WWE",       query:"WWE wrestling",        leagueId:4410, icon:"💪", color:"#C8A900", grad:["#1a1000","#C8A900"] },
+  { label:"🥊 UFC",       query:"UFC",                  leagueId:4443, icon:"🥊", color:"#E50914", grad:["#1a0000","#E50914"] },
+  { label:"🏈 NFL",       query:"NFL football",         leagueId:4391, icon:"🏈", color:"#1a5276", grad:["#0a0f1a","#1a5276"] },
+  { label:"🏀 NBA",       query:"NBA basketball",       leagueId:4387, icon:"🏀", color:"#E35205", grad:["#1a0a00","#E35205"] },
+  { label:"⚾ MLB",       query:"MLB baseball",         leagueId:4424, icon:"⚾", color:"#1A3A6B", grad:["#0a0f1a","#1A3A6B"] },
+  { label:"🏒 NHL",       query:"NHL hockey",           leagueId:4380, icon:"🏒", color:"#005A8B", grad:["#001020","#005A8B"] },
+  { label:"⚽ MLS",       query:"MLS soccer",           leagueId:4346, icon:"⚽", color:"#00A550", grad:["#001a0a","#00A550"] },
+  { label:"⚽ EPL",       query:"Premier League soccer",leagueId:4328, icon:"⚽", color:"#3D195B", grad:["#100a1a","#3D195B"] },
+  { label:"🏎️ F1",       query:"Formula 1 racing",     leagueId:4370, icon:"🏎️", color:"#E30020", grad:["#1a0000","#E30020"] },
+  { label:"🏈 NCAA",      query:"college football",     leagueId:4479, icon:"🏈", color:"#7B3F00", grad:["#1a0a00","#7B3F00"] },
+];
+
+// ─── SPORT SCHEDULE COMPONENT ─────────────────────────────────────────────────
+function SportsTab({ onSearch, setSearch }) {
+  const [selectedSport, setSelectedSport] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
+  const fetchEvents = async (sport) => {
+    setSelectedSport(sport);
+    setLoadingEvents(true);
+    setEvents([]);
+    try {
+      const [next, past] = await Promise.all([
+        fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${sport.leagueId}`).then(r=>r.json()),
+        fetch(`https://www.thesportsdb.com/api/v1/json/3/eventspastleague.php?id=${sport.leagueId}`).then(r=>r.json()),
+      ]);
+      const nextEvts = (next.events||[]).slice(0,8);
+      const pastEvts = (past.events||[]).slice(0,4).map(e=>({...e,_past:true}));
+      setEvents([...nextEvts, ...pastEvts]);
+    } catch(e) { setEvents([]); }
+    setLoadingEvents(false);
+  };
+
+  const formatDate = (dateStr, timeStr) => {
+    if (!dateStr) return "";
+    const d = new Date(`${dateStr}T${timeStr||"00:00:00"}`);
+    const now = new Date();
+    const diff = d - now;
+    if (Math.abs(diff) < 3600000) return "🔴 LIVE NOW";
+    if (diff > 0 && diff < 86400000) return `Today ${d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
+    if (diff > 0 && diff < 172800000) return `Tomorrow ${d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
+    return d.toLocaleDateString([],{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+  };
+
   return (
-    <div style={{
-      background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05))",
-      border:"1px solid rgba(16,185,129,.2)",
-      borderRadius:16, padding:"16px", marginBottom:20,
-    }}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-        <div>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"var(--sports)"}}>📺 Where To Watch Sports</div>
-          <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Updated guide — click any sport to search</div>
-        </div>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {shown.map(s=>{
-          const svcs = s.services.map(id=>SERVICES.find(sv=>sv.id===id)).filter(Boolean);
-          return (
-            <div key={s.sport} onClick={()=>onSearch(s.sport)}
-              style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:"10px 12px",cursor:"pointer",transition:"all .2s"}}
-              onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.4)"}
-              onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.06)"}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
-                  <span style={{fontSize:18,flexShrink:0}}>{s.icon}</span>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13}}>{s.sport}</div>
-                    <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{s.note}</div>
-                  </div>
-                </div>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap",flexShrink:0}}>
-                  {svcs.map(sv=>(
-                    <div key={sv.id} style={{background:sv.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>
-                      {sv.logo}
-                    </div>
-                  ))}
-                </div>
+    <div>
+      {/* Sport selector cards — horizontally scrollable */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"var(--sports)",marginBottom:10,padding:"0 4px"}}>⚡ SELECT A SPORT</div>
+        <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none"}}>
+          {SPORT_SEARCHES.map(s=>(
+            <div key={s.label} onClick={()=>{fetchEvents(s); onSearch(s.query);}}
+              style={{
+                flexShrink:0, width:100, height:90, borderRadius:16,
+                background:selectedSport?.label===s.label
+                  ? `linear-gradient(135deg,${s.grad[0]},${s.grad[1]})`
+                  : "rgba(255,255,255,.04)",
+                border:`1.5px solid ${selectedSport?.label===s.label?s.color:"rgba(255,255,255,.08)"}`,
+                display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                gap:4,cursor:"pointer",transition:"all .2s",
+                boxShadow:selectedSport?.label===s.label?`0 8px 24px ${s.color}44`:"none",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform="scale(1.05)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor=selectedSport?.label===s.label?s.color:"rgba(255,255,255,.08)";e.currentTarget.style.transform="scale(1)";}}>
+              <div style={{fontSize:28,lineHeight:1}}>{s.icon}</div>
+              <div style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)",color:selectedSport?.label===s.label?"#fff":"var(--muted)",textAlign:"center",lineHeight:1.2}}>
+                {s.label.replace(/^[^\s]+\s/,"")}
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
-      <button onClick={()=>setExpanded(!expanded)}
-        style={{marginTop:10,width:"100%",background:"none",border:"1px solid rgba(16,185,129,.2)",borderRadius:8,color:"var(--sports)",padding:"7px 0",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-        {expanded ? "Show Less ▲" : `Show All ${SPORTS_GUIDE.length} Sports ▼`}
-      </button>
+
+      {/* Games panel */}
+      {selectedSport && (
+        <div style={{marginBottom:20,background:`linear-gradient(135deg,${selectedSport.grad[0]},rgba(7,7,14,.9))`,border:`1px solid ${selectedSport.color}44`,borderRadius:16,padding:16,overflow:"hidden"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+            <span style={{fontSize:22}}>{selectedSport.icon}</span>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:selectedSport.color}}>
+                {selectedSport.label.replace(/^[^\s]+\s/,"")} Schedule
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,.4)"}}>Upcoming & recent events</div>
+            </div>
+          </div>
+
+          {loadingEvents ? (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {[1,2,3].map(i=><div key={i} className="skeleton" style={{height:72,borderRadius:10}}/>)}
+            </div>
+          ) : events.length===0 ? (
+            <div style={{textAlign:"center",padding:"24px 0",color:"rgba(255,255,255,.4)",fontSize:13}}>
+              No upcoming events found. Season may be off.
+            </div>
+          ) : (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {events.map((ev,i)=>{
+                const isLive = formatDate(ev.dateEvent,ev.strTime)==="🔴 LIVE NOW";
+                const isPast = ev._past;
+                const hasScore = ev.intHomeScore !== null && ev.intHomeScore !== "";
+                return (
+                  <div key={i} style={{
+                    background:"rgba(0,0,0,.35)",
+                    border:`1px solid ${isLive?"rgba(239,68,68,.5)":isPast?"rgba(255,255,255,.06)":"rgba(255,255,255,.1)"}`,
+                    borderRadius:12,padding:"10px 12px",
+                    backdropFilter:"blur(8px)",
+                  }}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,marginBottom:6}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#fff"}}>
+                          {ev.strEvent||`${ev.strHomeTeam} vs ${ev.strAwayTeam}`}
+                        </div>
+                        {ev.strVenue && (
+                          <div style={{fontSize:10,color:"rgba(255,255,255,.45)",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            📍 {ev.strVenue}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        {hasScore ? (
+                          <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:14,color:"#fff"}}>
+                            {ev.intHomeScore} – {ev.intAwayScore}
+                          </div>
+                        ) : (
+                          <div style={{
+                            background:isLive?"rgba(239,68,68,.8)":"rgba(255,255,255,.08)",
+                            borderRadius:6,padding:"2px 8px",fontSize:10,fontWeight:700,
+                            color:isLive?"#fff":"rgba(255,255,255,.6)",
+                            whiteSpace:"nowrap",
+                          }}>
+                            {formatDate(ev.dateEvent,ev.strTime)}
+                          </div>
+                        )}
+                        {isPast && <div style={{fontSize:9,color:"rgba(255,255,255,.3)",marginTop:2}}>Final</div>}
+                      </div>
+                    </div>
+                    {ev.strTV && (
+                      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        <span style={{fontSize:9,color:"rgba(255,255,255,.4)"}}>📺 WATCH ON:</span>
+                        {ev.strTV.split(/[,\/|]+/).slice(0,4).map((ch,ci)=>{
+                          const ch2 = ch.trim();
+                          const svc = SERVICES.find(s=>ch2.toLowerCase().includes(s.name.toLowerCase().replace("+"," plus").replace("+"," tv")));
+                          return (
+                            <span key={ci} style={{
+                              background:svc?svc.color:"rgba(255,255,255,.1)",
+                              borderRadius:5,padding:"1px 7px",fontSize:9,fontWeight:700,
+                              color:"#fff",whiteSpace:"nowrap",
+                            }}>{ch2}</span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Where to Watch guide */}
+      <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.06),rgba(6,182,212,.03))",border:"1px solid rgba(16,185,129,.15)",borderRadius:16,padding:14,marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:showGuide?12:0,cursor:"pointer"}} onClick={()=>setShowGuide(!showGuide)}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--sports)"}}>📺 Sports Streaming Guide</div>
+            <div style={{fontSize:10,color:"var(--muted)"}}>Which service has which league</div>
+          </div>
+          <span style={{color:"var(--sports)",fontSize:14}}>{showGuide?"▲":"▼"}</span>
+        </div>
+        {showGuide && (
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {SPORTS_GUIDE.map(s=>{
+              const svcs = s.services.map(id=>SERVICES.find(sv=>sv.id===id)).filter(Boolean);
+              return (
+                <div key={s.sport} onClick={()=>{const sp=SPORT_SEARCHES.find(sr=>sr.label.toLowerCase().includes(s.sport.toLowerCase().split(" ")[0]));if(sp)fetchEvents(sp);onSearch(s.sport);}}
+                  style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:"9px 12px",cursor:"pointer",transition:"border-color .2s"}}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.35)"}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.06)"}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+                      <span style={{fontSize:16,flexShrink:0}}>{s.icon}</span>
+                      <div style={{minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.sport}</div>
+                        <div style={{fontSize:10,color:"var(--muted)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.note}</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:3,flexShrink:0}}>
+                      {svcs.slice(0,4).map(sv=>(
+                        <div key={sv.id} style={{background:sv.color,borderRadius:5,padding:"2px 6px",fontSize:8,fontWeight:900,color:"#fff"}}>{sv.logo}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+
 
 const SERVICES = [
   { id:"netflix",     name:"Netflix",      color:"#E50914", logo:"N",   deal:null,                         url:"https://www.netflix.com/search?q=",          price:17.99 },
@@ -3447,20 +3880,17 @@ export default function StreamHub() {
         ) : (
           /* Regular grid */
           <div style={{padding:"0 0 12px"}}>
-            {/* Sports quick-pick buttons + guide */}
+            {/* Sports Hub — mobile */}
             {view==="sports" && !search.trim() && (
               <div style={{padding:"12px 14px 4px"}}>
-                {/* Sport quick search chips */}
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"var(--sports)",marginBottom:10}}>🔍 Search By Sport</div>
-                <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:10,scrollbarWidth:"none"}}>
-                  {SPORT_SEARCHES.map(s=>(
-                    <button key={s.label} onClick={()=>handleSportSearch(s.query)}
-                      style={{flexShrink:0,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"var(--font-head)"}}>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-                <SportsStreamingGuide onSearch={(q)=>handleSportSearch(q)}/>
+                <SportsTabHeader onSearch={handleSportSearch}/>
+                <SportCategoryGrid onSearch={handleSportSearch}/>
+                <SportsStreamingGuide onSearch={handleSportSearch}/>
+              </div>
+            )}
+            {view==="sports" && search.trim() && (
+              <div style={{padding:"0 14px"}}>
+                <LiveSportsSection sportQuery={search}/>
               </div>
             )}
             <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"0 14px"}}>
@@ -3676,19 +4106,16 @@ export default function StreamHub() {
                 {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
                 {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
               </div>
-              {/* Sports quick picks + guide */}
+              {/* Sports Hub */}
               {view==="sports" && !search.trim() && (
                 <div style={{marginBottom:16}}>
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
-                    {SPORT_SEARCHES.map(s=>(
-                      <button key={s.label} onClick={()=>handleSportSearch(s.query)}
-                        style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
+                  <SportsTabHeader onSearch={handleSportSearch}/>
+                  <SportCategoryGrid onSearch={handleSportSearch}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
                 </div>
+              )}
+              {view==="sports" && search.trim() && (
+                <LiveSportsSection sportQuery={search}/>
               )}
               {loading&&!search
                 ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
@@ -3942,21 +4369,16 @@ export default function StreamHub() {
                   </div>
                   {!user&&<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
                 </div>
-                {/* Sports quick picks + guide */}
+                {/* Sports Hub */}
                 {view==="sports" && !search.trim() && (
                   <div style={{marginBottom:20}}>
-                    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
-                      {SPORT_SEARCHES.map(s=>(
-                        <button key={s.label} onClick={()=>handleSportSearch(s.query)}
-                          style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:99,color:"var(--sports)",padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)",transition:"all .2s"}}
-                          onMouseEnter={e=>e.currentTarget.style.background="rgba(16,185,129,.25)"}
-                          onMouseLeave={e=>e.currentTarget.style.background="rgba(16,185,129,.1)"}>
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
+                    <SportsTabHeader onSearch={handleSportSearch}/>
+                    <SportCategoryGrid onSearch={handleSportSearch}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
                   </div>
+                )}
+                {view==="sports" && search.trim() && (
+                  <LiveSportsSection sportQuery={search}/>
                 )}
                 {loading&&!search
                   ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
