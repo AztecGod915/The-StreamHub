@@ -436,6 +436,56 @@ const SERVICES = [
   { id:"tubi",        name:"Tubi",         color:"#FA4343", logo:"Tu",  deal:"Always Free! 🎉",            url:"https://tubitv.com/search/",                 price:0     },
 ];
 
+// ─── SPORTS STREAMING GUIDE COMPONENT ────────────────────────────────────────
+function SportsStreamingGuide({ onSearch }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = expanded ? SPORTS_GUIDE : SPORTS_GUIDE.slice(0, 6);
+  return (
+    <div style={{
+      background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05))",
+      border:"1px solid rgba(16,185,129,.2)",
+      borderRadius:16, padding:"16px", marginBottom:20,
+    }}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"var(--sports)"}}>📺 Where To Watch Sports</div>
+          <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Click any sport to search</div>
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {shown.map(s=>{
+          const svcs = s.services.map(id=>SERVICES.find(sv=>sv.id===id)).filter(Boolean);
+          return (
+            <div key={s.sport} onClick={()=>onSearch(s.sport)}
+              style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:"10px 12px",cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(16,185,129,.4)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.06)"}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                  <span style={{fontSize:18,flexShrink:0}}>{s.icon}</span>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13}}>{s.sport}</div>
+                    <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{s.note}</div>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap",flexShrink:0}}>
+                  {svcs.map(sv=>(
+                    <div key={sv.id} style={{background:sv.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>{sv.logo}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={()=>setExpanded(!expanded)}
+        style={{marginTop:10,width:"100%",background:"none",border:"1px solid rgba(16,185,129,.2)",borderRadius:8,color:"var(--sports)",padding:"7px 0",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+        {expanded ? "Show Less ▲" : `Show All ${SPORTS_GUIDE.length} Sports ▼`}
+      </button>
+    </div>
+  );
+}
+
 const CATEGORY_TABS = [
   { id:"trending", label:"Trending",  icon:"🔥", color:"#F5C518", anim:"flameDance" },
   { id:"movies",   label:"Movies",    icon:"🎬", color:"var(--cyan)", anim:null },
