@@ -100,6 +100,9 @@ const GlobalStyles = () => {
       @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
       @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
       @keyframes trophyBounce { 0%,100%{transform:translateY(0) rotate(-5deg)} 40%{transform:translateY(-6px) rotate(5deg)} 70%{transform:translateY(-3px) rotate(-3deg)} }
+      @keyframes sportsGlow { 0%,100%{filter:drop-shadow(0 0 0px rgba(16,185,129,0)) drop-shadow(0 0 0px rgba(245,197,24,0))} 50%{filter:drop-shadow(0 0 8px rgba(16,185,129,.9)) drop-shadow(0 0 16px rgba(245,197,24,.6))} }
+      @keyframes liveDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
+      @keyframes sportsTabPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 4px rgba(239,68,68,.25)} }
       .fadeUp { animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
       .fadeIn { animation:fadeIn .25s ease both; }
       .skeleton { background:linear-gradient(90deg,#1a1a2e 25%,#252540 50%,#1a1a2e 75%); background-size:400px 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
@@ -311,78 +314,243 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
 }
 
 // ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
+// ─── GAME DETAIL MODAL ───────────────────────────────────────────────────────
+function GameDetailModal({ evt, onClose }) {
+  const broadcastLink = evt.broadcastLink ||
+    `https://www.google.com/search?q=watch+${encodeURIComponent((evt.shortName||evt.name||"").replace(/\s+/g,"+"))}+live+stream`;
+  const isFight = evt.isTitleFight;
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",
+        borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,
+        border:"1px solid rgba(16,185,129,.3)",
+        borderBottom:"none",
+        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+        overflow:"hidden",
+      }}>
+        {/* Live indicator stripe */}
+        {evt.isLive && (
+          <div style={{background:"linear-gradient(90deg,#ef4444,#dc2626)",padding:"6px 20px",display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:"#fff",animation:"liveDot 1s infinite"}}/>
+            <span style={{fontSize:11,fontWeight:800,color:"#fff",letterSpacing:1.5}}>LIVE NOW — {evt.periodText}</span>
+          </div>
+        )}
+
+        <div style={{padding:"20px 20px 8px"}}>
+          {/* Header */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+            <div>
+              {isFight && <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:4}}>🏆 TITLE FIGHT</div>}
+              {!evt.isLive && !evt.isOver && (
+                <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>📅 {evt.localDate} · {evt.localTime}</div>
+              )}
+              {evt.isOver && <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>✓ FINAL</div>}
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+
+          {/* Score / Matchup */}
+          {evt.home?.name && evt.away?.name ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:20}}>
+              {/* Away */}
+              <div style={{flex:1,textAlign:"center"}}>
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
+                <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.name}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Away</div>
+              </div>
+
+              {/* Score / VS */}
+              <div style={{textAlign:"center",flexShrink:0}}>
+                {(evt.isLive||evt.isOver) ? (
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:38,lineHeight:1,letterSpacing:-2}}>
+                    <span style={{color:evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.score}</span>
+                    <span style={{color:"var(--muted)",fontSize:22,margin:"0 6px"}}>:</span>
+                    <span style={{color:evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.score}</span>
+                  </div>
+                ) : (
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--muted)"}}>VS</div>
+                )}
+                {evt.isLive && evt.periodText && (
+                  <div style={{fontSize:10,color:"#ef4444",fontWeight:700,marginTop:4}}>{evt.periodText}</div>
+                )}
+              </div>
+
+              {/* Home */}
+              <div style={{flex:1,textAlign:"center"}}>
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
+                <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.name}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Home</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{fontSize:16,fontWeight:800,textAlign:"center",marginBottom:20}}>{evt.name}</div>
+          )}
+
+          {/* Venue + broadcast */}
+          <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"}}>
+            {evt.venue && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:120}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📍 VENUE</div>
+                <div style={{fontSize:12,fontWeight:700}}>{evt.venue}</div>
+                {evt.city && <div style={{fontSize:11,color:"var(--muted)"}}>{evt.city}</div>}
+              </div>
+            )}
+            {evt.broadcast && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:100}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📺 BROADCAST</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{evt.broadcast}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Watch button */}
+          <a href={broadcastLink} target="_blank" rel="noopener noreferrer"
+            style={{
+              display:"block",textAlign:"center",
+              background:evt.isLive
+                ? "linear-gradient(135deg,#ef4444,#dc2626)"
+                : "linear-gradient(135deg,var(--sports),#06b6d4)",
+              borderRadius:14, padding:"14px 0",
+              fontFamily:"var(--font-head)", fontWeight:800, fontSize:15,
+              color:"#fff", textDecoration:"none",
+              boxShadow:evt.isLive?"0 8px 24px rgba(239,68,68,.4)":"0 8px 24px rgba(16,185,129,.3)",
+              marginBottom:10,
+            }}>
+            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay" : `📺 Watch on ${evt.broadcast||"Streaming"}`}
+          </a>
+
+          {/* Fallback search */}
+          {!evt.broadcastLink && (
+            <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`}
+              target="_blank" rel="noopener noreferrer"
+              style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>
+              Search all streaming options →
+            </a>
+          )}
+        </div>
+
+        {/* Safe area padding */}
+        <div style={{height:20}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── BROADCAST LINK MAPPER ───────────────────────────────────────────────────
+function getBroadcastLink(broadcast) {
+  if (!broadcast) return null;
+  const b = broadcast.toUpperCase();
+  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD")) return "https://www.espnplus.com/";
+  if (b.includes("ESPN2") || b.includes("ESPN")) return "https://www.espn.com/watch/";
+  if (b.includes("MLB.TV")) return "https://www.mlb.tv/";
+  if (b.includes("NFL+") || b.includes("NFL NETWORK")) return "https://www.nfl.com/network/watch/";
+  if (b.includes("NBA TV") || b.includes("NBA LEAGUE")) return "https://www.nba.com/watch/";
+  if (b.includes("ABC") || b.includes("HULU")) return "https://www.hulu.com/live-tv";
+  if (b.includes("PEACOCK") || b.includes("NBC")) return "https://www.peacocktv.com/stream/sports";
+  if (b.includes("CBS") || b.includes("PARAMOUNT")) return "https://www.paramountplus.com/sports/";
+  if (b.includes("FOX") || b.includes("FS1") || b.includes("FS2") || b.includes("FS★")) return "https://www.foxsports.com/live";
+  if (b.includes("TNT") || b.includes("TBS") || b.includes("MAX") || b.includes("TRUETV")) return "https://www.max.com/sports";
+  if (b.includes("PRIME") || b.includes("AMAZON")) return "https://www.amazon.com/primevideo/sports";
+  if (b.includes("APPLE")) return "https://tv.apple.com/us/sports";
+  if (b.includes("NETFLIX")) return "https://www.netflix.com/";
+  if (b.includes("DAZN")) return "https://www.dazn.com/";
+  if (b.includes("YOUTUBE TV")) return "https://tv.youtube.com/";
+  if (b.includes("FUBO")) return "https://www.fubo.tv/welcome";
+  return null;
+}
+
 function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sportInfo, setSportInfo] = useState(null);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [polling, setPolling] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
   const intervalRef = useRef(null);
+  const sportRef = useRef(null);   // always has the latest sport — no stale closure
 
-  const fetchEvents = useCallback(async (sport, silent=false) => {
+  // Parse ESPN events from API response
+  const parseEvents = (data) => (data.events||[]).map(evt => {
+    const comp = evt.competitions?.[0];
+    const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
+    const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
+    const st = evt.status?.type;
+    return {
+      id: evt.id,
+      name: evt.name||evt.shortName||"",
+      shortName: evt.shortName||evt.name||"",
+      date: evt.date,
+      localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
+      localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
+      isLive: st?.name==="STATUS_IN_PROGRESS",
+      isOver: st?.completed||false,
+      period: evt.status?.period||0,
+      displayClock: evt.status?.displayClock||"",
+      periodText: evt.status?.type?.shortDetail||"",
+      home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
+      away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
+      broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
+      broadcastLink: getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
+      venue: comp?.venue?.fullName||"",
+      city: comp?.venue?.address?.city||"",
+      isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
+    };
+  });
+
+  // Core fetch function — reads sport from ref, no stale closure
+  const doFetch = async (silent=false) => {
+    const sport = sportRef.current;
     if (!sport) return;
     if (!silent) setLoading(true);
     try {
       const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const evts = (data.events||[]).map(evt => {
-        const comp = evt.competitions?.[0];
-        const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
-        const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
-        const st = evt.status?.type;
-        return {
-          id: evt.id,
-          name: evt.name||evt.shortName||"",
-          shortName: evt.shortName||evt.name||"",
-          date: evt.date,
-          localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
-          localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
-          isLive: st?.name==="STATUS_IN_PROGRESS",
-          isOver: st?.completed||false,
-          period: evt.status?.period||0,
-          displayClock: evt.status?.displayClock||"",
-          periodText: evt.status?.type?.shortDetail||"",
-          home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
-          away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
-          broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
-          venue: comp?.venue?.fullName||"",
-          city: comp?.venue?.address?.city||"",
-          isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
-        };
-      });
+      const evts = parseEvents(data);
       setEvents(evts);
       setLastUpdated(new Date());
       setError(null);
-      // Start/stop polling based on whether any games are live
-      const hasLive = evts.some(e=>e.isLive);
-      setPolling(hasLive);
+      setIsPolling(evts.some(e=>e.isLive));
     } catch(e) {
       if (!silent) setError("Could not load schedule");
     }
-    setLoading(false);
-  }, []);
+    if (!silent) setLoading(false);
+  };
 
-  // Initial fetch + set up polling
+  // When sport changes: update ref, reset state, fetch fresh
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
-    if (!sport) { setLoading(false); return; }
+    if (!sport) { setLoading(false); setError(null); return; }
+    sportRef.current = sport;
     setSportInfo(sport);
     setEvents([]);
     setLastUpdated(null);
-    fetchEvents(sport);
+    setIsPolling(false);
+    setError(null);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    doFetch(false);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [sportQuery]);
 
-  // Live polling — refetch every 30s when games are live
+  // Polling: start/stop based on isPolling flag
+  // Uses sportRef so the interval always calls with fresh sport data
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (polling && sportInfo) {
-      intervalRef.current = setInterval(() => fetchEvents(sportInfo, true), 30000);
+    if (isPolling) {
+      intervalRef.current = setInterval(() => doFetch(true), 30000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [polling, sportInfo]);
+  }, [isPolling]);
 
   const sport = getEspnSport(sportQuery);
   if (!sport && !loading) return null;
@@ -393,7 +561,6 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const recentEvents = events.filter(e=>e.isOver).slice(-4).reverse();
   const hasLive = liveEvents.length > 0;
 
-  // Sort: favorite team's games first
   const sortByFav = (evts) => {
     if (!favTeam) return evts.slice(0,8);
     const fav = evts.filter(e=>e.home.name===favTeam||e.away.name===favTeam);
@@ -410,31 +577,24 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:hasLive?"#ef4444":"var(--sports)"}}>
             {hasLive?"🔴 LIVE NOW":"📅 SCHEDULE"} — {sportInfo?.display||""}
           </div>
-          {polling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700}}>AUTO-UPDATING</div>}
+          {isPolling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700}}>AUTO-UPDATING</div>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-          {favTeam && (
-            <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>
-              ⭐ {favTeam}
-            </div>
-          )}
-          <button onClick={()=>setShowTeamPicker(true)}
-            style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-            {favTeam ? "⭐ Change Team" : "⭐ Follow a Team"}
+          {favTeam && <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>⭐ {favTeam}</div>}
+          <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+            {favTeam?"⭐ Change Team":"⭐ Follow a Team"}
           </button>
           {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
-          <button onClick={()=>fetchEvents(sportInfo,false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
+          <button onClick={()=>doFetch(false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
         </div>
       </div>
 
       {showTeamPicker && (
-        <FavoriteTeamModal
-          sport={sportInfo?.display}
-          events={events}
-          favoriteTeams={favoriteTeams||{}}
-          onToggle={onToggleFavorite}
-          onClose={()=>setShowTeamPicker(false)}
-        />
+        <FavoriteTeamModal sport={sportInfo?.display} events={events} favoriteTeams={favoriteTeams||{}} onToggle={onToggleFavorite} onClose={()=>setShowTeamPicker(false)}/>
+      )}
+
+      {selectedGame && (
+        <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)}/>
       )}
 
       {loading ? (
@@ -444,20 +604,21 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       ) : error ? (
         <div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,padding:16,textAlign:"center"}}>
           <div style={{fontSize:13,color:"var(--muted)",marginBottom:8}}>{error}</div>
-          <button onClick={()=>fetchEvents(sportInfo)} style={{background:"var(--sports)",border:"none",borderRadius:8,color:"#fff",padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Try Again</button>
+          <button onClick={()=>doFetch(false)} style={{background:"var(--sports)",border:"none",borderRadius:8,color:"#fff",padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Try Again</button>
         </div>
       ) : (
         <div>
+          {hasLive && <div style={{fontSize:11,color:"#ef4444",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>TAP A GAME TO WATCH LIVE</div>}
           {liveEvents.length>0 && (
             <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
-              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
+              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
             </div>
           )}
           {upcomingEvents.length>0 && (
             <>
-              {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING</div>}
+              {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING — tap to find where to watch</div>}
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
+                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onSelect={setSelectedGame}/>)}
               </div>
             </>
           )}
@@ -465,7 +626,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
             <>
               <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onFav={()=>setShowTeamPicker(true)}/>)}
+                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
               </div>
             </>
           )}
@@ -480,10 +641,88 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   );
 }
 
-function GameCard({ evt, isLive, isOver, favTeam, onFav }) {
+function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
   const hasTeams = evt.home?.name && evt.away?.name;
   const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
+
   return (
+    <div onClick={()=>onSelect&&onSelect(evt)}
+      style={{
+        flexShrink:0, width:210,
+        background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
+        border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+        borderRadius:14, overflow:"hidden",
+        boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+        position:"relative", cursor:"pointer", transition:"transform .15s, border-color .15s",
+      }}
+      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.7)":isLive?"rgba(239,68,68,.8)":"rgba(255,255,255,.25)";}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)";}}>
+      {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
+
+      {/* Top bar */}
+      <div style={{
+        padding:"6px 10px",
+        background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
+      }}>
+        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
+          {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          {evt.broadcast && (
+            <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              {evt.broadcast}
+            </div>
+          )}
+          {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
+        </div>
+      </div>
+
+      {/* Teams */}
+      <div style={{padding:"10px 12px"}}>
+        {hasTeams ? (
+          <>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
+              </div>
+              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
+              </div>
+              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
+            </div>
+          </>
+        ) : (
+          <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>
+        )}
+
+        {!isLive && !isOver && (
+          <div style={{marginTop:8,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
+            <span>🕐 {evt.localTime}</span>
+            {evt.city && <span>📍 {evt.city}</span>}
+          </div>
+        )}
+
+        {/* Watch CTA */}
+        <div style={{marginTop:8,fontSize:10,color:isLive?"#ef4444":"rgba(16,185,129,.7)",fontWeight:700}}>
+          {isLive ? "▶ Watch Live →" : isOver ? "" : "📺 Find where to watch →"}
+        </div>
+        {evt.isTitleFight && <div style={{marginTop:4,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
+      </div>
+    </div>
+  );
+}
     <div style={{
       flexShrink:0, width:210,
       background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
@@ -802,7 +1041,7 @@ const CATEGORY_TABS = [
   { id:"movies",   label:"Movies",    icon:"🎬", color:"var(--cyan)", anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA", anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
-  { id:"sports",   label:"Sports",    icon:"🏆", color:"var(--sports)", anim:"trophyBounce" },
+  { id:"sports",   label:"Sports Hub",icon:"🏆", color:"var(--sports)", anim:"trophyBounce", special:true },
   { id:"search",   label:"Search",    icon:"🔍", color:"var(--gold)", anim:null },
 ];
 
@@ -4310,14 +4549,22 @@ export default function StreamHub() {
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
-            {id:"sports",  icon:"🏆",label:"Sports",  color:"#10B981",anim:"trophyBounce"},
+            {id:"sports",  icon:"🏆",label:"Sports Hub",color:"#10B981",anim:"trophyBounce", special:true},
             {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F5C518",anim:null},
           ].map(t=>{
             const active=view===t.id;
             return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
               style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",cursor:"pointer"}}>
-              <span style={{fontSize:22,lineHeight:1,filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",display:"inline-block",animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
-              <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>{t.label}</span>
+              {t.special ? (
+                <div style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>
+                  {!active && <div style={{position:"absolute",inset:-4,borderRadius:"50%",animation:"sportsTabPulse 2s ease-in-out infinite",pointerEvents:"none"}}/>}
+                  <span style={{fontSize:22,lineHeight:1,display:"inline-block",animation:`trophyBounce 2s ease-in-out infinite, sportsGlow ${active?"1s":"2s"} ease-in-out infinite`,filter:active?`drop-shadow(0 0 12px #10B981) drop-shadow(0 0 24px rgba(245,197,24,.5))`:`drop-shadow(0 0 6px rgba(16,185,129,.6))`}}>🏆</span>
+                  <div style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s ease-in-out infinite",boxShadow:"0 0 6px #ef4444"}}/>
+                </div>
+              ) : (
+                <span style={{fontSize:22,lineHeight:1,filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",display:"inline-block",animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
+              )}
+              <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)",color:t.special?(active?"#10B981":"rgba(16,185,129,.8)"):(active?t.color:"rgba(240,240,250,.35)")}}>{t.label}</span>
               {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:36,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
             </button>;
           })}
@@ -4357,7 +4604,11 @@ export default function StreamHub() {
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
                 style={{background:view===t.id?`${t.color}15`:"none",border:"none",color:view===t.id?t.color:"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,transition:"all .2s",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap",boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",cursor:"pointer"}}>
-                <span style={{display:"inline-block",animation:view===t.id&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
+                <span style={{display:"inline-block",position:"relative",
+                    animation:t.special?`trophyBounce 2s ease-in-out infinite, sportsGlow ${view===t.id?"1s":"2.5s"} ease-in-out infinite`:view===t.id&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>
+                  {t.icon}
+                  {t.special&&<span style={{position:"absolute",top:-2,right:-3,width:6,height:6,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",boxShadow:"0 0 5px #ef4444"}}/>}
+                </span>
                 {t.label}
               </button>
             ))}
