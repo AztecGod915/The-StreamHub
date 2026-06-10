@@ -313,14 +313,208 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
   );
 }
 
-// ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
+// ─── CALENDAR REMINDER HELPERS ───────────────────────────────────────────────
+function toCalDate(dateStr) {
+  return new Date(dateStr).toISOString().replace(/[-:]|\.\d{3}/g,"");
+}
+
+function getReminderLinks(evt) {
+  const title = encodeURIComponent(evt.name||evt.shortName||"Sports Event");
+  const start = toCalDate(evt.date);
+  const end   = toCalDate(new Date(new Date(evt.date).getTime()+3*60*60*1000).toISOString());
+  const details = encodeURIComponent(`Watch on: ${evt.broadcast||"Check streaming services"}\nVenue: ${evt.venue||evt.city||""}`);
+  const location = encodeURIComponent(evt.venue||evt.city||"");
+  return {
+    google: `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`,
+    outlook: `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${encodeURIComponent(evt.date)}&enddt=${encodeURIComponent(new Date(new Date(evt.date).getTime()+3*60*60*1000).toISOString())}&body=${details}&location=${location}`,
+    ics: (() => {
+      const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//StreamHub//EN\r\nBEGIN:VEVENT\r\nSUMMARY:${decodeURIComponent(title)}\r\nDTSTART:${start}\r\nDTEND:${end}\r\nLOCATION:${decodeURIComponent(location)}\r\nDESCRIPTION:${decodeURIComponent(details)}\r\nEND:VEVENT\r\nEND:VCALENDAR`;
+      return URL.createObjectURL(new Blob([ics], {type:"text/calendar"}));
+    })(),
+  };
+}
+
 // ─── GAME DETAIL MODAL ───────────────────────────────────────────────────────
 function GameDetailModal({ evt, onClose }) {
+  const [showReminder, setShowReminder] = useState(false);
   const broadcastLink = evt.broadcastLink ||
     `https://www.google.com/search?q=watch+${encodeURIComponent((evt.shortName||evt.name||"").replace(/\s+/g,"+"))}+live+stream`;
   const isFight = evt.isTitleFight;
+  const isUpcoming = !evt.isLive && !evt.isOver;
+  const reminderLinks = isUpcoming ? getReminderLinks(evt) : null;
 
   return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",
+        borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,
+        border:"1px solid rgba(16,185,129,.3)",
+        borderBottom:"none",
+        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+        overflow:"hidden",
+      }}>
+        {/* Live indicator stripe */}
+        {evt.isLive && (
+          <div style={{background:"linear-gradient(90deg,#ef4444,#dc2626)",padding:"6px 20px",display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:"#fff",animation:"liveDot 1s infinite"}}/>
+            <span style={{fontSize:11,fontWeight:800,color:"#fff",letterSpacing:1.5}}>LIVE NOW — {evt.periodText}</span>
+          </div>
+        )}
+        {/* Upcoming stripe */}
+        {isUpcoming && (
+          <div style={{background:"linear-gradient(90deg,rgba(16,185,129,.2),rgba(6,182,212,.15))",padding:"6px 20px",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:11,fontWeight:800,color:"var(--sports)",letterSpacing:1}}>📅 UPCOMING · {evt.localDate} · {evt.localTime}</span>
+          </div>
+        )}
+
+        <div style={{padding:"20px 20px 8px"}}>
+          {/* Header */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+            <div>
+              {isFight && <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:4}}>🏆 TITLE FIGHT</div>}
+              {evt.isOver && <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>✓ FINAL</div>}
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+
+          {/* Score / Matchup */}
+          {evt.home?.name && evt.away?.name ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:20}}>
+              {/* Away */}
+              <div style={{flex:1,textAlign:"center"}}>
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
+                <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.name}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Away</div>
+              </div>
+
+              {/* Score / VS */}
+              <div style={{textAlign:"center",flexShrink:0}}>
+                {(evt.isLive||evt.isOver) ? (
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:38,lineHeight:1,letterSpacing:-2}}>
+                    <span style={{color:evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.score}</span>
+                    <span style={{color:"var(--muted)",fontSize:22,margin:"0 6px"}}>:</span>
+                    <span style={{color:evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.score}</span>
+                  </div>
+                ) : (
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--muted)"}}>VS</div>
+                )}
+                {evt.isLive && evt.periodText && (
+                  <div style={{fontSize:10,color:"#ef4444",fontWeight:700,marginTop:4}}>{evt.periodText}</div>
+                )}
+              </div>
+
+              {/* Home */}
+              <div style={{flex:1,textAlign:"center"}}>
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
+                <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.name}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Home</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{fontSize:16,fontWeight:800,textAlign:"center",marginBottom:20}}>{evt.name}</div>
+          )}
+
+          {/* Venue + broadcast */}
+          <div style={{display:"flex",gap:12,marginBottom:16,flexWrap:"wrap"}}>
+            {evt.venue && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:120}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📍 VENUE</div>
+                <div style={{fontSize:12,fontWeight:700}}>{evt.venue}</div>
+                {evt.city && <div style={{fontSize:11,color:"var(--muted)"}}>{evt.city}</div>}
+              </div>
+            )}
+            {evt.broadcast && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:100}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📺 BROADCAST</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{evt.broadcast}</div>
+              </div>
+            )}
+          </div>
+
+          {/* 🔔 Set Reminder — upcoming games only */}
+          {isUpcoming && reminderLinks && (
+            <div style={{marginBottom:12}}>
+              <button onClick={()=>setShowReminder(!showReminder)}
+                style={{
+                  width:"100%", background:showReminder?"rgba(245,197,24,.15)":"rgba(245,197,24,.08)",
+                  border:"1px solid rgba(245,197,24,.3)", borderRadius:12,
+                  color:"var(--gold)", padding:"11px 0",
+                  fontFamily:"var(--font-head)", fontWeight:800, fontSize:14,
+                  cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+                  transition:"all .2s",
+                }}>
+                🔔 {showReminder ? "Choose Calendar ↑" : "Set a Reminder"}
+              </button>
+              {showReminder && (
+                <div className="fadeUp" style={{marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {[
+                    { label:"Google Calendar", icon:"📅", href:reminderLinks.google, color:"#4285F4" },
+                    { label:"Apple Calendar",  icon:"🍎", href:reminderLinks.ics,    color:"#555", download:`${(evt.shortName||"game").replace(/\s+/g,"-")}.ics` },
+                    { label:"Outlook",         icon:"📧", href:reminderLinks.outlook, color:"#0078D4" },
+                  ].map(cal=>(
+                    <a key={cal.label} href={cal.href} target={cal.download?"_self":"_blank"}
+                      download={cal.download||undefined}
+                      rel="noopener noreferrer"
+                      onClick={()=>setTimeout(()=>setShowReminder(false),300)}
+                      style={{
+                        flex:1, minWidth:90, textAlign:"center",
+                        background:`${cal.color}15`, border:`1px solid ${cal.color}40`,
+                        borderRadius:10, padding:"10px 6px",
+                        fontSize:11, fontWeight:700, color:"var(--text)",
+                        textDecoration:"none", display:"flex",
+                        flexDirection:"column", alignItems:"center", gap:4,
+                        transition:"all .2s",
+                      }}
+                      onMouseEnter={e=>e.currentTarget.style.background=`${cal.color}30`}
+                      onMouseLeave={e=>e.currentTarget.style.background=`${cal.color}15`}>
+                      <span style={{fontSize:20}}>{cal.icon}</span>
+                      <span>{cal.label}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Watch button */}
+          <a href={broadcastLink} target="_blank" rel="noopener noreferrer"
+            style={{
+              display:"block", textAlign:"center",
+              background: evt.isLive
+                ? "linear-gradient(135deg,#ef4444,#dc2626)"
+                : isUpcoming
+                  ? "linear-gradient(135deg,rgba(16,185,129,.3),rgba(6,182,212,.3))"
+                  : "linear-gradient(135deg,var(--surface),rgba(255,255,255,.05))",
+              borderRadius:14, padding:"14px 0",
+              fontFamily:"var(--font-head)", fontWeight:800, fontSize:15,
+              color: evt.isLive ? "#fff" : isUpcoming ? "var(--sports)" : "var(--muted)",
+              textDecoration:"none",
+              border: evt.isLive ? "none" : "1px solid rgba(16,185,129,.3)",
+              boxShadow: evt.isLive ? "0 8px 24px rgba(239,68,68,.4)" : "none",
+              marginBottom:10,
+            }}>
+            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay / Highlights" : `📺 Where to Watch →`}
+          </a>
+
+          {!evt.broadcastLink && (
+            <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`}
+              target="_blank" rel="noopener noreferrer"
+              style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>
+              Search all streaming options →
+            </a>
+          )}
+        </div>
+        <div style={{height:20}}/>
+      </div>
+    </div>
+  );
+}
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
         background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",
@@ -4155,6 +4349,38 @@ export default function StreamHub() {
             {searching?"Searching…":`${searchResults.length} results for "${search}"`}
           </div>
         )}
+
+        {/* Sports Hub standalone button */}
+        <div style={{padding:"0 14px 12px"}}>
+          <button onClick={()=>{setView("sports");setSearch("");}}
+            style={{
+              width:"100%",
+              background:"linear-gradient(135deg,rgba(7,15,7,.95) 0%,rgba(10,30,15,.95) 50%,rgba(5,20,10,.95) 100%)",
+              border:"1.5px solid rgba(16,185,129,.45)",
+              borderRadius:16, padding:"13px 16px",
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              cursor:"pointer",
+              boxShadow:"0 4px 24px rgba(16,185,129,.15), inset 0 1px 0 rgba(16,185,129,.1)",
+              transition:"all .2s",
+            }}
+            onTouchStart={e=>e.currentTarget.style.transform="scale(.98)"}
+            onTouchEnd={e=>e.currentTarget.style.transform="scale(1)"}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{position:"relative",width:42,height:42,borderRadius:12,background:"rgba(16,185,129,.15)",border:"1px solid rgba(16,185,129,.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <span style={{fontSize:22,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
+                <div style={{position:"absolute",top:-3,right:-3,width:10,height:10,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",border:"1.5px solid var(--bg)",boxShadow:"0 0 6px #ef4444"}}/>
+              </div>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"#fff",marginBottom:2}}>Sports Hub</div>
+                <div style={{fontSize:11,color:"rgba(16,185,129,.8)",fontWeight:600}}>Live scores · Schedules · World Cup 🔴</div>
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.35)",borderRadius:99,padding:"3px 8px",fontSize:9,fontWeight:800,color:"#ef4444",letterSpacing:.5}}>LIVE</div>
+              <span style={{color:"rgba(16,185,129,.6)",fontSize:16}}>›</span>
+            </div>
+          </button>
+        </div>
 
         {/* Mobile Premium Tools Strip */}
         <div style={{padding:"0 14px 16px"}}>
