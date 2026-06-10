@@ -26,6 +26,7 @@ async function tmdbFetch(path) {
   return res.json();
 }
 
+// TMDB provider_id → our service id
 const PROVIDER_MAP = {
   8:"netflix", 337:"disney", 1899:"max", 15:"hulu", 350:"apple",
   9:"prime", 386:"peacock", 531:"paramount", 283:"crunchyroll", 149:"espnplus",
@@ -42,6 +43,7 @@ function getProviders(watchProviders) {
 // ─── GLOBAL STYLES ────────────────────────────────────────────────────────────
 const GlobalStyles = () => {
   useEffect(() => {
+    // ── Google Analytics ──
     const gaScript1 = document.createElement("script");
     gaScript1.async = true;
     gaScript1.src = "https://www.googletagmanager.com/gtag/js?id=G-LK433DT8M2";
@@ -101,8 +103,6 @@ const GlobalStyles = () => {
       @keyframes sportsGlow { 0%,100%{filter:drop-shadow(0 0 0px rgba(16,185,129,0)) drop-shadow(0 0 0px rgba(245,197,24,0))} 50%{filter:drop-shadow(0 0 8px rgba(16,185,129,.9)) drop-shadow(0 0 16px rgba(245,197,24,.6))} }
       @keyframes liveDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
       @keyframes sportsTabPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 4px rgba(239,68,68,.25)} }
-      @keyframes sportsPromoGlow { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0)} 50%{box-shadow:0 0 16px rgba(16,185,129,.18)} }
-      @keyframes sportsBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
       .fadeUp { animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
       .fadeIn { animation:fadeIn .25s ease both; }
       .skeleton { background:linear-gradient(90deg,#1a1a2e 25%,#252540 50%,#1a1a2e 75%); background-size:400px 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
@@ -126,6 +126,7 @@ const GlobalStyles = () => {
   return null;
 };
 
+// ─── SERVICES ─────────────────────────────────────────────────────────────────
 // ─── ESPN SPORT ENDPOINT MAP ─────────────────────────────────────────────────
 const ESPN_SPORT_MAP = {
   "nfl":            { path:"football/nfl",             display:"NFL",                  icon:"🏈" },
@@ -140,6 +141,7 @@ const ESPN_SPORT_MAP = {
   "formula":        { path:"racing/f1",                display:"Formula 1",            icon:"🏎️" },
   "college":        { path:"football/college-football",display:"College Football",      icon:"🏈" },
   "ncaa":           { path:"football/college-football",display:"College Football",      icon:"🏈" },
+  // ── Soccer leagues by ID ───
   "eng.1":          { path:"soccer/eng.1",          display:"Premier League",     icon:"⚽" },
   "esp.1":          { path:"soccer/esp.1",          display:"La Liga",            icon:"⚽" },
   "ger.1":          { path:"soccer/ger.1",          display:"Bundesliga",         icon:"⚽" },
@@ -160,6 +162,7 @@ const ESPN_SPORT_MAP = {
 
 function getEspnSport(query) {
   const q = (query||"").toLowerCase();
+  // Check longer keys first to avoid "soccer" matching before "world cup soccer"
   const sorted = Object.entries(ESPN_SPORT_MAP).sort((a,b)=>b[0].length-a[0].length);
   for (const [key, val] of sorted) {
     if (q.includes(key)) return val;
@@ -169,50 +172,54 @@ function getEspnSport(query) {
 
 // ─── WORLD CUP 2026 TEAMS ────────────────────────────────────────────────────
 const WC_TEAMS = [
-  {name:"United States",flag:"🇺🇸",conf:"CONCACAF"},{name:"Mexico",flag:"🇲🇽",conf:"CONCACAF"},
-  {name:"Canada",flag:"🇨🇦",conf:"CONCACAF"},{name:"Brazil",flag:"🇧🇷",conf:"CONMEBOL"},
-  {name:"Argentina",flag:"🇦🇷",conf:"CONMEBOL"},{name:"France",flag:"🇫🇷",conf:"UEFA"},
-  {name:"England",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",conf:"UEFA"},{name:"Germany",flag:"🇩🇪",conf:"UEFA"},
-  {name:"Spain",flag:"🇪🇸",conf:"UEFA"},{name:"Portugal",flag:"🇵🇹",conf:"UEFA"},
-  {name:"Netherlands",flag:"🇳🇱",conf:"UEFA"},{name:"Italy",flag:"🇮🇹",conf:"UEFA"},
-  {name:"Belgium",flag:"🇧🇪",conf:"UEFA"},{name:"Croatia",flag:"🇭🇷",conf:"UEFA"},
-  {name:"Switzerland",flag:"🇨🇭",conf:"UEFA"},{name:"Denmark",flag:"🇩🇰",conf:"UEFA"},
-  {name:"Austria",flag:"🇦🇹",conf:"UEFA"},{name:"Poland",flag:"🇵🇱",conf:"UEFA"},
-  {name:"Serbia",flag:"🇷🇸",conf:"UEFA"},{name:"Turkey",flag:"🇹🇷",conf:"UEFA"},
-  {name:"Scotland",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿",conf:"UEFA"},{name:"Ukraine",flag:"🇺🇦",conf:"UEFA"},
-  {name:"Morocco",flag:"🇲🇦",conf:"CAF"},{name:"Senegal",flag:"🇸🇳",conf:"CAF"},
-  {name:"Egypt",flag:"🇪🇬",conf:"CAF"},{name:"Nigeria",flag:"🇳🇬",conf:"CAF"},
-  {name:"South Africa",flag:"🇿🇦",conf:"CAF"},{name:"Cameroon",flag:"🇨🇲",conf:"CAF"},
-  {name:"Japan",flag:"🇯🇵",conf:"AFC"},{name:"South Korea",flag:"🇰🇷",conf:"AFC"},
-  {name:"Australia",flag:"🇦🇺",conf:"AFC"},{name:"Iran",flag:"🇮🇷",conf:"AFC"},
-  {name:"Saudi Arabia",flag:"🇸🇦",conf:"AFC"},{name:"Uruguay",flag:"🇺🇾",conf:"CONMEBOL"},
-  {name:"Colombia",flag:"🇨🇴",conf:"CONMEBOL"},{name:"Ecuador",flag:"🇪🇨",conf:"CONMEBOL"},
-  {name:"Chile",flag:"🇨🇱",conf:"CONMEBOL"},{name:"Venezuela",flag:"🇻🇪",conf:"CONMEBOL"},
-  {name:"Peru",flag:"🇵🇪",conf:"CONMEBOL"},{name:"Panama",flag:"🇵🇦",conf:"CONCACAF"},
-  {name:"Costa Rica",flag:"🇨🇷",conf:"CONCACAF"},{name:"Jamaica",flag:"🇯🇲",conf:"CONCACAF"},
-  {name:"Honduras",flag:"🇭🇳",conf:"CONCACAF"},{name:"New Zealand",flag:"🇳🇿",conf:"OFC"},
-  {name:"Qatar",flag:"🇶🇦",conf:"AFC"},{name:"Algeria",flag:"🇩🇿",conf:"CAF"},
-  {name:"Tunisia",flag:"🇹🇳",conf:"CAF"},{name:"Ghana",flag:"🇬🇭",conf:"CAF"},
-];
-
-// ─── SOCCER LEAGUES ──────────────────────────────────────────────────────────
-const SOCCER_LEAGUES = [
-  { id:"eng.1",          name:"Premier League",     flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England"     },
-  { id:"esp.1",          name:"La Liga",            flag:"🇪🇸", country:"Spain"       },
-  { id:"ger.1",          name:"Bundesliga",         flag:"🇩🇪", country:"Germany"     },
-  { id:"ita.1",          name:"Serie A",            flag:"🇮🇹", country:"Italy"       },
-  { id:"fra.1",          name:"Ligue 1",            flag:"🇫🇷", country:"France"      },
-  { id:"uefa.champions", name:"Champions League",   flag:"🏆", country:"Europe"      },
-  { id:"uefa.europa",    name:"Europa League",      flag:"🇪🇺", country:"Europe"      },
-  { id:"usa.1",          name:"MLS",                flag:"🇺🇸", country:"USA"         },
-  { id:"mex.1",          name:"Liga MX",            flag:"🇲🇽", country:"Mexico"      },
-  { id:"ned.1",          name:"Eredivisie",         flag:"🇳🇱", country:"Netherlands" },
-  { id:"por.1",          name:"Primeira Liga",      flag:"🇵🇹", country:"Portugal"    },
-  { id:"sco.1",          name:"Scottish Prem",      flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", country:"Scotland"    },
-  { id:"bra.1",          name:"Brasileirão",        flag:"🇧🇷", country:"Brazil"      },
-  { id:"arg.1",          name:"Liga Argentina",     flag:"🇦🇷", country:"Argentina"   },
-  { id:"eng.2",          name:"Championship",       flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England 2"   },
-  { id:"tur.1",          name:"Süper Lig",          flag:"🇹🇷", country:"Turkey"      },
+  {name:"United States",   flag:"🇺🇸", conf:"CONCACAF"},
+  {name:"Mexico",          flag:"🇲🇽", conf:"CONCACAF"},
+  {name:"Canada",          flag:"🇨🇦", conf:"CONCACAF"},
+  {name:"Brazil",          flag:"🇧🇷", conf:"CONMEBOL"},
+  {name:"Argentina",       flag:"🇦🇷", conf:"CONMEBOL"},
+  {name:"France",          flag:"🇫🇷", conf:"UEFA"},
+  {name:"England",         flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", conf:"UEFA"},
+  {name:"Germany",         flag:"🇩🇪", conf:"UEFA"},
+  {name:"Spain",           flag:"🇪🇸", conf:"UEFA"},
+  {name:"Portugal",        flag:"🇵🇹", conf:"UEFA"},
+  {name:"Netherlands",     flag:"🇳🇱", conf:"UEFA"},
+  {name:"Italy",           flag:"🇮🇹", conf:"UEFA"},
+  {name:"Belgium",         flag:"🇧🇪", conf:"UEFA"},
+  {name:"Croatia",         flag:"🇭🇷", conf:"UEFA"},
+  {name:"Switzerland",     flag:"🇨🇭", conf:"UEFA"},
+  {name:"Denmark",         flag:"🇩🇰", conf:"UEFA"},
+  {name:"Austria",         flag:"🇦🇹", conf:"UEFA"},
+  {name:"Poland",          flag:"🇵🇱", conf:"UEFA"},
+  {name:"Serbia",          flag:"🇷🇸", conf:"UEFA"},
+  {name:"Turkey",          flag:"🇹🇷", conf:"UEFA"},
+  {name:"Scotland",        flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", conf:"UEFA"},
+  {name:"Ukraine",         flag:"🇺🇦", conf:"UEFA"},
+  {name:"Morocco",         flag:"🇲🇦", conf:"CAF"},
+  {name:"Senegal",         flag:"🇸🇳", conf:"CAF"},
+  {name:"Egypt",           flag:"🇪🇬", conf:"CAF"},
+  {name:"Nigeria",         flag:"🇳🇬", conf:"CAF"},
+  {name:"South Africa",    flag:"🇿🇦", conf:"CAF"},
+  {name:"Cameroon",        flag:"🇨🇲", conf:"CAF"},
+  {name:"Japan",           flag:"🇯🇵", conf:"AFC"},
+  {name:"South Korea",     flag:"🇰🇷", conf:"AFC"},
+  {name:"Australia",       flag:"🇦🇺", conf:"AFC"},
+  {name:"Iran",            flag:"🇮🇷", conf:"AFC"},
+  {name:"Saudi Arabia",    flag:"🇸🇦", conf:"AFC"},
+  {name:"Uruguay",         flag:"🇺🇾", conf:"CONMEBOL"},
+  {name:"Colombia",        flag:"🇨🇴", conf:"CONMEBOL"},
+  {name:"Ecuador",         flag:"🇪🇨", conf:"CONMEBOL"},
+  {name:"Chile",           flag:"🇨🇱", conf:"CONMEBOL"},
+  {name:"Venezuela",       flag:"🇻🇪", conf:"CONMEBOL"},
+  {name:"Peru",            flag:"🇵🇪", conf:"CONMEBOL"},
+  {name:"Panama",          flag:"🇵🇦", conf:"CONCACAF"},
+  {name:"Costa Rica",      flag:"🇨🇷", conf:"CONCACAF"},
+  {name:"Jamaica",         flag:"🇯🇲", conf:"CONCACAF"},
+  {name:"Honduras",        flag:"🇭🇳", conf:"CONCACAF"},
+  {name:"New Zealand",     flag:"🇳🇿", conf:"OFC"},
+  {name:"Qatar",           flag:"🇶🇦", conf:"AFC"},
+  {name:"Algeria",         flag:"🇩🇿", conf:"CAF"},
+  {name:"Tunisia",         flag:"🇹🇳", conf:"CAF"},
+  {name:"Ghana",           flag:"🇬🇭", conf:"CAF"},
 ];
 
 // ─── FAVORITE TEAMS MODAL ────────────────────────────────────────────────────
@@ -221,9 +228,13 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
   const [espnTeams, setEspnTeams] = useState([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const isWC = sport?.toLowerCase().includes("world cup") || sport?.toLowerCase().includes("fifa");
+  const isSoccer = sport && (SOCCER_LEAGUES.some(l=>l.name===sport||l.id===sport) || isWC);
+
+  // Find league ID from sport display name
   const leagueEntry = SOCCER_LEAGUES.find(l=>l.name===sport);
   const leagueId = leagueEntry?.id;
 
+  // Fetch all teams from ESPN for soccer leagues
   useEffect(() => {
     if (!leagueId) return;
     setLoadingTeams(true);
@@ -238,11 +249,15 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
       .catch(()=>setLoadingTeams(false));
   }, [leagueId]);
 
+  // Build full team list
   const baseTeams = isWC
     ? WC_TEAMS
     : espnTeams.length > 0
       ? espnTeams
-      : [...new Set([...events.map(e=>e.home.name),...events.map(e=>e.away.name)])].filter(Boolean).sort().map(name=>({name,flag:"🏅"}));
+      : [...new Set([
+          ...events.map(e=>e.home.name),
+          ...events.map(e=>e.away.name),
+        ])].filter(Boolean).sort().map(name=>({name, flag:"🏅"}));
 
   const teams = baseTeams.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()));
   const currentFav = favoriteTeams[sport||""];
@@ -258,7 +273,8 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search team..."
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search team..."
             style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none",boxSizing:"border-box"}}/>
           {currentFav && (
             <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.25)",borderRadius:10,padding:"8px 12px"}}>
@@ -268,13 +284,21 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
           )}
         </div>
         <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
-          {loadingTeams ? Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:56,borderRadius:10}}/>) :
-           teams.length===0 ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div> :
-           teams.map(t=>{
+          {loadingTeams ? (
+            Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:56,borderRadius:10}}/>)
+          ) : teams.length===0 ? (
+            <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div>
+          ) : teams.map(t=>{
             const isFav = currentFav===t.name;
             return (
               <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
-                style={{background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.03)",border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"10px 8px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)"}}
+                style={{
+                  background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.03)",
+                  border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,
+                  borderRadius:12, padding:"10px 8px",
+                  display:"flex",alignItems:"center",gap:8,
+                  cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)",
+                }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(245,197,24,.4)"}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}>
                 <span style={{fontSize:18,flexShrink:0}}>{t.flag||"🏅"}</span>
@@ -289,36 +313,58 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
   );
 }
 
+// ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
 // ─── GAME DETAIL MODAL ───────────────────────────────────────────────────────
 function GameDetailModal({ evt, onClose }) {
   const broadcastLink = evt.broadcastLink ||
     `https://www.google.com/search?q=watch+${encodeURIComponent((evt.shortName||evt.name||"").replace(/\s+/g,"+"))}+live+stream`;
   const isFight = evt.isTitleFight;
+
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,border:"1px solid rgba(16,185,129,.3)",borderBottom:"none",boxShadow:"0 -20px 60px rgba(0,0,0,.6)",overflow:"hidden"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",
+        borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,
+        border:"1px solid rgba(16,185,129,.3)",
+        borderBottom:"none",
+        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+        overflow:"hidden",
+      }}>
+        {/* Live indicator stripe */}
         {evt.isLive && (
           <div style={{background:"linear-gradient(90deg,#ef4444,#dc2626)",padding:"6px 20px",display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:"#fff",animation:"liveDot 1s infinite"}}/>
             <span style={{fontSize:11,fontWeight:800,color:"#fff",letterSpacing:1.5}}>LIVE NOW — {evt.periodText}</span>
           </div>
         )}
+
         <div style={{padding:"20px 20px 8px"}}>
+          {/* Header */}
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
             <div>
               {isFight && <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:4}}>🏆 TITLE FIGHT</div>}
-              {!evt.isLive && !evt.isOver && <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>📅 {evt.localDate} · {evt.localTime}</div>}
+              {!evt.isLive && !evt.isOver && (
+                <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>📅 {evt.localDate} · {evt.localTime}</div>
+              )}
               {evt.isOver && <div style={{fontSize:12,color:"var(--muted)",marginBottom:4}}>✓ FINAL</div>}
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
+
+          {/* Score / Matchup */}
           {evt.home?.name && evt.away?.name ? (
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:20}}>
+              {/* Away */}
               <div style={{flex:1,textAlign:"center"}}>
-                {evt.away.logo ? <img src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/> : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.away.abbr?.slice(0,3)}</div>}
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
                 <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.name}</div>
                 <div style={{fontSize:11,color:"var(--muted)"}}>Away</div>
               </div>
+
+              {/* Score / VS */}
               <div style={{textAlign:"center",flexShrink:0}}>
                 {(evt.isLive||evt.isOver) ? (
                   <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:38,lineHeight:1,letterSpacing:-2}}>
@@ -326,26 +372,72 @@ function GameDetailModal({ evt, onClose }) {
                     <span style={{color:"var(--muted)",fontSize:22,margin:"0 6px"}}>:</span>
                     <span style={{color:evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.score}</span>
                   </div>
-                ) : <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--muted)"}}>VS</div>}
-                {evt.isLive && evt.periodText && <div style={{fontSize:10,color:"#ef4444",fontWeight:700,marginTop:4}}>{evt.periodText}</div>}
+                ) : (
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--muted)"}}>VS</div>
+                )}
+                {evt.isLive && evt.periodText && (
+                  <div style={{fontSize:10,color:"#ef4444",fontWeight:700,marginTop:4}}>{evt.periodText}</div>
+                )}
               </div>
+
+              {/* Home */}
               <div style={{flex:1,textAlign:"center"}}>
-                {evt.home.logo ? <img src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/> : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.home.abbr?.slice(0,3)}</div>}
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
                 <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.name}</div>
                 <div style={{fontSize:11,color:"var(--muted)"}}>Home</div>
               </div>
             </div>
-          ) : <div style={{fontSize:16,fontWeight:800,textAlign:"center",marginBottom:20}}>{evt.name}</div>}
+          ) : (
+            <div style={{fontSize:16,fontWeight:800,textAlign:"center",marginBottom:20}}>{evt.name}</div>
+          )}
+
+          {/* Venue + broadcast */}
           <div style={{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"}}>
-            {evt.venue && <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:120}}><div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📍 VENUE</div><div style={{fontSize:12,fontWeight:700}}>{evt.venue}</div>{evt.city&&<div style={{fontSize:11,color:"var(--muted)"}}>{evt.city}</div>}</div>}
-            {evt.broadcast && <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:100}}><div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📺 BROADCAST</div><div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{evt.broadcast}</div></div>}
+            {evt.venue && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:120}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📍 VENUE</div>
+                <div style={{fontSize:12,fontWeight:700}}>{evt.venue}</div>
+                {evt.city && <div style={{fontSize:11,color:"var(--muted)"}}>{evt.city}</div>}
+              </div>
+            )}
+            {evt.broadcast && (
+              <div style={{flex:1,background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",minWidth:100}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>📺 BROADCAST</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{evt.broadcast}</div>
+              </div>
+            )}
           </div>
+
+          {/* Watch button */}
           <a href={broadcastLink} target="_blank" rel="noopener noreferrer"
-            style={{display:"block",textAlign:"center",background:evt.isLive?"linear-gradient(135deg,#ef4444,#dc2626)":"linear-gradient(135deg,var(--sports),#06b6d4)",borderRadius:14,padding:"14px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"#fff",textDecoration:"none",boxShadow:evt.isLive?"0 8px 24px rgba(239,68,68,.4)":"0 8px 24px rgba(16,185,129,.3)",marginBottom:10}}>
+            style={{
+              display:"block",textAlign:"center",
+              background:evt.isLive
+                ? "linear-gradient(135deg,#ef4444,#dc2626)"
+                : "linear-gradient(135deg,var(--sports),#06b6d4)",
+              borderRadius:14, padding:"14px 0",
+              fontFamily:"var(--font-head)", fontWeight:800, fontSize:15,
+              color:"#fff", textDecoration:"none",
+              boxShadow:evt.isLive?"0 8px 24px rgba(239,68,68,.4)":"0 8px 24px rgba(16,185,129,.3)",
+              marginBottom:10,
+            }}>
             {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay" : `📺 Watch on ${evt.broadcast||"Streaming"}`}
           </a>
-          {!evt.broadcastLink && <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`} target="_blank" rel="noopener noreferrer" style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>Search all streaming options →</a>}
+
+          {/* Fallback search */}
+          {!evt.broadcastLink && (
+            <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`}
+              target="_blank" rel="noopener noreferrer"
+              style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>
+              Search all streaming options →
+            </a>
+          )}
         </div>
+
+        {/* Safe area padding */}
         <div style={{height:20}}/>
       </div>
     </div>
@@ -375,120 +467,6 @@ function getBroadcastLink(broadcast) {
   return null;
 }
 
-// ─── ADD TO CALENDAR HELPER ───────────────────────────────────────────────────
-function addGameReminder(evt) {
-  const gameTitle = evt.shortName || evt.name || "Game";
-  const gameDate  = evt.date ? new Date(evt.date) : null;
-  if (!gameDate || isNaN(gameDate)) return;
-  const pad = n => String(n).padStart(2, "0");
-  const fmt = d =>
-    `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}` +
-    `T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
-  const end = new Date(gameDate.getTime() + 3 * 60 * 60 * 1000);
-  const ics = [
-    "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//StreamHub//Game Reminder//EN",
-    "BEGIN:VEVENT",
-    `UID:${evt.id||Date.now()}@thestreamhub.app`,
-    `SUMMARY:${gameTitle}`,
-    `DTSTART:${fmt(gameDate)}`,
-    `DTEND:${fmt(end)}`,
-    `DESCRIPTION:Watch on The StreamHub — thestreamhub.app`,
-    `URL:${evt.broadcastLink||"https://thestreamhub.app"}`,
-    "BEGIN:VALARM","TRIGGER:-PT30M","ACTION:DISPLAY",
-    `DESCRIPTION:${gameTitle} starts in 30 minutes!`,
-    "END:VALARM","END:VEVENT","END:VCALENDAR",
-  ].join("\r\n");
-  const blob = new Blob([ics], { type:"text/calendar;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = `${gameTitle.replace(/\s+/g,"_")}.ics`;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
-// ─── GAME CARD ────────────────────────────────────────────────────────────────
-function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
-  const [reminderAdded, setReminderAdded] = useState(false);
-  const hasTeams = evt.home?.name && evt.away?.name;
-  const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
-  const isUpcoming = !isLive && !isOver;
-
-  const handleReminderClick = (e) => {
-    e.stopPropagation();
-    addGameReminder(evt);
-    setReminderAdded(true);
-    setTimeout(() => setReminderAdded(false), 3000);
-  };
-
-  return (
-    <div onClick={()=>onSelect&&onSelect(evt)}
-      style={{
-        flexShrink:0, width:210,
-        background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
-        border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
-        borderRadius:14, overflow:"hidden",
-        boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
-        position:"relative", cursor:"pointer", transition:"transform .15s, border-color .15s",
-      }}
-      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.7)":isLive?"rgba(239,68,68,.8)":"rgba(255,255,255,.25)";}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)";}}>
-      {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
-      {/* Top bar */}
-      <div style={{padding:"6px 10px",background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-          {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
-          {evt.broadcast && !isUpcoming && (
-            <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-              {evt.broadcast}
-            </div>
-          )}
-          {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
-          {isUpcoming && (
-            <button onClick={handleReminderClick} title="Add to Calendar"
-              style={{background:reminderAdded?"rgba(16,185,129,.25)":"rgba(255,255,255,.08)",border:`1px solid ${reminderAdded?"rgba(16,185,129,.5)":"rgba(255,255,255,.15)"}`,borderRadius:6,color:reminderAdded?"#10b981":"var(--muted)",width:22,height:22,fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s",flexShrink:0}}>
-              {reminderAdded ? "✓" : "🔔"}
-            </button>
-          )}
-        </div>
-      </div>
-      {/* Teams */}
-      <div style={{padding:"10px 12px"}}>
-        {hasTeams ? (
-          <>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                {evt.away.logo ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>}
-                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
-              </div>
-              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
-            </div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                {evt.home.logo ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>}
-                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
-              </div>
-              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
-            </div>
-          </>
-        ) : <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>}
-        {!isLive && !isOver && (
-          <div style={{marginTop:8,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
-            <span>🕐 {evt.localTime}</span>
-            {evt.city && <span>📍 {evt.city}</span>}
-          </div>
-        )}
-        <div style={{marginTop:8,fontSize:10,color:isLive?"#ef4444":"rgba(16,185,129,.7)",fontWeight:700}}>
-          {isLive ? "▶ Watch Live →" : isOver ? "" : "📺 Find where to watch →"}
-        </div>
-        {evt.isTitleFight && <div style={{marginTop:4,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
-      </div>
-    </div>
-  );
-}
-
-// ─── LIVE SPORTS SECTION ─────────────────────────────────────────────────────
 function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -499,30 +477,37 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
   const intervalRef = useRef(null);
-  const sportRef = useRef(null);
+  const sportRef = useRef(null);   // always has the latest sport — no stale closure
 
+  // Parse ESPN events from API response
   const parseEvents = (data) => (data.events||[]).map(evt => {
     const comp = evt.competitions?.[0];
     const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
     const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
     const st = evt.status?.type;
     return {
-      id: evt.id, name: evt.name||evt.shortName||"", shortName: evt.shortName||evt.name||"",
+      id: evt.id,
+      name: evt.name||evt.shortName||"",
+      shortName: evt.shortName||evt.name||"",
       date: evt.date,
       localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
       localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
-      isLive: st?.name==="STATUS_IN_PROGRESS", isOver: st?.completed||false,
-      period: evt.status?.period||0, displayClock: evt.status?.displayClock||"",
+      isLive: st?.name==="STATUS_IN_PROGRESS",
+      isOver: st?.completed||false,
+      period: evt.status?.period||0,
+      displayClock: evt.status?.displayClock||"",
       periodText: evt.status?.type?.shortDetail||"",
       home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
       away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
       broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
       broadcastLink: getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
-      venue: comp?.venue?.fullName||"", city: comp?.venue?.address?.city||"",
+      venue: comp?.venue?.fullName||"",
+      city: comp?.venue?.address?.city||"",
       isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
     };
   });
 
+  // Core fetch function — reads sport from ref, no stale closure
   const doFetch = async (silent=false) => {
     const sport = sportRef.current;
     if (!sport) return;
@@ -532,25 +517,38 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const evts = parseEvents(data);
-      setEvents(evts); setLastUpdated(new Date()); setError(null);
+      setEvents(evts);
+      setLastUpdated(new Date());
+      setError(null);
       setIsPolling(evts.some(e=>e.isLive));
-    } catch(e) { if (!silent) setError("Could not load schedule"); }
+    } catch(e) {
+      if (!silent) setError("Could not load schedule");
+    }
     if (!silent) setLoading(false);
   };
 
+  // When sport changes: update ref, reset state, fetch fresh
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
     if (!sport) { setLoading(false); setError(null); return; }
-    sportRef.current = sport; setSportInfo(sport); setEvents([]);
-    setLastUpdated(null); setIsPolling(false); setError(null);
+    sportRef.current = sport;
+    setSportInfo(sport);
+    setEvents([]);
+    setLastUpdated(null);
+    setIsPolling(false);
+    setError(null);
     if (intervalRef.current) clearInterval(intervalRef.current);
     doFetch(false);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [sportQuery]);
 
+  // Polling: start/stop based on isPolling flag
+  // Uses sportRef so the interval always calls with fresh sport data
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (isPolling) { intervalRef.current = setInterval(() => doFetch(true), 30000); }
+    if (isPolling) {
+      intervalRef.current = setInterval(() => doFetch(true), 30000);
+    }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isPolling]);
 
@@ -572,6 +570,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
 
   return (
     <div style={{marginBottom:20}}>
+      {/* Header */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12,flexWrap:"wrap",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {hasLive && <div style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"pulse 1.5s infinite",boxShadow:"0 0 8px #ef4444",flexShrink:0}}/>}
@@ -582,13 +581,22 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
           {favTeam && <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>⭐ {favTeam}</div>}
-          <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>{favTeam?"⭐ Change Team":"⭐ Follow a Team"}</button>
+          <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+            {favTeam?"⭐ Change Team":"⭐ Follow a Team"}
+          </button>
           {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
           <button onClick={()=>doFetch(false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
         </div>
       </div>
-      {showTeamPicker && <FavoriteTeamModal sport={sportInfo?.display} events={events} favoriteTeams={favoriteTeams||{}} onToggle={onToggleFavorite} onClose={()=>setShowTeamPicker(false)}/>}
-      {selectedGame && <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)}/>}
+
+      {showTeamPicker && (
+        <FavoriteTeamModal sport={sportInfo?.display} events={events} favoriteTeams={favoriteTeams||{}} onToggle={onToggleFavorite} onClose={()=>setShowTeamPicker(false)}/>
+      )}
+
+      {selectedGame && (
+        <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)}/>
+      )}
+
       {loading ? (
         <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4}}>
           {[1,2,3].map(i=><div key={i} className="skeleton" style={{flexShrink:0,width:200,height:110,borderRadius:12}}/>)}
@@ -601,54 +609,182 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       ) : (
         <div>
           {hasLive && <div style={{fontSize:11,color:"#ef4444",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>TAP A GAME TO WATCH LIVE</div>}
-          {liveEvents.length>0 && <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>{sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}</div>}
+          {liveEvents.length>0 && (
+            <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
+              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+            </div>
+          )}
           {upcomingEvents.length>0 && (
             <>
               {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING — tap to find where to watch</div>}
-              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>{sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onSelect={setSelectedGame}/>)}</div>
+              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
+                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+              </div>
             </>
           )}
           {recentEvents.length>0 && upcomingEvents.length===0 && (
             <>
               <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
-              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>{sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}</div>
+              <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
+                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+              </div>
             </>
           )}
-          {events.length===0 && <div style={{fontSize:13,color:"var(--muted)",textAlign:"center",padding:"24px 0",background:"rgba(255,255,255,.02)",borderRadius:12}}>No games scheduled right now. Season may be on break.</div>}
+          {events.length===0 && (
+            <div style={{fontSize:13,color:"var(--muted)",textAlign:"center",padding:"24px 0",background:"rgba(255,255,255,.02)",borderRadius:12}}>
+              No games scheduled right now. Season may be on break.
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// ─── SPORTS HUB PROMO CARD ────────────────────────────────────────────────────
-function SportsHubPromo({ onNavigate }) {
+function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
+  const hasTeams = evt.home?.name && evt.away?.name;
+  const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
+
   return (
-    <div onClick={() => onNavigate("sports")}
-      style={{cursor:"pointer",borderRadius:14,overflow:"hidden",marginBottom:12,background:"linear-gradient(135deg,rgba(239,68,68,.1) 0%,rgba(16,185,129,.1) 100%)",border:"1px solid rgba(16,185,129,.25)",padding:"12px 14px",transition:"transform .2s, box-shadow .2s",animation:"sportsPromoGlow 3s ease-in-out infinite"}}
-      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.boxShadow="0 4px 20px rgba(16,185,129,.2)";}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="none";}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:5}}>
-          <div style={{width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",boxShadow:"0 0 6px #ef4444"}}/>
-          <span style={{fontSize:9,fontWeight:800,color:"#ef4444",letterSpacing:1}}>LIVE</span>
+    <div onClick={()=>onSelect&&onSelect(evt)}
+      style={{
+        flexShrink:0, width:210,
+        background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
+        border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+        borderRadius:14, overflow:"hidden",
+        boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+        position:"relative", cursor:"pointer", transition:"transform .15s, border-color .15s",
+      }}
+      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.7)":isLive?"rgba(239,68,68,.8)":"rgba(255,255,255,.25)";}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)";}}>
+      {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
+
+      {/* Top bar */}
+      <div style={{
+        padding:"6px 10px",
+        background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
+      }}>
+        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
+          {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
         </div>
-        <span style={{fontSize:10,color:"var(--muted)"}}>tap to open →</span>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          {evt.broadcast && (
+            <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              {evt.broadcast}
+            </div>
+          )}
+          {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
+        </div>
       </div>
-      <div style={{display:"flex",gap:4,marginBottom:6,fontSize:18}}>
-        <span style={{animation:"sportsBounce 2s ease-in-out infinite"}}>🏀</span>
-        <span style={{animation:"sportsBounce 2s ease-in-out .3s infinite"}}>⚽</span>
-        <span style={{animation:"sportsBounce 2s ease-in-out .6s infinite"}}>🏈</span>
-        <span style={{animation:"sportsBounce 2s ease-in-out .9s infinite"}}>⚾</span>
+
+      {/* Teams */}
+      <div style={{padding:"10px 12px"}}>
+        {hasTeams ? (
+          <>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                {evt.away.logo
+                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
+              </div>
+              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                {evt.home.logo
+                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
+                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>
+                }
+                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
+              </div>
+              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
+            </div>
+          </>
+        ) : (
+          <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>
+        )}
+
+        {!isLive && !isOver && (
+          <div style={{marginTop:8,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
+            <span>🕐 {evt.localTime}</span>
+            {evt.city && <span>📍 {evt.city}</span>}
+          </div>
+        )}
+
+        {/* Watch CTA */}
+        <div style={{marginTop:8,fontSize:10,color:isLive?"#ef4444":"rgba(16,185,129,.7)",fontWeight:700}}>
+          {isLive ? "▶ Watch Live →" : isOver ? "" : "📺 Find where to watch →"}
+        </div>
+        {evt.isTitleFight && <div style={{marginTop:4,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
       </div>
-      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,marginBottom:2}}>Sports Hub</div>
-      <div style={{fontSize:10,color:"var(--muted)",marginBottom:8}}>Live scores · Schedules · Reminders</div>
-      <div style={{display:"inline-flex",alignItems:"center",gap:4,background:"linear-gradient(90deg,#10b981,#059669)",borderRadius:7,padding:"4px 10px",fontSize:10,fontWeight:700,color:"#fff",boxShadow:"0 2px 8px rgba(16,185,129,.3)"}}>▶ Watch Live Scores</div>
     </div>
   );
 }
 
+
 // ─── SPORT CATEGORY CARDS ────────────────────────────────────────────────────
+// ─── SOCCER LEAGUES ──────────────────────────────────────────────────────────
+const SOCCER_LEAGUES = [
+  { id:"eng.1",          name:"Premier League",     flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England"     },
+  { id:"esp.1",          name:"La Liga",            flag:"🇪🇸", country:"Spain"       },
+  { id:"ger.1",          name:"Bundesliga",         flag:"🇩🇪", country:"Germany"     },
+  { id:"ita.1",          name:"Serie A",            flag:"🇮🇹", country:"Italy"       },
+  { id:"fra.1",          name:"Ligue 1",            flag:"🇫🇷", country:"France"      },
+  { id:"uefa.champions", name:"Champions League",   flag:"🏆", country:"Europe"      },
+  { id:"uefa.europa",    name:"Europa League",      flag:"🇪🇺", country:"Europe"      },
+  { id:"usa.1",          name:"MLS",                flag:"🇺🇸", country:"USA"         },
+  { id:"mex.1",          name:"Liga MX",            flag:"🇲🇽", country:"Mexico"      },
+  { id:"ned.1",          name:"Eredivisie",         flag:"🇳🇱", country:"Netherlands" },
+  { id:"por.1",          name:"Primeira Liga",      flag:"🇵🇹", country:"Portugal"    },
+  { id:"sco.1",          name:"Scottish Prem",      flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", country:"Scotland"    },
+  { id:"bra.1",          name:"Brasileirão",        flag:"🇧🇷", country:"Brazil"      },
+  { id:"arg.1",          name:"Liga Argentina",     flag:"🇦🇷", country:"Argentina"   },
+  { id:"eng.2",          name:"Championship",       flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", country:"England 2"   },
+  { id:"tur.1",          name:"Süper Lig",          flag:"🇹🇷", country:"Turkey"      },
+];
+
+function SoccerHub({ onSearch, favoriteTeams }) {
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+        <span style={{fontSize:22}}>⚽</span>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:"#1CE783"}}>Soccer Hub</div>
+          <div style={{fontSize:11,color:"var(--muted)"}}>Pick a league for live scores & schedules</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
+        {SOCCER_LEAGUES.map(league=>{
+          const hasFav = favoriteTeams?.[league.id];
+          return (
+            <button key={league.id} onClick={()=>onSearch(league.id)}
+              style={{
+                background:"rgba(26,110,60,.12)",
+                border:"1px solid rgba(28,231,131,.2)",
+                borderRadius:12, padding:"10px 12px",
+                display:"flex",alignItems:"center",gap:10,
+                cursor:"pointer", textAlign:"left", transition:"all .2s",
+                color:"var(--text)",
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background="rgba(26,110,60,.25)";e.currentTarget.style.borderColor="rgba(28,231,131,.5)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background="rgba(26,110,60,.12)";e.currentTarget.style.borderColor="rgba(28,231,131,.2)";}}>
+              <span style={{fontSize:20,flexShrink:0}}>{league.flag}</span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{league.name}</div>
+                <div style={{fontSize:10,color:"var(--muted)"}}>{league.country}</div>
+              </div>
+              {hasFav && <span style={{fontSize:12,flexShrink:0}}>⭐</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const SPORT_CARDS = [
   { label:"💪 WWE",        query:"WWE wrestling",          color:"#CC0000", bg:"rgba(204,0,0,.15)",     service:"Peacock" },
   { label:"🥊 UFC",        query:"UFC mixed martial arts", color:"#D20A0A", bg:"rgba(210,10,10,.15)",   service:"ESPN+" },
@@ -665,8 +801,16 @@ const SPORT_CARDS = [
 function SportCategoryGrid({ onSearch, favoriteTeams }) {
   return (
     <div style={{marginBottom:20}}>
+      {/* World Cup Hero Card */}
       <div onClick={()=>onSearch("FIFA World Cup 2026")}
-        style={{background:"linear-gradient(135deg,#1a2a0a 0%,#0d4a1a 40%,#1a3a0a 100%)",border:"2px solid rgba(245,197,24,.5)",borderRadius:16,padding:"16px 18px",marginBottom:12,cursor:"pointer",position:"relative",overflow:"hidden",boxShadow:"0 8px 32px rgba(245,197,24,.15)",transition:"all .2s"}}
+        style={{
+          background:"linear-gradient(135deg,#1a2a0a 0%,#0d4a1a 40%,#1a3a0a 100%)",
+          border:"2px solid rgba(245,197,24,.5)",
+          borderRadius:16, padding:"16px 18px", marginBottom:12,
+          cursor:"pointer", position:"relative", overflow:"hidden",
+          boxShadow:"0 8px 32px rgba(245,197,24,.15)",
+          transition:"all .2s",
+        }}
         onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.8)";e.currentTarget.style.transform="scale(1.01)";}}
         onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.5)";e.currentTarget.style.transform="scale(1)";}}>
         <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.1,pointerEvents:"none"}}>🏆</div>
@@ -685,17 +829,29 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
           </div>
         </div>
       </div>
-      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--sports)",marginBottom:12,letterSpacing:.5}}>🏆 SELECT A SPORT</div>
+
+      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--sports)",marginBottom:12,letterSpacing:.5}}>
+        🏆 SELECT A SPORT
+      </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
         {SPORT_CARDS.map(s=>(
           <button key={s.label} onClick={()=>onSearch(s.query)}
-            style={{background:s.bg,border:`1px solid ${s.color}40`,borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",textAlign:"left",transition:"all .2s"}}
+            style={{
+              background:s.bg, border:`1px solid ${s.color}40`,
+              borderRadius:14, padding:"12px 14px",
+              display:"flex",alignItems:"center",justifyContent:"space-between",
+              cursor:"pointer", textAlign:"left",
+              transition:"all .2s",
+            }}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform="scale(1.02)";}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}40`;e.currentTarget.style.transform="scale(1)";}}>
             <div>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>{s.label}</div>
               <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
             </div>
+            {favoriteTeams?.[s.label] && (
+              <div style={{fontSize:10,color:"var(--gold)",background:"rgba(245,197,24,.1)",borderRadius:6,padding:"2px 7px",fontWeight:700}}>⭐</div>
+            )}
           </button>
         ))}
       </div>
@@ -706,7 +862,12 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
 // ─── SPORTS TAB HEADER ───────────────────────────────────────────────────────
 function SportsTabHeader({ onSearch }) {
   return (
-    <div style={{background:"linear-gradient(135deg,#0a1628 0%,#1a0a2e 50%,#0a2010 100%)",borderRadius:18,padding:"20px 16px",marginBottom:16,border:"1px solid rgba(16,185,129,.2)",position:"relative",overflow:"hidden"}}>
+    <div style={{
+      background:"linear-gradient(135deg,#0a1628 0%,#1a0a2e 50%,#0a2010 100%)",
+      borderRadius:18, padding:"20px 16px", marginBottom:16,
+      border:"1px solid rgba(16,185,129,.2)",
+      position:"relative", overflow:"hidden",
+    }}>
       <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:"rgba(16,185,129,.1)",filter:"blur(40px)",pointerEvents:"none"}}/>
       <div style={{position:"absolute",bottom:-20,left:-20,width:120,height:120,borderRadius:"50%",background:"rgba(239,68,68,.08)",filter:"blur(30px)",pointerEvents:"none"}}/>
       <div style={{position:"relative"}}>
@@ -722,39 +883,6 @@ function SportsTabHeader({ onSearch }) {
             <div key={tag} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.2)",borderRadius:99,padding:"3px 10px",fontSize:10,color:"var(--sports)",fontWeight:700}}>{tag}</div>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── SOCCER HUB ──────────────────────────────────────────────────────────────
-function SoccerHub({ onSearch, favoriteTeams }) {
-  return (
-    <div style={{marginBottom:20}}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-        <span style={{fontSize:22}}>⚽</span>
-        <div>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:"#1CE783"}}>Soccer Hub</div>
-          <div style={{fontSize:11,color:"var(--muted)"}}>Pick a league for live scores & schedules</div>
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
-        {SOCCER_LEAGUES.map(league=>{
-          const hasFav = favoriteTeams?.[league.id];
-          return (
-            <button key={league.id} onClick={()=>onSearch(league.id)}
-              style={{background:"rgba(26,110,60,.12)",border:"1px solid rgba(28,231,131,.2)",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",textAlign:"left",transition:"all .2s",color:"var(--text)"}}
-              onMouseEnter={e=>{e.currentTarget.style.background="rgba(26,110,60,.25)";e.currentTarget.style.borderColor="rgba(28,231,131,.5)";}}
-              onMouseLeave={e=>{e.currentTarget.style.background="rgba(26,110,60,.12)";e.currentTarget.style.borderColor="rgba(28,231,131,.2)";}}>
-              <span style={{fontSize:20,flexShrink:0}}>{league.flag}</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{league.name}</div>
-                <div style={{fontSize:10,color:"var(--muted)"}}>{league.country}</div>
-              </div>
-              {hasFav && <span style={{fontSize:12,flexShrink:0}}>⭐</span>}
-            </button>
-          );
-        })}
       </div>
     </div>
   );
@@ -776,6 +904,7 @@ const SPORTS_GUIDE = [
   { sport:"Boxing / DAZN",   icon:"🥊", services:["dazn"],                           note:"DAZN — major boxing events" },
 ];
 
+
 const SERVICES = [
   { id:"netflix",     name:"Netflix",      color:"#E50914", logo:"N",   deal:null,                         url:"https://www.netflix.com/search?q=",          price:17.99 },
   { id:"disney",      name:"Disney+",      color:"#0063E5", logo:"D+",  deal:null,                         url:"https://www.disneyplus.com/search/",          price:13.99 },
@@ -794,11 +923,16 @@ const SERVICES = [
   { id:"tubi",        name:"Tubi",         color:"#FA4343", logo:"Tu",  deal:"Always Free! 🎉",            url:"https://tubitv.com/search/",                 price:0     },
 ];
 
+// ─── SPORTS STREAMING GUIDE COMPONENT ────────────────────────────────────────
 function SportsStreamingGuide({ onSearch }) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? SPORTS_GUIDE : SPORTS_GUIDE.slice(0, 6);
   return (
-    <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05))",border:"1px solid rgba(16,185,129,.2)",borderRadius:16,padding:"16px",marginBottom:20}}>
+    <div style={{
+      background:"linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05))",
+      border:"1px solid rgba(16,185,129,.2)",
+      borderRadius:16, padding:"16px", marginBottom:20,
+    }}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
         <div>
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"var(--sports)"}}>📺 Where To Watch Sports</div>
@@ -822,14 +956,17 @@ function SportsStreamingGuide({ onSearch }) {
                   </div>
                 </div>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap",flexShrink:0}}>
-                  {svcs.map(sv=><div key={sv.id} style={{background:sv.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>{sv.logo}</div>)}
+                  {svcs.map(sv=>(
+                    <div key={sv.id} style={{background:sv.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>{sv.logo}</div>
+                  ))}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
-      <button onClick={()=>setExpanded(!expanded)} style={{marginTop:10,width:"100%",background:"none",border:"1px solid rgba(16,185,129,.2)",borderRadius:8,color:"var(--sports)",padding:"7px 0",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+      <button onClick={()=>setExpanded(!expanded)}
+        style={{marginTop:10,width:"100%",background:"none",border:"1px solid rgba(16,185,129,.2)",borderRadius:8,color:"var(--sports)",padding:"7px 0",fontSize:12,fontWeight:700,cursor:"pointer"}}>
         {expanded ? "Show Less ▲" : `Show All ${SPORTS_GUIDE.length} Sports ▼`}
       </button>
     </div>
@@ -851,6 +988,7 @@ const GR = [
   ["#1f1200","#d97706"],["#001f0d","#10b981"],["#1a0a0a","#ef4444"],
   ["#0d0d1a","#6366f1"],["#1a1000","#eab308"],["#0a1a1a","#14b8a6"],
 ];
+// Safe gradient accessor — always returns a valid pair
 const safeGR = (id) => GR[((id||0) % GR.length + GR.length) % GR.length] || GR[0];
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
@@ -860,8 +998,18 @@ function Logo({ size=32 }) {
     <div style={{display:"flex",alignItems:"center",flexShrink:0}}>
       <div style={{animation:"logoFloat 3s ease-in-out infinite",display:"flex"}}>
         {!imgError ? (
-          <img src="/logo-clean.png" alt="The StreamHub" onError={()=>setImgError(true)}
-            style={{height:size*2.8,width:"auto",objectFit:"contain",filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",animation:"logoPulse 2.5s ease-in-out infinite"}}/>
+          <img
+            src="/logo-clean.png"
+            alt="The StreamHub"
+            onError={()=>setImgError(true)}
+            style={{
+              height: size * 2.8,
+              width: "auto",
+              objectFit:"contain",
+              filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",
+              animation:"logoPulse 2.5s ease-in-out infinite",
+            }}
+          />
         ) : (
           <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em"}}>
             <span style={{background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>The Stream</span>
@@ -887,7 +1035,8 @@ function StarPicker({ value, onChange, size=18, readOnly=false }) {
   return (
     <div style={{display:"flex",gap:2}}>
       {Array.from({length:10},(_,i)=>i+1).map(s=>(
-        <span key={s} onClick={()=>!readOnly&&onChange(s)} onMouseEnter={()=>!readOnly&&setHover(s)} onMouseLeave={()=>!readOnly&&setHover(0)}
+        <span key={s} onClick={()=>!readOnly&&onChange(s)}
+          onMouseEnter={()=>!readOnly&&setHover(s)} onMouseLeave={()=>!readOnly&&setHover(0)}
           style={{fontSize:size,cursor:readOnly?"default":"pointer",color:s<=display?"#F5C518":"rgba(255,255,255,0.15)",display:"inline-block",transform:(!readOnly&&hover===s)?"scale(1.3)":"scale(1)",transition:"all .12s",lineHeight:1}}>★</span>
       ))}
     </div>
@@ -911,16 +1060,37 @@ function MovieCard({ movie, watchlist, userRatings, userSubs, onSelect, onToggle
   const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
   const rating = movie.vote_average ? (movie.vote_average).toFixed(1) : "—";
   const accent = movie.category === "anime" ? "var(--anime)" : movie.category === "tv" ? "var(--purple)" : "var(--gold)";
+
   return (
     <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} onClick={()=>onSelect(movie)}
-      style={{borderRadius:"var(--radius)",overflow:"hidden",cursor:"pointer",position:"relative",border:`1px solid ${hov?accent:"var(--border)"}`,transform:hov?"translateY(-4px) scale(1.015)":"translateY(0) scale(1)",transition:"all .25s cubic-bezier(.22,1,.36,1)",boxShadow:hov?"0 20px 40px rgba(0,0,0,.5)":"0 4px 12px rgba(0,0,0,.3)",filter:notSub?"brightness(0.6) saturate(0.5)":"none",background:"var(--card)",WebkitTapHighlightColor:"transparent",touchAction:"manipulation"}}>
+      style={{borderRadius:"var(--radius)",overflow:"hidden",cursor:"pointer",position:"relative",
+        border:`1px solid ${hov?accent:"var(--border)"}`,
+        transform:hov?"translateY(-4px) scale(1.015)":"translateY(0) scale(1)",
+        transition:"all .25s cubic-bezier(.22,1,.36,1)",
+        boxShadow:hov?"0 20px 40px rgba(0,0,0,.5)":"0 4px 12px rgba(0,0,0,.3)",
+        filter:notSub?"brightness(0.6) saturate(0.5)":"none",
+        background:"var(--card)",
+        WebkitTapHighlightColor:"transparent",
+        touchAction:"manipulation",
+      }}>      {/* Poster */}
       <div style={{height:200,position:"relative",overflow:"hidden",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
-        {poster ? <img src={poster} alt={movie.title||movie.name} style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy"/> : <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,opacity:.15,fontFamily:"var(--font-head)",fontWeight:800,color:"#fff"}}>{(movie.title||movie.name||"").slice(0,2).toUpperCase()}</div>}
+        {poster
+          ? <img src={poster} alt={movie.title||movie.name} style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy" />
+          : <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:52,opacity:.15,fontFamily:"var(--font-head)",fontWeight:800,color:"#fff"}}>{(movie.title||movie.name||"").slice(0,2).toUpperCase()}</div>
+        }
         {hov && <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeIn .2s"}}><div style={{width:46,height:46,borderRadius:"50%",background:accent,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:18,marginLeft:3}}>▶</span></div></div>}
         {notSub && <div style={{position:"absolute",top:8,left:8,background:"rgba(0,0,0,.8)",borderRadius:6,padding:"3px 7px",fontSize:10,color:"var(--muted)",fontWeight:600}}>NOT SUBSCRIBED</div>}
-        <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{position:"absolute",top:8,right:8,background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:"50%",width:30,height:30,fontSize:14,color:inWL?"#000":"#fff",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>{inWL?"♥":"♡"}</button>
-        {providers.length > 0 && <div style={{position:"absolute",bottom:8,left:8,display:"flex",gap:4,flexWrap:"wrap"}}>{providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small />)}</div>}
+        <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}}
+          style={{position:"absolute",top:8,right:8,background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:"50%",width:30,height:30,fontSize:14,color:inWL?"#000":"#fff",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .2s"}}>
+          {inWL?"♥":"♡"}
+        </button>
+        {providers.length > 0 && (
+          <div style={{position:"absolute",bottom:8,left:8,display:"flex",gap:4,flexWrap:"wrap"}}>
+            {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small />)}
+          </div>
+        )}
       </div>
+      {/* Info */}
       <div style={{padding:"10px 12px 12px"}}>
         <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{movie.title||movie.name}</div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -945,34 +1115,39 @@ function AuthModal({ onClose, showToast }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const inp = {background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"11px 14px",width:"100%",fontSize:14,outline:"none",fontFamily:"var(--font-body)"};
+
   const handleSubmit = async () => {
     setErr(""); setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({ email, password, options:{ data:{ username } } });
         if (error) throw error;
-        showToast("Account created! Check your email to verify. ✉️"); onClose();
+        showToast("Account created! Check your email to verify. ✉️");
+        onClose();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        showToast("Welcome back! 👋"); onClose();
+        showToast("Welcome back! 👋");
+        onClose();
       }
     } catch(e) { setErr(e.message); }
     setLoading(false);
   };
+
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:420,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         <div style={{padding:28}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
-            <Logo size={28}/><button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20}}>✕</button>
+            <Logo size={28} />
+            <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20}}>✕</button>
           </div>
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:6}}>{mode==="login"?"Welcome back":"Create account"}</div>
           <div style={{fontSize:13,color:"var(--muted)",marginBottom:24}}>{mode==="login"?"Sign in to sync your watchlist & reviews":"Join StreamHub — it's free"}</div>
           <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
-            {mode==="signup" && <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Username" style={inp}/>}
-            <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" style={inp}/>
-            <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password" style={inp}/>
+            {mode==="signup" && <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Username" style={inp} />}
+            <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" style={inp} />
+            <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password" style={inp} />
           </div>
           {err && <div style={{color:"var(--danger)",fontSize:12,marginBottom:12}}>{err}</div>}
           <button onClick={handleSubmit} disabled={loading} style={{width:"100%",background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -1015,6 +1190,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
     if (file.size > 2 * 1024 * 1024) return showToast("Image must be under 2MB");
     setUploadingAvatar(true);
     try {
+      // Convert to base64 and store in profile
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const base64 = ev.target.result;
@@ -1027,18 +1203,27 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
     } catch(e) { showToast("Failed to upload"); setUploadingAvatar(false); }
   };
 
+  // Load watchlist movies from TMDB when tab opens
   useEffect(() => {
     if (tab !== "watchlist" || wlMovies.length > 0) return;
     setLoadingWl(true);
     Promise.all(watchlist.slice(0,20).map(async id => {
-      try { return await tmdbFetch(`/movie/${id}?language=en-US`).catch(() => tmdbFetch(`/tv/${id}?language=en-US`)); } catch { return null; }
-    })).then(results => { setWlMovies(results.filter(Boolean)); setLoadingWl(false); });
+      try { return await tmdbFetch(`/movie/${id}?language=en-US`).catch(() => tmdbFetch(`/tv/${id}?language=en-US`)); }
+      catch { return null; }
+    })).then(results => {
+      setWlMovies(results.filter(Boolean));
+      setLoadingWl(false);
+    });
   }, [tab]);
 
+  // Load user's reviews
   useEffect(() => {
     if (tab !== "reviews" || myReviews.length > 0) return;
     setLoadingRev(true);
-    supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).then(({data}) => { setMyReviews(data||[]); setLoadingRev(false); });
+    supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).then(({data}) => {
+      setMyReviews(data||[]);
+      setLoadingRev(false);
+    });
   }, [tab]);
 
   const deleteReview = async (id) => {
@@ -1052,14 +1237,41 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:520,maxHeight:"90vh",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+
+        {/* Header */}
         <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.3),rgba(245,197,24,.1))",padding:"24px 24px 20px",position:"relative",flexShrink:0}}>
           <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
+            {/* Avatar with upload */}
             <div style={{position:"relative",flexShrink:0}}>
-              <div style={{width:70,height:70,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,border:isPremium?"3px solid #F5C518":"3px solid rgba(124,58,237,.4)",boxShadow:isPremium?"0 0 20px rgba(245,197,24,.6), 0 0 40px rgba(245,197,24,.3)":"none",overflow:"hidden",flexShrink:0,transition:"all .3s"}}>
-                {avatarUrl ? <img src={avatarUrl} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : avatarLetter}
+              <div style={{
+                width:70, height:70, borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontFamily:"var(--font-head)", fontWeight:800, fontSize:26,
+                border: isPremium
+                  ? "3px solid #F5C518"
+                  : "3px solid rgba(124,58,237,.4)",
+                boxShadow: isPremium
+                  ? "0 0 20px rgba(245,197,24,.6), 0 0 40px rgba(245,197,24,.3)"
+                  : "none",
+                overflow:"hidden", flexShrink:0,
+                transition:"all .3s",
+              }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : avatarLetter
+                }
               </div>
-              <label style={{position:"absolute",bottom:-2,right:-2,width:24,height:24,borderRadius:"50%",background:"var(--gold)",border:"2px solid var(--surface)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:11,boxShadow:"0 2px 8px rgba(0,0,0,.5)"}} title="Change profile picture">
+              {/* Upload button */}
+              <label style={{
+                position:"absolute", bottom:-2, right:-2,
+                width:24, height:24, borderRadius:"50%",
+                background:"var(--gold)", border:"2px solid var(--surface)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                cursor:"pointer", fontSize:11,
+                boxShadow:"0 2px 8px rgba(0,0,0,.5)",
+              }} title="Change profile picture">
                 {uploadingAvatar ? "⏳" : "📷"}
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
               </label>
@@ -1067,7 +1279,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
             <div>
               {editing
                 ? <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    <input value={username} onChange={e=>setUsername(e.target.value)} autoFocus style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:15,fontFamily:"var(--font-head)",fontWeight:700,outline:"none",width:160}}/>
+                    <input value={username} onChange={e=>setUsername(e.target.value)} autoFocus style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:15,fontFamily:"var(--font-head)",fontWeight:700,outline:"none",width:160}} />
                     <button onClick={saveUsername} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 12px",fontWeight:700,fontSize:12,cursor:"pointer"}}>Save</button>
                   </div>
                 : <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1076,12 +1288,18 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                   </div>
               }
               <div style={{fontSize:12,color:"rgba(255,255,255,.5)",marginTop:4}}>{user?.email}</div>
-              {tier==="premium" ? <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>✦ PREMIUM</span> : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>}
+              {tier==="premium"
+                ? <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>✦ PREMIUM</span>
+                : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
+              }
             </div>
           </div>
+
+          {/* Stats row */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:16}}>
             {[["♥",watchlist.length,"Watchlist","watchlist"],["✍",myReviews.length||"—","Reviews","reviews"],["★",totalRatings,"Rated",null]].map(([icon,val,label,t])=>(
-              <button key={label} onClick={()=>t&&setTab(t)} style={{background:tab===t?"rgba(245,197,24,.12)":"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:`1px solid ${tab===t?"rgba(245,197,24,.3)":"rgba(255,255,255,.08)"}`,cursor:t?"pointer":"default",transition:"all .2s"}}>
+              <button key={label} onClick={()=>t&&setTab(t)}
+                style={{background:tab===t?"rgba(245,197,24,.12)":"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:`1px solid ${tab===t?"rgba(245,197,24,.3)":"rgba(255,255,255,.08)"}`,cursor:t?"pointer":"default",transition:"all .2s"}}>
                 <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,color:"var(--gold)"}}>{val}</div>
                 <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{label}</div>
@@ -1089,10 +1307,18 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
             ))}
           </div>
         </div>
+
+        {/* Tabs */}
         <div style={{display:"flex",borderBottom:"1px solid var(--border)",flexShrink:0}}>
-          {tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{flex:1,background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"12px 0",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>{t}</button>)}
+          {tabs.map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{flex:1,background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"12px 0",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>{t}</button>
+          ))}
         </div>
+
+        {/* Tab content */}
         <div style={{overflowY:"auto",flex:1,padding:20}}>
+
+          {/* Overview tab */}
           {tab==="overview" && (
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               <button onClick={onEditSubs} style={{background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:12,color:"var(--text)",padding:"12px 16px",fontWeight:600,fontSize:14,textAlign:"left",cursor:"pointer"}}>⚙️ Manage Subscriptions</button>
@@ -1100,142 +1326,67 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
               <button onClick={onSignOut} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,color:"var(--danger)",padding:"12px 0",fontWeight:600,fontSize:14,cursor:"pointer"}}>Sign Out</button>
             </div>
           )}
+
+          {/* Watchlist tab */}
           {tab==="watchlist" && (
             <div>
-              {loadingWl ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}><span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your watchlist…</div>
-               : watchlist.length === 0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>Your watchlist is empty. Tap ♡ on any title to save it!</div>
-               : <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                   {wlMovies.map(m=>{
-                     const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
-                     return <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{cursor:"pointer",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",background:"var(--card)",transition:"transform .2s"}} onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-                       {poster ? <img src={poster} alt="" style={{width:"100%",height:110,objectFit:"cover"}}/> : <div style={{height:110,background:`linear-gradient(135deg,#1a1a2e,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                       <div style={{padding:"6px 8px"}}><div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div><div style={{fontSize:10,color:"var(--gold)"}}>★ {m.vote_average?.toFixed(1)||"—"}</div></div>
-                     </div>;
-                   })}
-                 </div>}
+              {loadingWl ? (
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}>
+                  <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your watchlist…
+                </div>
+              ) : watchlist.length === 0 ? (
+                <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>Your watchlist is empty. Tap ♡ on any title to save it!</div>
+              ) : (
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                  {wlMovies.map(m=>{
+                    const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
+                    return (
+                      <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{cursor:"pointer",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",background:"var(--card)",transition:"transform .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
+                        onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+                        {poster ? <img src={poster} alt="" style={{width:"100%",height:110,objectFit:"cover"}}/> : <div style={{height:110,background:`linear-gradient(135deg,#1a1a2e,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
+                        <div style={{padding:"6px 8px"}}>
+                          <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
+                          <div style={{fontSize:10,color:"var(--gold)"}}>★ {m.vote_average?.toFixed(1)||"—"}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
+
+          {/* Reviews tab */}
           {tab==="reviews" && (
             <div>
-              {loadingRev ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}><span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your reviews…</div>
-               : myReviews.length === 0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>You haven't written any reviews yet.</div>
-               : <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                   {myReviews.map(rv=>(
-                     <div key={rv.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14}}>
-                       <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8,gap:10}}>
-                         <div style={{flex:1,minWidth:0}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:2}}>{rv.title}</div><div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div></div>
-                         <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                           <span style={{background:"var(--gold-dim)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
-                           <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"var(--danger)",padding:"3px 8px",fontSize:11,cursor:"pointer"}}>Delete</button>
-                         </div>
-                       </div>
-                       <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content}</div>
-                     </div>
-                   ))}
-                 </div>}
+              {loadingRev ? (
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}>
+                  <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your reviews…
+                </div>
+              ) : myReviews.length === 0 ? (
+                <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>You haven't written any reviews yet. Open any title and share your thoughts!</div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  {myReviews.map(rv=>(
+                    <div key={rv.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14}}>
+                      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8,gap:10}}>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:2}}>{rv.title}</div>
+                          <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                          <span style={{background:"var(--gold-dim)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
+                          <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"var(--danger)",padding:"3px 8px",fontSize:11,cursor:"pointer"}}>Delete</button>
+                        </div>
+                      </div>
+                      <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── UPGRADE MODAL ────────────────────────────────────────────────────────────
-function UpgradeModal({ onClose, onComplete }) {
-  const [step,setStep]=useState("plans");
-  const [card,setCard]=useState({name:"",number:"",expiry:"",cvc:""});
-  const [loading,setLoading]=useState(false);
-  const fmtCard=v=>v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
-  const fmtExp=v=>{const d=v.replace(/\D/g,"").slice(0,4);return d.length>2?d.slice(0,2)+"/"+d.slice(2):d;};
-  const inp={background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"11px 14px",width:"100%",fontSize:14,outline:"none",fontFamily:"var(--font-body)"};
-  const handlePay=()=>{ window.location.href="https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00"; };
-  return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:520,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        {step==="plans"&&(
-          <div style={{padding:28}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-              <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>Upgrade to Premium</div><div style={{fontSize:13,color:"var(--muted)",marginTop:2}}>Unlock the full streaming experience</div></div>
-              <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
-              <div style={{border:"1px solid var(--border)",borderRadius:14,padding:16}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Free Account</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--muted)",marginBottom:14}}>$0</div>
-                {[{text:"10 searches/day",ok:true},{text:"Watchlist (50 titles)",ok:true},{text:"3 AI picks",ok:true},{text:"Ratings & reviews",ok:true},{text:"Watch trailers",ok:true},{text:"Mood Search",ok:false},{text:"Leaving Soon alerts",ok:false},{text:"Watch History",ok:false},{text:"Cost Calculator",ok:false}].map((f,i)=>(
-                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:f.ok?"var(--text)":"var(--muted)",marginBottom:7,opacity:f.ok?1:.5}}>
-                    <span style={{color:f.ok?"var(--sports)":"rgba(255,255,255,.2)",fontSize:13}}>{f.ok?"✓":"✕"}</span>{f.text}
-                  </div>
-                ))}
-              </div>
-              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,197,24,.04)",position:"relative"}}>
-                <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>​/mo</span></div>
-                {[{text:"Unlimited searches",ok:true},{text:"Unlimited watchlist",ok:true},{text:"12 AI picks",ok:true},{text:"Ratings & reviews",ok:true},{text:"Watch trailers",ok:true},{text:"🎭 Mood Search",ok:true},{text:"🚨 Leaving Soon alerts",ok:true},{text:"📺 Watch History & Stats",ok:true},{text:"💰 Cost Calculator",ok:true}].map((f,i)=>(
-                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,marginBottom:7,color:"var(--text)"}}>
-                    <span style={{color:"var(--gold)",fontSize:13}}>✓</span>{f.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>Upgrade to Premium — $9.99/mo →</button>
-            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
-          </div>
-        )}
-        {step==="pay"&&(
-          <div style={{padding:28}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:22}}>
-              <button onClick={()=>setStep("plans")} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:8,color:"var(--text)",width:32,height:32,fontSize:16}}>←</button>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20}}>Payment Details</div>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
-              <input value={card.name} onChange={e=>setCard({...card,name:e.target.value})} placeholder="Cardholder name" style={inp}/>
-              <div style={{position:"relative"}}>
-                <input value={card.number} onChange={e=>setCard({...card,number:fmtCard(e.target.value)})} placeholder="1234 5678 9012 3456" style={{...inp,paddingRight:48}}/>
-                <span style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",fontSize:18}}>💳</span>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <input value={card.expiry} onChange={e=>setCard({...card,expiry:fmtExp(e.target.value)})} placeholder="MM / YY" style={inp}/>
-                <input value={card.cvc} onChange={e=>setCard({...card,cvc:e.target.value.replace(/\D/g,"").slice(0,3)})} placeholder="CVC" style={inp}/>
-              </div>
-            </div>
-            <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,197,24,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-              {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $9.99 / month"}
-            </button>
-            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:14}}>🔒 Secured by <span style={{color:"#6772e5",fontWeight:700}}>Stripe</span> · SSL Encrypted</div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── SETUP MODAL ──────────────────────────────────────────────────────────────
-function SetupModal({ userSubs, onSave, onClose, isFirst }) {
-  const [selected, setSelected] = useState(new Set(userSubs));
-  const toggle = id => setSelected(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
-  return (
-    <div onClick={isFirst?null:onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1200,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(12px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:560,border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.9)",overflow:"hidden"}}>
-        <div style={{padding:"28px 28px 0"}}><Logo size={28}/><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:6,marginTop:16}}>{isFirst?"Welcome! What are you subscribed to?":"Manage Subscriptions"}</div><div style={{fontSize:13,color:"var(--muted)",marginBottom:24,lineHeight:1.6}}>{isFirst?"Pick your services and we'll personalize your experience.":"Toggle the services you currently pay for."}</div></div>
-        <div style={{padding:"0 28px",maxHeight:340,overflowY:"auto"}}>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,paddingBottom:24}}>
-            {SERVICES.map(s=>{
-              const on=selected.has(s.id);
-              return <button key={s.id} onClick={()=>toggle(s.id)} style={{background:on?`${s.color}20`:"rgba(255,255,255,.04)",border:`2px solid ${on?s.color:"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,transition:"all .2s",position:"relative"}}>
-                {on&&<span style={{position:"absolute",top:6,right:8,color:s.color,fontSize:14,fontWeight:800}}>✓</span>}
-                <span style={{background:on?s.color:"rgba(255,255,255,.12)",borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff"}}>{s.logo}</span>
-                <span style={{fontSize:11,fontWeight:700,color:on?"#fff":"var(--muted)",textAlign:"center"}}>{s.name}</span>
-              </button>;
-            })}
-          </div>
-        </div>
-        <div style={{padding:"16px 28px 28px",borderTop:"1px solid var(--border)",display:"flex",gap:12,alignItems:"center"}}>
-          <span style={{fontSize:13,color:"var(--muted)",flex:1}}>{selected.size} service{selected.size!==1?"s":""} selected</span>
-          {!isFirst&&<button onClick={onClose} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:10,color:"var(--text)",padding:"10px 20px",fontSize:14,fontWeight:600}}>Cancel</button>}
-          <button onClick={()=>{onSave([...selected]);onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 24px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{isFirst?"Let's Go →":"Save Changes"}</button>
         </div>
       </div>
     </div>
@@ -1259,7 +1410,8 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
   useEffect(() => {
     if (!movie?.id) return;
     setRating(userRatings?.[movie.id] || 0);
-    setTrailerKey(null); setShowTrailer(false); setAllProviders({flatrate:[],rent:[],buy:[],free:[]});
+    setTrailerKey(null); setShowTrailer(false);
+    setAllProviders({flatrate:[],rent:[],buy:[],free:[]});
     const type = movie.first_air_date ? "tv" : "movie";
     tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar,videos`).then(d => {
       setDetails(d);
@@ -1267,15 +1419,22 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
       const t = vids.find(v=>v.type==="Trailer"&&v.site==="YouTube") || vids.find(v=>v.site==="YouTube");
       if (t) setTrailerKey(t.key);
     }).catch(()=>{});
+    // Fetch watch providers (rent/buy/stream/free)
     fetch(`${TMDB_BASE}/${type}/${movie.id}/watch/providers`,{headers:tmdbHeaders})
       .then(r=>r.json()).then(data=>{
         const res = data.results?.US || data.results?.GB || Object.values(data.results||{})[0] || {};
-        setAllProviders({flatrate:res.flatrate||[],rent:res.rent||[],buy:res.buy||[],free:res.free||[]});
+        setAllProviders({
+          flatrate: res.flatrate||[],
+          rent:     res.rent||[],
+          buy:      res.buy||[],
+          free:     res.free||[],
+        });
       }).catch(()=>{});
-    supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at",{ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
+    supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at", {ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
   }, [movie?.id]);
 
   if (!movie) return null;
+
   const inWL = (watchlist||[]).includes(movie.id);
   const providers = movie.providers || [];
   const mainProvider = providers[0];
@@ -1293,7 +1452,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
     if (!user) return showToast && showToast("Sign in to rate! 👤");
     setRating(val);
     if (onRate) onRate(movie.id, val);
-    try { await supabase.from("ratings").upsert({user_id:user.id,movie_id:movie.id,rating:val},{onConflict:"user_id,movie_id"}); } catch(e){}
+    try { await supabase.from("ratings").upsert({user_id:user.id, movie_id:movie.id, rating:val}, {onConflict:"user_id,movie_id"}); } catch(e){}
     showToast && showToast(`Rated ${val}/10 ★`);
   };
 
@@ -1310,8 +1469,8 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
     if (revContent.trim().length < 10) return showToast && showToast("Review too short!");
     setSubmitting(true);
     try {
-      const { data } = await supabase.from("reviews").insert({user_id:user.id,movie_id:movie.id,title:revTitle,content:revContent,rating:revRating}).select("*,profiles(username)");
-      if (data?.[0]) { setReviews(prev=>[data[0],...prev]); setRevTitle(""); setRevContent(""); setRevRating(0); showToast && showToast("Review posted! ✍"); }
+      const { data } = await supabase.from("reviews").insert({user_id:user.id, movie_id:movie.id, title:revTitle, content:revContent, rating:revRating}).select("*,profiles(username)");
+      if (data?.[0]) { setReviews(prev => [data[0], ...prev]); setRevTitle(""); setRevContent(""); setRevRating(0); showToast && showToast("Review posted! ✍"); }
     } catch(e) { showToast && showToast("Error posting review"); }
     setSubmitting(false);
   };
@@ -1321,66 +1480,176 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:780,maxHeight:"92vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         {/* Hero */}
         <div style={{height:200,position:"relative",flexShrink:0,overflow:"hidden",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
-          {showTrailer && trailerKey
-            ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`} allow="autoplay; encrypted-media" allowFullScreen style={{width:"100%",height:"100%",border:"none",position:"absolute",inset:0}}/>
-            : <>
-                {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}}/>}
-                <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}}/>
-                {trailerKey && <button onClick={()=>setShowTrailer(true)} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"rgba(0,0,0,.7)",border:"2px solid rgba(255,255,255,.8)",borderRadius:"50%",width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",backdropFilter:"blur(4px)",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,197,24,.9)";e.currentTarget.style.borderColor="var(--gold)";}} onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,.7)";e.currentTarget.style.borderColor="rgba(255,255,255,.8)";}}>
+          {showTrailer && trailerKey ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              style={{width:"100%",height:"100%",border:"none",position:"absolute",inset:0}}
+            />
+          ) : (
+            <>
+              {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
+              {trailerKey && (
+                <button onClick={()=>setShowTrailer(true)}
+                  style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",
+                    background:"rgba(0,0,0,.7)",border:"2px solid rgba(255,255,255,.8)",borderRadius:"50%",
+                    width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",
+                    cursor:"pointer",backdropFilter:"blur(4px)",transition:"all .2s"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,197,24,.9)";e.currentTarget.style.borderColor="var(--gold)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,.7)";e.currentTarget.style.borderColor="rgba(255,255,255,.8)";}}>
                   <span style={{fontSize:22,marginLeft:4}}>▶</span>
-                </button>}
-              </>
-          }
+                </button>
+              )}
+            </>
+          )}
           <div style={{position:"absolute",top:14,right:14,display:"flex",gap:8}}>
             {showTrailer && <button onClick={()=>setShowTrailer(false)} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",padding:"6px 12px",fontSize:12,cursor:"pointer",backdropFilter:"blur(8px)"}}>✕ Close</button>}
             <button onClick={()=>onToggleWatchlist&&onToggleWatchlist(movie.id)} style={{background:inWL?"var(--gold)":"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:inWL?"#000":"#fff",padding:"6px 14px",fontWeight:700,fontSize:13,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Watchlist"}</button>
             <button onClick={onClose} style={{background:"rgba(0,0,0,.7)",border:"none",borderRadius:10,color:"#fff",width:36,height:36,fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
-          {!showTrailer && <div style={{position:"absolute",bottom:16,left:20,right:20}}>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name||""}</div>
-            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-              <span style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{releaseYear}</span>
-              {genres.map(g=><span key={g.id} style={{background:"rgba(255,255,255,.12)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{g.name}</span>)}
-              {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p}/>)}
+          {!showTrailer && (
+            <div style={{position:"absolute",bottom:16,left:20,right:20}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:6,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{movie.title||movie.name||""}</div>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <span style={{fontSize:13,color:"rgba(255,255,255,.7)"}}>{releaseYear}</span>
+                {genres.map(g=><span key={g.id} style={{background:"rgba(255,255,255,.12)",borderRadius:6,padding:"2px 8px",fontSize:11}}>{g.name}</span>)}
+                {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p}/>)}
+              </div>
             </div>
-          </div>}
+          )}
         </div>
+
         {/* Rating bar */}
         <div style={{display:"flex",alignItems:"center",gap:16,padding:"14px 20px",borderBottom:"1px solid var(--border)",flexShrink:0,background:"var(--card)",flexWrap:"wrap"}}>
           <div>
             <div style={{fontSize:11,color:"var(--muted)",marginBottom:3}}>TMDB Score</div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{color:"var(--gold)",fontSize:22,fontFamily:"var(--font-head)",fontWeight:800}}>{tmdbRating}</span><span style={{color:"var(--muted)",fontSize:13}}>/ 10</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{color:"var(--gold)",fontSize:22,fontFamily:"var(--font-head)",fontWeight:800}}>{tmdbRating}</span>
+              <span style={{color:"var(--muted)",fontSize:13}}>/ 10</span>
+            </div>
           </div>
           <div style={{width:1,height:36,background:"var(--border)"}}/>
-          <div><div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>Your Rating</div><StarPicker value={rating} onChange={handleRate} size={16}/></div>
-          {svc && <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} webUrl={svc.url} style={{marginLeft:"auto"}}/>}
-          {trailerKey && !showTrailer && <button onClick={()=>setShowTrailer(true)} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,color:"var(--text)",padding:"9px 16px",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6,marginLeft:svc?"0":"auto"}}>🎬 Trailer</button>}
+          <div>
+            <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>Your Rating</div>
+            <StarPicker value={rating} onChange={handleRate} size={16}/>
+          </div>
+          {svc && (
+            <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} webUrl={svc.url} style={{marginLeft:"auto"}}/>
+          )}
+          {trailerKey && !showTrailer && (
+            <button onClick={()=>setShowTrailer(true)}
+              style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,color:"var(--text)",padding:"9px 16px",fontWeight:700,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6,marginLeft:svc?"0":"auto"}}>
+              🎬 Trailer
+            </button>
+          )}
         </div>
+
         {/* Tabs */}
         <div style={{display:"flex",gap:4,padding:"12px 20px 0",borderBottom:"1px solid var(--border)",flexShrink:0}}>
-          {["overview","cast","reviews"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"8px 12px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>{t}{t==="reviews"?` (${reviews.length})`:""}</button>)}
+          {["overview","cast","reviews"].map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"8px 12px",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>
+              {t}{t==="reviews"?` (${reviews.length})`:""}
+            </button>
+          ))}
         </div>
+
         {/* Content */}
         <div style={{overflowY:"auto",flex:1,padding:20}}>
+
           {tab==="overview" && (
             <div>
               <p style={{fontSize:14,lineHeight:1.75,color:"rgba(240,240,250,.8)",marginBottom:20}}>{movie.overview||details?.overview||"No description available."}</p>
-              {(allProviders.flatrate.length>0||allProviders.free.length>0||allProviders.rent.length>0||allProviders.buy.length>0) && (
+
+              {/* Where to Watch / Find It */}
+              {(allProviders.flatrate.length>0 || allProviders.free.length>0 || allProviders.rent.length>0 || allProviders.buy.length>0) && (
                 <div style={{marginBottom:20}}>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--muted)",letterSpacing:1.2,marginBottom:10}}>WHERE TO WATCH</div>
-                  {allProviders.flatrate.length>0 && <div style={{marginBottom:10}}><div style={{fontSize:11,color:"var(--sports)",fontWeight:700,marginBottom:6}}>✅ INCLUDED IN SUBSCRIPTION</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{allProviders.flatrate.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>{p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,objectFit:"cover",borderRadius:4}}/>}{p.provider_name}</div>)}</div></div>}
-                  {allProviders.free.length>0 && <div style={{marginBottom:10}}><div style={{fontSize:11,color:"var(--gold)",fontWeight:700,marginBottom:6}}>🆓 FREE WITH ADS</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{allProviders.free.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>{p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}{p.provider_name}</div>)}</div></div>}
-                  {allProviders.rent.length>0 && <div style={{marginBottom:10}}><div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>💳 RENT</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{allProviders.rent.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>{p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}{p.provider_name}</div>)}</div></div>}
-                  {allProviders.buy.length>0 && <div style={{marginBottom:10}}><div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>🛒 BUY</div><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{allProviders.buy.map((p,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>{p.logo_path&&<img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}{p.provider_name}</div>)}</div></div>}
+
+                  {/* Streaming (included) */}
+                  {allProviders.flatrate.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"var(--sports)",fontWeight:700,marginBottom:6}}>✅ INCLUDED IN SUBSCRIPTION</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.flatrate.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            <div style={{width:20,height:20,borderRadius:5,background:p.logo_path?"transparent":"#333",overflow:"hidden",flexShrink:0}}>
+                              {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                            </div>
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Free */}
+                  {allProviders.free.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"var(--gold)",fontWeight:700,marginBottom:6}}>🆓 FREE WITH ADS</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.free.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rent */}
+                  {allProviders.rent.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>💳 RENT</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.rent.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Buy */}
+                  {allProviders.buy.length>0 && (
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>🛒 BUY</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                        {allProviders.buy.map((p,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.provider_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-              {allProviders.flatrate.length===0&&allProviders.free.length===0&&allProviders.rent.length===0&&allProviders.buy.length===0&&details&&(
+
+              {/* Not available anywhere — show search options */}
+              {allProviders.flatrate.length===0 && allProviders.free.length===0 && allProviders.rent.length===0 && allProviders.buy.length===0 && details && (
                 <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.08)",borderRadius:14,padding:16,marginBottom:20}}>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:4}}>🔍 Not on streaming right now</div>
-                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:12}}>May be available to rent, buy, or find for free elsewhere:</div>
+                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:12}}>This title may be available to rent, buy, or find for free elsewhere:</div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                    {[{name:"YouTube",url:`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title||movie.name)}`,color:"#FF0000"},{name:"Amazon",url:`https://www.amazon.com/s?k=${encodeURIComponent(movie.title||movie.name)}+movie`,color:"#00A8E1"},{name:"Apple TV",url:`https://tv.apple.com/search?term=${encodeURIComponent(movie.title||movie.name)}`,color:"#555"},{name:"Vudu",url:`https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(movie.title||movie.name)}`,color:"#3399FF"},{name:"Google Play",url:`https://play.google.com/store/search?q=${encodeURIComponent(movie.title||movie.name)}&c=movies`,color:"#4285F4"}].map(s=>(
-                      <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,background:`${s.color}15`,border:`1px solid ${s.color}40`,borderRadius:10,padding:"7px 12px",fontSize:12,fontWeight:700,color:"var(--text)",textDecoration:"none",transition:"all .2s"}} onMouseEnter={e=>e.currentTarget.style.background=`${s.color}30`} onMouseLeave={e=>e.currentTarget.style.background=`${s.color}15`}>🔗 {s.name}</a>
+                    {[
+                      {name:"YouTube",    url:`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title||movie.name)}`,    color:"#FF0000"},
+                      {name:"Amazon",     url:`https://www.amazon.com/s?k=${encodeURIComponent(movie.title||movie.name)}+movie`,                color:"#00A8E1"},
+                      {name:"Apple TV",   url:`https://tv.apple.com/search?term=${encodeURIComponent(movie.title||movie.name)}`,                color:"#555"},
+                      {name:"Vudu",       url:`https://www.vudu.com/content/movies/search?searchString=${encodeURIComponent(movie.title||movie.name)}`, color:"#3399FF"},
+                      {name:"Google Play",url:`https://play.google.com/store/search?q=${encodeURIComponent(movie.title||movie.name)}&c=movies`, color:"#4285F4"},
+                    ].map(s=>(
+                      <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                        style={{display:"flex",alignItems:"center",gap:6,background:`${s.color}15`,border:`1px solid ${s.color}40`,borderRadius:10,padding:"7px 12px",fontSize:12,fontWeight:700,color:"var(--text)",textDecoration:"none",transition:"all .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.background=`${s.color}30`}
+                        onMouseLeave={e=>e.currentTarget.style.background=`${s.color}15`}>
+                        🔗 {s.name}
+                      </a>
                     ))}
                   </div>
                 </div>
@@ -1389,61 +1658,231 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:12,color:"var(--muted)"}}>Similar Titles</div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                    {similar.map(sm=>{const sgr=safeGR(sm.id);const sp=sm.poster_path?`${TMDB_IMG}${sm.poster_path}`:null;return(
-                      <div key={sm.id} onClick={()=>onSelectSimilar&&onSelectSimilar(sm)} style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}} onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                        {sp?<img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>:<div style={{height:100,background:`linear-gradient(135deg,${sgr[0]},${sgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
-                        <div style={{padding:"6px 8px"}}><div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sm.title||sm.name||""}</div><div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div></div>
-                      </div>
-                    );})}
+                    {similar.map(sm=>{
+                      const sgr = safeGR(sm.id);
+                      const sp = sm.poster_path ? `${TMDB_IMG}${sm.poster_path}` : null;
+                      return (
+                        <div key={sm.id} onClick={()=>onSelectSimilar&&onSelectSimilar(sm)}
+                          style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
+                          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}}
+                          onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
+                          {sp ? <img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>
+                               : <div style={{height:100,background:`linear-gradient(135deg,${sgr[0]},${sgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
+                          <div style={{padding:"6px 8px"}}>
+                            <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sm.title||sm.name||""}</div>
+                            <div style={{fontSize:10,color:"var(--gold)"}}>★ {sm.vote_average?.toFixed(1)||"—"}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
             </div>
           )}
+
           {tab==="cast" && (
             <div>
-              {cast.length===0 ? <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>No cast info available.</div>
-               : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:14}}>
-                   {cast.map(c=>{const cgr=safeGR(c.id);return(
-                     <div key={c.id} style={{textAlign:"center"}}>
-                       <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${cgr[0]},${cgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
-                         {c.profile_path?<img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{opacity:.4}}>{(c.name||"").slice(0,2)}</span>}
-                       </div>
-                       <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name||""}</div>
-                       <div style={{fontSize:11,color:"var(--muted)"}}>{c.character||""}</div>
-                     </div>
-                   );})}
-                 </div>}
+              {cast.length===0
+                ? <div style={{color:"var(--muted)",textAlign:"center",padding:"32px 0"}}>No cast info available.</div>
+                : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:14}}>
+                    {cast.map(c=>{
+                      const cgr = safeGR(c.id);
+                      return (
+                        <div key={c.id} style={{textAlign:"center"}}>
+                          <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${cgr[0]},${cgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
+                            {c.profile_path ? <img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                                            : <span style={{opacity:.4}}>{(c.name||"").slice(0,2)}</span>}
+                          </div>
+                          <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name||""}</div>
+                          <div style={{fontSize:11,color:"var(--muted)"}}>{c.character||""}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+              }
             </div>
           )}
+
           {tab==="reviews" && (
             <div>
               <div style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:"var(--radius)",padding:18,marginBottom:24}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:12,fontSize:15}}>{user?"Write a Review":"Sign in to Review"}</div>
                 {user ? (
                   <div>
-                    <div style={{marginBottom:10}}><div style={{fontSize:12,color:"var(--muted)",marginBottom:6}}>Your Rating</div><StarPicker value={revRating} onChange={setRevRating}/></div>
+                    <div style={{marginBottom:10}}>
+                      <div style={{fontSize:12,color:"var(--muted)",marginBottom:6}}>Your Rating</div>
+                      <StarPicker value={revRating} onChange={setRevRating}/>
+                    </div>
                     <input value={revTitle} onChange={e=>setRevTitle(e.target.value)} placeholder="Review title..." style={{...inp,marginBottom:8}}/>
                     <textarea value={revContent} onChange={e=>setRevContent(e.target.value)} placeholder="Share your thoughts..." rows={3} style={{...inp,resize:"vertical",marginBottom:8}}/>
-                    <button onClick={submitReview} disabled={submitting} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 20px",fontWeight:600,fontSize:13,cursor:"pointer"}}>{submitting?"Posting…":"Post Review"}</button>
+                    <button onClick={submitReview} disabled={submitting} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 20px",fontWeight:600,fontSize:13,cursor:"pointer"}}>
+                      {submitting?"Posting…":"Post Review"}
+                    </button>
                   </div>
                 ) : <div style={{fontSize:13,color:"var(--muted)"}}>Create a free account to leave reviews.</div>}
               </div>
-              {reviews.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>No reviews yet. Be the first!</div>
-               : reviews.map(rv=>(
-                <div key={rv.id||Math.random()} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:16,marginBottom:12}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                    <div style={{width:32,height:32,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13}}>{((rv.profiles?.username||"U")[0]||"U").toUpperCase()}</div>
-                    <div><div style={{fontWeight:600,fontSize:13}}>{rv.profiles?.username||"User"}</div><div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString()}</div></div>
-                    <span style={{marginLeft:"auto",background:"rgba(245,197,24,.15)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
-                    {user?.id===rv.user_id && <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"#ef4444",padding:"4px 10px",fontSize:12,cursor:"pointer"}}>Delete</button>}
-                  </div>
-                  <div style={{fontWeight:700,fontSize:14,marginBottom:5}}>{rv.title||""}</div>
-                  <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content||""}</div>
-                </div>
-              ))}
+              {reviews.length===0
+                ? <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>No reviews yet. Be the first!</div>
+                : reviews.map(rv=>(
+                    <div key={rv.id||Math.random()} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:"var(--radius)",padding:16,marginBottom:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                        <div style={{width:32,height:32,borderRadius:"50%",background:"var(--purple)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13}}>
+                          {((rv.profiles?.username||"U")[0]||"U").toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{fontWeight:600,fontSize:13}}>{rv.profiles?.username||"User"}</div>
+                          <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <span style={{marginLeft:"auto",background:"rgba(245,197,24,.15)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
+                        {user?.id===rv.user_id && <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"#ef4444",padding:"4px 10px",fontSize:12,cursor:"pointer"}}>Delete</button>}
+                      </div>
+                      <div style={{fontWeight:700,fontSize:14,marginBottom:5}}>{rv.title||""}</div>
+                      <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content||""}</div>
+                    </div>
+                  ))
+              }
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── UPGRADE MODAL ────────────────────────────────────────────────────────────
+function UpgradeModal({ onClose, onComplete }) {
+  const [step,setStep]=useState("plans");
+  const [card,setCard]=useState({name:"",number:"",expiry:"",cvc:""});
+  const [loading,setLoading]=useState(false);
+  const fmtCard=v=>v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
+  const fmtExp=v=>{const d=v.replace(/\D/g,"").slice(0,4);return d.length>2?d.slice(0,2)+"/"+d.slice(2):d;};
+  const inp={background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"11px 14px",width:"100%",fontSize:14,outline:"none",fontFamily:"var(--font-body)"};
+  const handlePay=()=>{
+    window.location.href="https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00";
+  };
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:520,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        {step==="plans"&&(
+          <div style={{padding:28}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>Upgrade to Premium</div>
+                <div style={{fontSize:13,color:"var(--muted)",marginTop:2}}>Unlock the full streaming experience</div>
+              </div>
+              <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+            </div>
+
+            {/* Comparison */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+              {/* Free */}
+              <div style={{border:"1px solid var(--border)",borderRadius:14,padding:16}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Free Account</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--muted)",marginBottom:14}}>$0</div>
+                {[
+                  {text:"10 searches/day",      ok:true},
+                  {text:"Watchlist (50 titles)", ok:true},
+                  {text:"3 AI picks",            ok:true},
+                  {text:"Ratings & reviews",     ok:true},
+                  {text:"Watch trailers",        ok:true},
+                  {text:"Mood Search",           ok:false},
+                  {text:"Leaving Soon alerts",   ok:false},
+                  {text:"Watch History",         ok:false},
+                  {text:"Cost Calculator",       ok:false},
+                ].map((f,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:f.ok?"var(--text)":"var(--muted)",marginBottom:7,opacity:f.ok?1:.5}}>
+                    <span style={{color:f.ok?"var(--sports)":"rgba(255,255,255,.2)",fontSize:13}}>{f.ok?"✓":"✕"}</span>{f.text}
+                  </div>
+                ))}
+              </div>
+
+              {/* Premium */}
+              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,197,24,.04)",position:"relative"}}>
+                <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
+                {[
+                  {text:"Unlimited searches",         ok:true},
+                  {text:"Unlimited watchlist",        ok:true},
+                  {text:"12 AI picks",                ok:true},
+                  {text:"Ratings & reviews",          ok:true},
+                  {text:"Watch trailers",             ok:true},
+                  {text:"🎭 Mood Search",             ok:true},
+                  {text:"🚨 Leaving Soon alerts",     ok:true},
+                  {text:"📺 Watch History & Stats",   ok:true},
+                  {text:"💰 Cost Calculator",         ok:true},
+                ].map((f,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,marginBottom:7,color:"var(--text)"}}>
+                    <span style={{color:"var(--gold)",fontSize:13}}>✓</span>{f.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+              Upgrade to Premium — $9.99/mo →
+            </button>
+            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
+          </div>
+        )}
+        {step==="pay"&&(
+          <div style={{padding:28}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:22}}>
+              <button onClick={()=>setStep("plans")} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:8,color:"var(--text)",width:32,height:32,fontSize:16}}>←</button>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20}}>Payment Details</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
+              <input value={card.name} onChange={e=>setCard({...card,name:e.target.value})} placeholder="Cardholder name" style={inp} />
+              <div style={{position:"relative"}}>
+                <input value={card.number} onChange={e=>setCard({...card,number:fmtCard(e.target.value)})} placeholder="1234 5678 9012 3456" style={{...inp,paddingRight:48}} />
+                <span style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",fontSize:18}}>💳</span>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <input value={card.expiry} onChange={e=>setCard({...card,expiry:fmtExp(e.target.value)})} placeholder="MM / YY" style={inp} />
+                <input value={card.cvc} onChange={e=>setCard({...card,cvc:e.target.value.replace(/\D/g,"").slice(0,3)})} placeholder="CVC" style={inp} />
+              </div>
+            </div>
+            <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,197,24,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+              {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $9.99 / month"}
+            </button>
+            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:14}}>🔒 Secured by <span style={{color:"#6772e5",fontWeight:700}}>Stripe</span> · SSL Encrypted</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SETUP MODAL ──────────────────────────────────────────────────────────────
+function SetupModal({ userSubs, onSave, onClose, isFirst }) {
+  const [selected, setSelected] = useState(new Set(userSubs));
+  const toggle = id => setSelected(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
+  return (
+    <div onClick={isFirst?null:onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1200,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(12px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:560,border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.9)",overflow:"hidden"}}>
+        <div style={{padding:"28px 28px 0"}}>
+          <Logo size={28} />
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:6,marginTop:16}}>{isFirst?"Welcome! What are you subscribed to?":"Manage Subscriptions"}</div>
+          <div style={{fontSize:13,color:"var(--muted)",marginBottom:24,lineHeight:1.6}}>{isFirst?"Pick your services and we'll personalize your experience.":"Toggle the services you currently pay for."}</div>
+        </div>
+        <div style={{padding:"0 28px",maxHeight:340,overflowY:"auto"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,paddingBottom:24}}>
+            {SERVICES.map(s=>{
+              const on=selected.has(s.id);
+              return <button key={s.id} onClick={()=>toggle(s.id)} style={{background:on?`${s.color}20`:"rgba(255,255,255,.04)",border:`2px solid ${on?s.color:"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"12px 10px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,transition:"all .2s",position:"relative"}}>
+                {on&&<span style={{position:"absolute",top:6,right:8,color:s.color,fontSize:14,fontWeight:800}}>✓</span>}
+                <span style={{background:on?s.color:"rgba(255,255,255,.12)",borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff"}}>{s.logo}</span>
+                <span style={{fontSize:11,fontWeight:700,color:on?"#fff":"var(--muted)",textAlign:"center"}}>{s.name}</span>
+              </button>;
+            })}
+          </div>
+        </div>
+        <div style={{padding:"16px 28px 28px",borderTop:"1px solid var(--border)",display:"flex",gap:12,alignItems:"center"}}>
+          <span style={{fontSize:13,color:"var(--muted)",flex:1}}>{selected.size} service{selected.size!==1?"s":""} selected</span>
+          {!isFirst&&<button onClick={onClose} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:10,color:"var(--text)",padding:"10px 20px",fontSize:14,fontWeight:600}}>Cancel</button>}
+          <button onClick={()=>{onSave([...selected]);onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 24px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>{isFirst?"Let's Go →":"Save Changes"}</button>
         </div>
       </div>
     </div>
@@ -1455,6 +1894,7 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
   const [loaded, setLoaded] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
+
   useEffect(() => {
     if (!movie) return;
     setTrailerKey(null); setShowTrailer(false);
@@ -1464,7 +1904,12 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
       if (t) setTrailerKey(t.key);
     }).catch(()=>{});
   }, [movie?.id]);
-  if (!movie) return <div style={{height:520,background:"linear-gradient(135deg,#0d0d1a,#1a0533)",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:40,height:40,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/></div>;
+
+  if (!movie) return (
+    <div style={{height:520,background:"linear-gradient(135deg,#0d0d1a,#1a0533)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{width:40,height:40,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}} />
+    </div>
+  );
   const backdrop = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null;
   const poster   = movie.poster_path   ? `${TMDB_IMG}${movie.poster_path}` : null;
   const title    = movie.title||movie.name||"";
@@ -1474,11 +1919,14 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
   const providers = movie.providers||[];
   return (
     <div style={{position:"relative",height:520,overflow:"hidden",cursor:showTrailer?"default":"pointer"}} onClick={()=>!showTrailer&&onSelect(movie)}>
-      {showTrailer && trailerKey ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2}} allow="autoplay; fullscreen" allowFullScreen/>
-        : backdrop && <img src={backdrop} alt="" onLoad={()=>setLoaded(true)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:loaded?0.55:0.2,transition:"opacity 1s"}}/>}
+      {/* Trailer or backdrop */}
+      {showTrailer && trailerKey
+        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2}} allow="autoplay; fullscreen" allowFullScreen />
+        : backdrop && <img src={backdrop} alt="" onLoad={()=>setLoaded(true)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:loaded?0.55:0.2,transition:"opacity 1s"}} />
+      }
       {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.6) 50%,rgba(7,7,14,.2) 100%)"}}/>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 40%)"}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.6) 50%,rgba(7,7,14,.2) 100%)"}} />
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 40%)"}} />
       </>}
       {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:16,right:16,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close Trailer</button>}
       {!showTrailer && (
@@ -1489,16 +1937,18 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
               <span style={{color:"var(--gold)",fontWeight:700,fontSize:15}}>★ {rating}</span>
               <span style={{color:"var(--muted)",fontSize:14}}>{year}</span>
-              {providers.slice(0,3).map(p=><ServiceBadge key={p} platformId={p}/>)}
+              {providers.slice(0,3).map(p=><ServiceBadge key={p} platformId={p} />)}
             </div>
             <p style={{fontSize:15,color:"rgba(240,240,250,.75)",lineHeight:1.7,marginBottom:28,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{movie.overview}</p>
             <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
               <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"13px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>▶ Watch Now</button>
               {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:12,color:"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+                {inWL?"♥ Saved":"♡ Save"}
+              </button>
             </div>
           </div>
-          {poster && <img src={poster} alt={title} style={{marginLeft:"auto",height:340,borderRadius:16,boxShadow:"0 32px 80px rgba(0,0,0,.8)",objectFit:"cover",flexShrink:0}}/>}
+          {poster && <img src={poster} alt={title} style={{marginLeft:"auto",height:340,borderRadius:16,boxShadow:"0 32px 80px rgba(0,0,0,.8)",objectFit:"cover",flexShrink:0}} />}
         </div>
       )}
     </div>
@@ -1513,69 +1963,86 @@ function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, on
   return (
     <div style={{marginBottom:36}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",marginBottom:14}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{icon}</span><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color}}>{title}</div></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>{icon}</span>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color}}>{title}</div>
+        </div>
         <div style={{display:"flex",gap:6}}>
           <button onClick={()=>scroll(-1)} style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
-          <button onClick={()=>scroll(1)} style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+          <button onClick={()=>scroll(1)}  style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
         </div>
       </div>
       <div ref={ref} style={{display:"flex",gap:12,overflowX:"auto",padding:"4px 24px 8px",scrollbarWidth:"none",scrollSnapType:"x mandatory",touchAction:"pan-x"}}>
-        {movies.map(m=><div key={m.id} style={{flexShrink:0,width:155,scrollSnapAlign:"start"}}><MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={onSelect} onToggleWatchlist={onToggleWatchlist}/></div>)}
+        {movies.map(m=>(
+          <div key={m.id} style={{flexShrink:0,width:155,scrollSnapAlign:"start"}}>
+            <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={onSelect} onToggleWatchlist={onToggleWatchlist} />
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── SKELETON CARD ───────────────────────────────────────────────────────────
-function SkeletonCard() {
-  return <div style={{borderRadius:"var(--radius)",overflow:"hidden",border:"1px solid var(--border)"}}><div className="skeleton" style={{height:200}}/><div style={{padding:"10px 12px 12px",background:"var(--card)"}}><div className="skeleton" style={{height:14,marginBottom:8,width:"80%"}}/><div className="skeleton" style={{height:11,width:"50%"}}/></div></div>;
-}
-
 // ─── DEVICE DETECTION ────────────────────────────────────────────────────────
 function useDevice() {
-  const [device, setDevice] = useState(() => { const w=window.innerWidth; if(w<=768)return"mobile"; if(w<=1100)return"tablet"; return"desktop"; });
+  const [device, setDevice] = useState(() => {
+    const w = window.innerWidth;
+    if (w <= 768) return "mobile";
+    if (w <= 1100) return "tablet";
+    return "desktop";
+  });
   useEffect(() => {
-    const fn=()=>{ const w=window.innerWidth; if(w<=768)setDevice("mobile"); else if(w<=1100)setDevice("tablet"); else setDevice("desktop"); };
-    window.addEventListener("resize",fn); return()=>window.removeEventListener("resize",fn);
+    const fn = () => {
+      const w = window.innerWidth;
+      if (w <= 768) setDevice("mobile");
+      else if (w <= 1100) setDevice("tablet");
+      else setDevice("desktop");
+    };
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
   return device;
 }
 function useIsMobile() { return useDevice() === "mobile"; }
 
-// ─── APP SCHEMES / WATCH BUTTON ───────────────────────────────────────────────
-const APP_SCHEMES = {
-  netflix:{ios:"nflx://",android:"intent://www.netflix.com#Intent;scheme=https;package=com.netflix.mediaclient;end"},
-  disney:{ios:"disneyplus://",android:"intent://www.disneyplus.com#Intent;scheme=https;package=com.disney.disneyplus;end"},
-  max:{ios:"max://",android:"intent://play.max.com#Intent;scheme=https;package=com.hbo.hbonow;end"},
-  hulu:{ios:"hulu://",android:"intent://www.hulu.com#Intent;scheme=https;package=com.hulu.plus;end"},
-  apple:{ios:"videos://",android:null},
-  prime:{ios:"aiv://",android:"intent://www.amazon.com#Intent;scheme=https;package=com.amazon.avod.thirdpartyclient;end"},
-  peacock:{ios:"peacock://",android:"intent://www.peacocktv.com#Intent;scheme=https;package=com.peacocktv.peacockandroid;end"},
-  paramount:{ios:"paramountplus://",android:"intent://www.paramountplus.com#Intent;scheme=https;package=com.cbs.app;end"},
-  crunchyroll:{ios:"crunchyroll://",android:"intent://www.crunchyroll.com#Intent;scheme=https;package=com.crunchyroll.crunchyroid;end"},
-  espnplus:{ios:"sportscenter://",android:"intent://www.espn.com#Intent;scheme=https;package=com.espn.score_center;end"},
-  dazn:{ios:"dazn://",android:"intent://www.dazn.com#Intent;scheme=https;package=com.dazn;end"},
-  fubo:{ios:"fubo://",android:"intent://www.fubo.tv#Intent;scheme=https;package=tv.fubo.mobile;end"},
-  tubi:{ios:"tubi://",android:"intent://tubitv.com#Intent;scheme=https;package=com.tubitv;end"},
-};
-
-function WatchButton({ serviceId, title, webUrl, style }) {
-  const svc = SERVICES.find(s => s.id === serviceId);
-  if (!svc) return null;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const handleWatch = (e) => {
-    e.stopPropagation();
-    const isMobileDevice=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isAndroid=/Android/i.test(navigator.userAgent);
-    const scheme=APP_SCHEMES[serviceId];
-    if (isMobileDevice && scheme) {
-      if (isIOS && scheme.ios) { const appUrl=scheme.ios; const webFallback=svc.url+encodeURIComponent(title); window.location.href=appUrl; setTimeout(()=>{ window.open(webFallback,"_blank"); },1500); return; }
-      if (isAndroid && scheme.android) { window.location.href=scheme.android; setTimeout(()=>{ window.open(svc.url+encodeURIComponent(title),"_blank"); },1500); return; }
-    }
-    window.open(svc.url+encodeURIComponent(title),"_blank");
-  };
-  return <button onClick={handleWatch} style={{display:"inline-flex",alignItems:"center",gap:8,background:svc.color,borderRadius:10,color:"#fff",padding:"9px 18px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,border:"none",cursor:"pointer",boxShadow:`0 4px 16px ${svc.color}44`,...style}}>▶ Watch on {svc.name}{isMobile&&<span style={{fontSize:10,opacity:.8}}>📱</span>}</button>;
+function MobileBottomNav({ view, setView, watchlist, onProfile }) {
+  const tabs=[
+    {id:"trending", icon:"🔥", label:"Trending",  color:"#F5C518", anim:"flameDance"},
+    {id:"movies",   icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
+    {id:"tv",       icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
+    {id:"anime",    icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
+    {id:"sports",   icon:"🏆", label:"Sports",    color:"#10B981", anim:"trophyBounce"},
+    {id:"watchlist",icon:"♥",  label:"Watchlist", color:"#F5C518", anim:null},
+  ];
+  return (
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.12)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+      {tabs.map(t=>{
+        const active = view===t.id;
+        const count = t.id==="watchlist"&&watchlist.length>0 ? watchlist.length : 0;
+        return (
+          <button key={t.id} onClick={()=>setView(t.id)}
+            style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",transition:"color .2s",cursor:"pointer"}}>
+            <span style={{
+              fontSize:20, lineHeight:1,
+              filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",
+              transition:"filter .2s",
+              display:"inline-block",
+              animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none",
+            }}>{t.icon}</span>
+            <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3}}>{t.label}</span>
+            {count>0&&<span style={{position:"absolute",top:6,left:"50%",marginLeft:6,background:"var(--gold)",color:"#000",borderRadius:99,minWidth:16,height:16,fontSize:9,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px"}}>{count}</span>}
+            {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:32,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
+          </button>
+        );
+      })}
+      {/* Profile button */}
+      <button onClick={onProfile}
+        style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:"rgba(240,240,250,.35)",cursor:"pointer"}}>
+        <span style={{fontSize:20,lineHeight:1}}>👤</span>
+        <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3}}>Profile</span>
+      </button>
+    </div>
+  );
 }
 
 // ─── LEAVING SOON MODAL ───────────────────────────────────────────────────────
@@ -1586,40 +2053,67 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade }) {
     if (tier !== "premium") { setLoading(false); return; }
     const fetchLeaving = async () => {
       try {
-        const today = new Date(); const endOfMonth = new Date(today.getFullYear(),today.getMonth()+1,0);
-        const res = await fetch(`${TMDB_BASE}/discover/movie?sort_by=popularity.desc&watch_region=US&with_watch_providers=${userSubs.map(s=>({netflix:8,disney:337,max:1899,hulu:15,apple:350,prime:9,peacock:386,paramount:531,crunchyroll:283,espnplus:149})[s]).filter(Boolean).join("|")}&language=en-US&page=1`,{headers:tmdbHeaders});
+        const today = new Date();
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth()+1, 0);
+        const dateStr = endOfMonth.toISOString().split("T")[0];
+        const res = await fetch(`${TMDB_BASE}/discover/movie?sort_by=popularity.desc&watch_region=US&with_watch_providers=${userSubs.map(s=>({netflix:8,disney:337,max:1899,hulu:15,apple:350,prime:9,peacock:386,paramount:531,crunchyroll:283,espnplus:149})[s]).filter(Boolean).join("|")}&language=en-US&page=1`, { headers: tmdbHeaders });
         const data = await res.json();
-        const results = (data.results||[]).slice(0,12).map((m,i)=>({...m,leavingDate:new Date(today.getFullYear(),today.getMonth(),today.getDate()+(i%28)+1).toLocaleDateString("en-US",{month:"short",day:"numeric"}),daysLeft:(i%28)+1}));
+        // Simulate leaving soon with popular titles
+        const results = (data.results||[]).slice(0,12).map((m,i) => ({
+          ...m,
+          leavingDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + (i%28)+1).toLocaleDateString("en-US",{month:"short",day:"numeric"}),
+          daysLeft: (i%28)+1,
+        }));
         setItems(results);
-      } catch(e) {}
+      } catch(e) { console.error(e); }
       setLoading(false);
     };
     fetchLeaving();
   }, [tier, userSubs]);
+
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"85vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(239,68,68,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(239,68,68,.12),rgba(245,197,24,.06))"}}>
-          <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🚨 Leaving Soon</div><div style={{fontSize:13,color:"var(--muted)"}}>Titles leaving your services this month</div></div>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🚨 Leaving Soon</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>Titles leaving your services this month</div>
+          </div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{overflowY:"auto",padding:20,flex:1}}>
-          {tier!=="premium" ? (
+          {!tier||tier!=="premium" ? (
             <div style={{textAlign:"center",padding:"40px 20px"}}>
               <div style={{fontSize:48,marginBottom:16}}>🚨</div>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
               <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Get notified about titles leaving your services so you never miss a show before it's gone.</div>
               <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
             </div>
-          ) : loading ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}><span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Checking your services…</div>
-          : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
-              {items.map(m=>{const poster=m.poster_path?`${TMDB_IMG}${m.poster_path}`:null;const urgent=m.daysLeft<=7;return(
-                <div key={m.id} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:`1px solid ${urgent?"rgba(239,68,68,.4)":"var(--border)"}`}}>
-                  {poster?<img src={poster} alt="" style={{width:"100%",height:140,objectFit:"cover"}}/>:<div style={{height:140,background:"linear-gradient(135deg,#1a0a0a,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                  <div style={{padding:"8px 10px"}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div><div style={{fontSize:11,color:urgent?"var(--danger)":"var(--muted)",fontWeight:urgent?700:400}}>{urgent?"⚠️ ":"📅 "}Leaves {m.leavingDate}</div><div style={{fontSize:10,color:urgent?"var(--danger)":"var(--muted)",marginTop:2}}>{m.daysLeft} day{m.daysLeft!==1?"s":""} left</div></div>
-                </div>
-              );})}
-            </div>}
+          ) : loading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}>
+              <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
+              Checking your services…
+            </div>
+          ) : (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
+              {items.map(m=>{
+                const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
+                const urgent = m.daysLeft <= 7;
+                return (
+                  <div key={m.id} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:`1px solid ${urgent?"rgba(239,68,68,.4)":"var(--border)"}`}}>
+                    {poster ? <img src={poster} alt="" style={{width:"100%",height:140,objectFit:"cover"}}/> : <div style={{height:140,background:"linear-gradient(135deg,#1a0a0a,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
+                    <div style={{padding:"8px 10px"}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
+                      <div style={{fontSize:11,color:urgent?"var(--danger)":"var(--muted)",fontWeight:urgent?700:400}}>
+                        {urgent?"⚠️ ":"📅 "}Leaves {m.leavingDate}
+                      </div>
+                      <div style={{fontSize:10,color:urgent?"var(--danger)":"var(--muted)",marginTop:2}}>{m.daysLeft} day{m.daysLeft!==1?"s":""} left</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1632,35 +2126,72 @@ function WatchHistoryModal({ onClose, user, tier, onUpgrade }) {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     if (!user || tier !== "premium") { setLoading(false); return; }
-    supabase.from("watch_history").select("*").eq("user_id",user.id).order("watched_at",{ascending:false}).then(({data})=>{ setHistory(data||[]); setLoading(false); });
+    supabase.from("watch_history").select("*").eq("user_id", user.id).order("watched_at",{ascending:false}).then(({data}) => {
+      setHistory(data||[]);
+      setLoading(false);
+    });
   }, [user, tier]);
-  const totalWatched=history.length,thisMonth=history.filter(h=>new Date(h.watched_at).getMonth()===new Date().getMonth()).length,thisYear=history.filter(h=>new Date(h.watched_at).getFullYear()===new Date().getFullYear()).length,movies=history.filter(h=>h.movie_type==="movie").length,shows=history.filter(h=>h.movie_type==="tv").length;
+
+  const totalWatched = history.length;
+  const thisMonth = history.filter(h => new Date(h.watched_at).getMonth() === new Date().getMonth()).length;
+  const thisYear = history.filter(h => new Date(h.watched_at).getFullYear() === new Date().getFullYear()).length;
+  const movies = history.filter(h => h.movie_type === "movie").length;
+  const shows = history.filter(h => h.movie_type === "tv").length;
+
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:620,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
         <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(6,182,212,.06))"}}>
-          <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>📺 Watch History & Stats</div><div style={{fontSize:13,color:"var(--muted)"}}>Everything you've watched on StreamHub</div></div>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>📺 Watch History & Stats</div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>Everything you've watched on StreamHub</div>
+          </div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{overflowY:"auto",padding:20,flex:1}}>
-          {tier!=="premium" ? <div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:48,marginBottom:16}}>📺</div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div><div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Track everything you watch and see your streaming stats.</div><button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button></div>
-          : loading ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}><span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your history…</div>
-          : <>
+          {tier !== "premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>📺</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Track everything you watch and see your streaming stats — total watched, this month, movies vs shows and more.</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : loading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:12,color:"var(--muted)"}}>
+              <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your history…
+            </div>
+          ) : (
+            <>
+              {/* Stats grid */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:24}}>
                 {[["📺",totalWatched,"Total Watched"],["📅",thisMonth,"This Month"],["🗓️",thisYear,"This Year"],["🎬",movies,"Movies"],["📡",shows,"TV Shows"],["⭐",Math.round(totalWatched*1.2),"Hours Est."]].map(([icon,val,label])=>(
-                  <div key={label} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"14px 10px",textAlign:"center"}}><div style={{fontSize:20,marginBottom:4}}>{icon}</div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--purple)"}}>{val}</div><div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{label}</div></div>
+                  <div key={label} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"14px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:20,marginBottom:4}}>{icon}</div>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--purple)"}}>{val}</div>
+                    <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{label}</div>
+                  </div>
                 ))}
               </div>
-              {history.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>No watch history yet. Click "Mark as Watched" on any title to start tracking!</div>
-              : <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {/* History list */}
+              {history.length === 0 ? (
+                <div style={{textAlign:"center",color:"var(--muted)",padding:"32px 0",fontSize:14}}>
+                  No watch history yet. Click "Mark as Watched" on any title to start tracking!
+                </div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {history.map(h=>(
                     <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,.03)",borderRadius:10,padding:"10px 12px",border:"1px solid var(--border)"}}>
-                      {h.movie_poster?<img src={`${TMDB_IMG}${h.movie_poster}`} alt="" style={{width:40,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}}/>:<div style={{width:40,height:56,background:"var(--card)",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🎬</div>}
-                      <div style={{flex:1,minWidth:0}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.movie_title}</div><div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{h.movie_type==="tv"?"📡 TV Show":"🎬 Movie"} · Watched {new Date(h.watched_at).toLocaleDateString()}</div></div>
+                      {h.movie_poster ? <img src={`${TMDB_IMG}${h.movie_poster}`} alt="" style={{width:40,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}}/> : <div style={{width:40,height:56,background:"var(--card)",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🎬</div>}
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.movie_title}</div>
+                        <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{h.movie_type==="tv"?"📡 TV Show":"🎬 Movie"} · Watched {new Date(h.watched_at).toLocaleDateString()}</div>
+                      </div>
                     </div>
                   ))}
-                </div>}
-            </>}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1672,31 +2203,73 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
   const [aiReport, setAiReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState("overview");
+
   const myServices = SERVICES.filter(s => userSubs.includes(s.id));
   const totalMonthly = myServices.reduce((sum,s) => sum + (s.price||0), 0);
   const totalAnnual = totalMonthly * 12;
+
+  // Calculate watches per service from history
   const watchesByService = {};
-  (watchHistory||[]).forEach(h => { const svc=h.service_id||(h.providers&&h.providers[0]); if(svc) watchesByService[svc]=(watchesByService[svc]||0)+1; });
-  const serviceStats = myServices.map(s => { const watches=watchesByService[s.id]||0; const cpw=watches>0?s.price/watches:null; return {...s,watches,cpw}; }).sort((a,b)=>b.price-a.price);
-  const totalWatches=Object.values(watchesByService).reduce((s,v)=>s+v,0);
-  const mostUsed=serviceStats.filter(s=>s.watches>0).sort((a,b)=>b.watches-a.watches)[0];
-  const leastUsed=serviceStats.filter(s=>s.watches===0&&s.price>0);
-  const bestValue=serviceStats.filter(s=>s.cpw!==null).sort((a,b)=>a.cpw-b.cpw)[0];
-  const worstValue=serviceStats.filter(s=>s.cpw!==null).sort((a,b)=>b.cpw-a.cpw)[0];
+  (watchHistory||[]).forEach(h => {
+    const svc = h.service_id || (h.providers && h.providers[0]);
+    if (svc) watchesByService[svc] = (watchesByService[svc]||0) + 1;
+  });
+
+  // Cost per watch per service
+  const serviceStats = myServices.map(s => {
+    const watches = watchesByService[s.id] || 0;
+    const cpw = watches > 0 ? s.price / watches : null;
+    return { ...s, watches, cpw };
+  }).sort((a,b) => b.price - a.price);
+
+  const totalWatches = Object.values(watchesByService).reduce((s,v)=>s+v,0);
+  const mostUsed = serviceStats.filter(s=>s.watches>0).sort((a,b)=>b.watches-a.watches)[0];
+  const leastUsed = serviceStats.filter(s=>s.watches===0 && s.price>0);
+  const bestValue = serviceStats.filter(s=>s.cpw!==null).sort((a,b)=>a.cpw-b.cpw)[0];
+  const worstValue = serviceStats.filter(s=>s.cpw!==null).sort((a,b)=>b.cpw-a.cpw)[0];
+
+  // Watchlist service distribution
+  const wlByService = {};
+  (watchlist||[]).forEach(id => {
+    // approximate from watchHistory
+  });
 
   const generateAIReport = async () => {
     setLoading(true);
-    const dataSnapshot={services:serviceStats.map(s=>({name:s.name,price:s.price,watches:s.watches,cpw:s.cpw?.toFixed(2)||"no data"})),totalMonthly:totalMonthly.toFixed(2),totalWatches,watchlistSize:(watchlist||[]).length,ratingsCount:Object.keys(userRatings||{}).length,unusedServices:leastUsed.map(s=>s.name),mostUsed:mostUsed?.name||"none",bestValue:bestValue?`${bestValue.name} at $${bestValue.cpw?.toFixed(2)}/watch`:"none"};
+    const dataSnapshot = {
+      services: serviceStats.map(s=>({name:s.name,price:s.price,watches:s.watches,cpw:s.cpw?.toFixed(2)||"no data"})),
+      totalMonthly: totalMonthly.toFixed(2),
+      totalWatches,
+      watchlistSize: (watchlist||[]).length,
+      ratingsCount: Object.keys(userRatings||{}).length,
+      unusedServices: leastUsed.map(s=>s.name),
+      mostUsed: mostUsed?.name || "none",
+      bestValue: bestValue ? `${bestValue.name} at $${bestValue.cpw?.toFixed(2)}/watch` : "none",
+    };
     try {
-      const res = await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:800,system:`You are a smart streaming advisor. Analyze streaming data and give brutally honest recommendations. Be specific with dollar amounts. Return ONLY valid JSON with keys: summary (2 sentences), keep (array of {service, reason}), drop (array of {service, reason, savings}), tip (one power tip). No markdown, no extra text.`,messages:[{role:"user",content:`Streaming data: ${JSON.stringify(dataSnapshot)}`}]})});
-      if (!res.ok) { const errData=await res.json().catch(()=>({})); throw new Error(errData.error||`HTTP ${res.status}`); }
-      const data=await res.json();
-      const text=data.content?.find(b=>b.type==="text")?.text||"";
+      const res = await fetch("/api/ai", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-6",
+          max_tokens:800,
+          system:`You are a smart streaming advisor. Analyze streaming data and give brutally honest recommendations. Be specific with dollar amounts. Return ONLY valid JSON with keys: summary (2 sentences), keep (array of {service, reason}), drop (array of {service, reason, savings}), tip (one power tip). No markdown, no extra text.`,
+          messages:[{role:"user",content:`Streaming data: ${JSON.stringify(dataSnapshot)}`}]
+        })
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const text = data.content?.find(b=>b.type==="text")?.text || "";
       if (!text) throw new Error("Empty AI response");
-      const clean=text.replace(/```json|```/g,"").trim();
-      const parsed=JSON.parse(clean);
+      const clean = text.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
       setAiReport(parsed);
-    } catch(e) { setAiReport({error:e.message,summary:"",keep:[],drop:[],tip:""}); }
+    } catch(e) {
+      setAiReport({ error: e.message, summary:"", keep:[], drop:[], tip:"" });
+    }
     setLoading(false);
   };
 
@@ -1707,9 +2280,15 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
         <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>Streaming Intelligence Report</div>
         <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>AI analyzes your watch history, ratings, and watchlist to tell you exactly which services are worth keeping — and which ones to cut.</div>
         <div style={{background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.2)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
-          {["Cost-per-watch breakdown per service","AI verdict: Keep, Cut, or Rotate","Personalized save recommendations","Monthly & annual waste calculator","Best value score for your taste"].map((f,i)=><div key={i} style={{display:"flex",gap:8,fontSize:13,color:"var(--muted)",marginBottom:i<4?8:0}}><span style={{color:"var(--sports)"}}>✓</span>{f}</div>)}
+          {["Cost-per-watch breakdown per service","AI verdict: Keep, Cut, or Rotate","Personalized save recommendations","Monthly & annual waste calculator","Best value score for your taste"].map((f,i)=>(
+            <div key={i} style={{display:"flex",gap:8,fontSize:13,color:"var(--muted)",marginBottom:i<4?8:0}}>
+              <span style={{color:"var(--sports)"}}>✓</span>{f}
+            </div>
+          ))}
         </div>
-        <button onClick={()=>{onUpgrade&&onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10}}>Upgrade to Premium ✦</button>
+        <button onClick={()=>{onUpgrade&&onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10}}>
+          Upgrade to Premium ✦
+        </button>
         <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:13,cursor:"pointer"}}>Maybe later</button>
       </div>
     </div>
@@ -1718,80 +2297,187 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"90vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(16,185,129,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+
+        {/* Header */}
         <div style={{padding:"20px 24px 16px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(245,197,24,.06))",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>💰 Streaming Intelligence</div><div style={{fontSize:12,color:"var(--muted)"}}>AI-powered analysis of your streaming value</div></div>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>💰 Streaming Intelligence</div>
+              <div style={{fontSize:12,color:"var(--muted)"}}>AI-powered analysis of your streaming value</div>
+            </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
+          {/* Tabs */}
           <div style={{display:"flex",gap:4,marginTop:14}}>
-            {["overview","ai report"].map(t=><button key={t} onClick={()=>setTab(t)} style={{background:tab===t?"rgba(16,185,129,.2)":"none",border:tab===t?"1px solid rgba(16,185,129,.4)":"1px solid transparent",borderRadius:99,color:tab===t?"var(--sports)":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",textTransform:"capitalize",fontFamily:"var(--font-head)"}}>{t==="ai report"?"🤖 AI Report":"📊 Overview"}</button>)}
+            {["overview","ai report"].map(t=>(
+              <button key={t} onClick={()=>setTab(t)} style={{background:tab===t?"rgba(16,185,129,.2)":"none",border:tab===t?"1px solid rgba(16,185,129,.4)":"1px solid transparent",borderRadius:99,color:tab===t?"var(--sports)":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",textTransform:"capitalize",fontFamily:"var(--font-head)"}}>
+                {t==="ai report"?"🤖 AI Report":t==="overview"?"📊 Overview":""}
+              </button>
+            ))}
           </div>
         </div>
+
         <div style={{overflowY:"auto",flex:1,padding:"20px 24px 24px"}}>
+
           {tab==="overview" && (
             <div>
+              {/* Big total — responsive font size */}
               <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.1),rgba(16,185,129,.03))",border:"1px solid rgba(16,185,129,.2)",borderRadius:16,padding:"16px 12px",textAlign:"center",marginBottom:14}}>
                 <div style={{fontSize:10,color:"var(--muted)",marginBottom:6,letterSpacing:1.5}}>MONTHLY STREAMING SPEND</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:"clamp(32px,8vw,52px)",color:"var(--sports)",lineHeight:1}}>${totalMonthly.toFixed(2)}</div>
                 <div style={{display:"flex",justifyContent:"center",gap:12,marginTop:10,flexWrap:"wrap"}}>
-                  <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>${totalAnnual.toFixed(0)}</div><div style={{fontSize:10,color:"var(--muted)"}}>per year</div></div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>${totalAnnual.toFixed(0)}</div>
+                    <div style={{fontSize:10,color:"var(--muted)"}}>per year</div>
+                  </div>
                   <div style={{width:1,background:"var(--border)"}}/>
-                  <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>${(totalMonthly/30).toFixed(2)}</div><div style={{fontSize:10,color:"var(--muted)"}}>per day</div></div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>${(totalMonthly/30).toFixed(2)}</div>
+                    <div style={{fontSize:10,color:"var(--muted)"}}>per day</div>
+                  </div>
                   <div style={{width:1,background:"var(--border)"}}/>
-                  <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>{totalWatches}</div><div style={{fontSize:10,color:"var(--muted)"}}>watched</div></div>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"rgba(240,240,250,.8)"}}>{totalWatches}</div>
+                    <div style={{fontSize:10,color:"var(--muted)"}}>watched</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Per-service cost breakdown */}
               <div style={{marginBottom:14}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--muted)",letterSpacing:1.2,marginBottom:10}}>COST PER SERVICE — THIS MONTH</div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {serviceStats.map(s=>{
-                    const pct=totalMonthly>0?(s.price/totalMonthly)*100:0;
-                    const verdict=s.watches===0&&s.price>0?"⚠️ Unused":s.cpw&&s.cpw<3?"🟢 Great":s.cpw&&s.cpw<8?"🟡 Average":"🔴 Pricey";
-                    return <div key={s.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 12px"}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,gap:8}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
-                          <span style={{background:s.color,borderRadius:7,width:26,height:26,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",flexShrink:0}}>{s.logo}</span>
-                          <div style={{minWidth:0}}><div style={{fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div><div style={{fontSize:10,color:"var(--muted)"}}>{s.watches>0?`${s.watches} watch${s.watches!==1?"es":""}  ·  $${s.cpw.toFixed(2)}/watch`:"No watches yet"}</div></div>
+                    const pct = totalMonthly>0?(s.price/totalMonthly)*100:0;
+                    const verdict = s.watches===0&&s.price>0?"⚠️ Unused":s.cpw&&s.cpw<3?"🟢 Great":s.cpw&&s.cpw<8?"🟡 Average":"🔴 Pricey";
+                    return (
+                      <div key={s.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 12px"}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,gap:8}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+                            <span style={{background:s.color,borderRadius:7,width:26,height:26,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",flexShrink:0}}>{s.logo}</span>
+                            <div style={{minWidth:0}}>
+                              <div style={{fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
+                              <div style={{fontSize:10,color:"var(--muted)"}}>
+                                {s.watches>0?`${s.watches} watch${s.watches!==1?"es":""}  ·  $${s.cpw.toFixed(2)}/watch`:"No watches yet"}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{textAlign:"right",flexShrink:0}}>
+                            <div style={{fontFamily:"var(--font-head)",fontWeight:800,color:"var(--sports)",fontSize:13}}>${s.price.toFixed(2)}</div>
+                            <div style={{fontSize:10,color:"var(--muted)",whiteSpace:"nowrap"}}>{verdict}</div>
+                          </div>
                         </div>
-                        <div style={{textAlign:"right",flexShrink:0}}><div style={{fontFamily:"var(--font-head)",fontWeight:800,color:"var(--sports)",fontSize:13}}>${s.price.toFixed(2)}</div><div style={{fontSize:10,color:"var(--muted)",whiteSpace:"nowrap"}}>{verdict}</div></div>
+                        <div style={{height:4,background:"rgba(255,255,255,.05)",borderRadius:99,overflow:"hidden"}}>
+                          <div style={{height:"100%",width:`${pct}%`,background:s.watches===0?"rgba(239,68,68,.6)":s.color,borderRadius:99,transition:"width .6s"}}/>
+                        </div>
                       </div>
-                      <div style={{height:4,background:"rgba(255,255,255,.05)",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:s.watches===0?"rgba(239,68,68,.6)":s.color,borderRadius:99,transition:"width .6s"}}/></div>
-                    </div>;
+                    );
                   })}
                 </div>
               </div>
+
+              {/* Quick insights */}
               <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:14}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--muted)",letterSpacing:1.2,marginBottom:2}}>QUICK INSIGHTS</div>
-                {mostUsed&&<div style={{background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>🏆 <strong>{mostUsed.name}</strong> is your most-used — {mostUsed.watches} watches this month</div>}
-                {bestValue&&<div style={{background:"rgba(6,182,212,.08)",border:"1px solid rgba(6,182,212,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💎 Best value: <strong>{bestValue.name}</strong> at <strong>${bestValue.cpw.toFixed(2)}/watch</strong></div>}
-                {worstValue&&worstValue.cpw>10&&<div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>⚠️ <strong>{worstValue.name}</strong> is costing <strong>${worstValue.cpw.toFixed(2)}/watch</strong></div>}
-                {leastUsed.length>0&&<div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💸 <strong>{leastUsed.map(s=>s.name).join(", ")}</strong> — paid for, nothing watched. That's <strong>${leastUsed.reduce((s,sv)=>s+sv.price,0).toFixed(2)}/mo</strong> unused.</div>}
+                {mostUsed && <div style={{background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>🏆 <strong>{mostUsed.name}</strong> is your most-used — {mostUsed.watches} watches this month</div>}
+                {bestValue && <div style={{background:"rgba(6,182,212,.08)",border:"1px solid rgba(6,182,212,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💎 Best value: <strong>{bestValue.name}</strong> at <strong>${bestValue.cpw.toFixed(2)}/watch</strong></div>}
+                {worstValue && worstValue.cpw > 10 && <div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>⚠️ <strong>{worstValue.name}</strong> is costing <strong>${worstValue.cpw.toFixed(2)}/watch</strong></div>}
+                {leastUsed.length>0 && <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💸 <strong>{leastUsed.map(s=>s.name).join(", ")}</strong> — paid for, nothing watched. That's <strong>${leastUsed.reduce((s,sv)=>s+sv.price,0).toFixed(2)}/mo</strong> unused.</div>}
               </div>
-              <button onClick={()=>setTab("ai report")} style={{width:"100%",background:"linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2))",border:"1px solid rgba(16,185,129,.4)",borderRadius:12,color:"var(--sports)",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,cursor:"pointer"}}>🤖 Get AI Recommendations →</button>
+
+              <button onClick={()=>setTab("ai report")} style={{width:"100%",background:"linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2))",border:"1px solid rgba(16,185,129,.4)",borderRadius:12,color:"var(--sports)",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,cursor:"pointer"}}>
+                🤖 Get AI Recommendations →
+              </button>
             </div>
           )}
+
           {tab==="ai report" && (
             <div>
-              {!aiReport&&!loading&&(
+              {!aiReport && !loading && (
                 <div style={{textAlign:"center",padding:"32px 0"}}>
                   <div style={{fontSize:52,marginBottom:16}}>🤖</div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>AI Streaming Advisor</div>
-                  <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.7,maxWidth:380,margin:"0 auto 24px"}}>AI analyzes your watch history, ratings, and watchlist to give you brutally honest advice on what to keep, what to cut, and how to save money.</div>
-                  <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24,textAlign:"left"}}>
-                    {[`${myServices.length} services · $${totalMonthly.toFixed(2)}/mo`,`${totalWatches} titles watched`,`${(watchlist||[]).length} titles on watchlist`,`${Object.keys(userRatings||{}).length} ratings given`].map((stat,i)=><div key={i} style={{background:"rgba(255,255,255,.04)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 14px",fontSize:13,color:"var(--muted)",display:"flex",alignItems:"center",gap:8}}><span style={{color:"var(--sports)"}}>✓</span>{stat}</div>)}
+                  <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.7,maxWidth:380,margin:"0 auto 24px"}}>
+                    AI analyzes your watch history, ratings, and watchlist to give you brutally honest advice on what to keep, what to cut, and how to save money.
                   </div>
-                  <button onClick={generateAIReport} style={{background:"linear-gradient(135deg,#10b981,#06b6d4)",border:"none",borderRadius:14,color:"#fff",padding:"14px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 32px rgba(16,185,129,.4)"}}>✦ Generate My Report</button>
+                  <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:24,textAlign:"left"}}>
+                    {[
+                      `${myServices.length} services · $${totalMonthly.toFixed(2)}/mo`,
+                      `${totalWatches} titles watched`,
+                      `${(watchlist||[]).length} titles on watchlist`,
+                      `${Object.keys(userRatings||{}).length} ratings given`,
+                    ].map((stat,i)=>(
+                      <div key={i} style={{background:"rgba(255,255,255,.04)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 14px",fontSize:13,color:"var(--muted)",display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{color:"var(--sports)"}}>✓</span>{stat}
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={generateAIReport} style={{background:"linear-gradient(135deg,#10b981,#06b6d4)",border:"none",borderRadius:14,color:"#fff",padding:"14px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 32px rgba(16,185,129,.4)"}}>
+                    ✦ Generate My Report
+                  </button>
                 </div>
               )}
-              {loading&&<div style={{textAlign:"center",padding:"48px 0"}}><div style={{width:48,height:48,border:"3px solid rgba(16,185,129,.2)",borderTop:"3px solid var(--sports)",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 20px"}}/><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Analyzing your streaming habits...</div><div style={{color:"var(--muted)",fontSize:13}}>Calculating cost-per-watch, checking your watchlist, reviewing your ratings</div></div>}
-              {aiReport&&!loading&&(
+
+              {loading && (
+                <div style={{textAlign:"center",padding:"48px 0"}}>
+                  <div style={{width:48,height:48,border:"3px solid rgba(16,185,129,.2)",borderTop:"3px solid var(--sports)",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 20px"}}/>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Analyzing your streaming habits...</div>
+                  <div style={{color:"var(--muted)",fontSize:13}}>Calculating cost-per-watch, checking your watchlist, reviewing your ratings</div>
+                </div>
+              )}
+
+              {aiReport && !loading && (
                 <div>
-                  {aiReport.error&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:12,padding:16,marginBottom:16,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>😕</div><div style={{fontWeight:700,marginBottom:4}}>Couldn't generate report</div><div style={{fontSize:12,color:"var(--muted)",marginBottom:12}}>{aiReport.error}</div><button onClick={()=>{setAiReport(null);generateAIReport();}} style={{background:"var(--sports)",border:"none",borderRadius:10,color:"#fff",padding:"8px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>Try Again</button></div>}
-                  <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(6,182,212,.08))",border:"1px solid rgba(16,185,129,.25)",borderRadius:14,padding:16,marginBottom:16}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--sports)",letterSpacing:1.2,marginBottom:8}}>AI SUMMARY</div><div style={{fontSize:14,lineHeight:1.7,color:"rgba(240,240,250,.85)"}}>{aiReport.summary}</div></div>
-                  {aiReport.keep?.length>0&&<div style={{marginBottom:14}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--sports)",letterSpacing:1.2,marginBottom:8}}>✅ KEEP THESE</div>{aiReport.keep.map((k,i)=><div key={i} style={{background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13}}><strong>{k.service}</strong> — {k.reason}</div>)}</div>}
-                  {aiReport.drop?.length>0&&<div style={{marginBottom:14}}><div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"#ef4444",letterSpacing:1.2,marginBottom:8}}>✂️ CONSIDER CUTTING</div>{aiReport.drop.map((d,i)=><div key={i} style={{background:"rgba(239,68,68,.06)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13}}><strong>{d.service}</strong> — {d.reason}{d.savings&&<span style={{marginLeft:8,background:"rgba(239,68,68,.15)",color:"#ef4444",borderRadius:6,padding:"1px 7px",fontSize:11,fontWeight:700}}>Save {d.savings}</span>}</div>)}</div>}
-                  {aiReport.tip&&<div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:16}}>💡 <strong>Power tip:</strong> {aiReport.tip}</div>}
-                  <button onClick={()=>{setAiReport(null);generateAIReport();}} style={{width:"100%",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:10,color:"var(--sports)",padding:"10px 0",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,cursor:"pointer"}}>🔄 Regenerate Report</button>
+                  {/* Show error if present */}
+                  {aiReport.error && (
+                    <div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:12,padding:16,marginBottom:16,textAlign:"center"}}>
+                      <div style={{fontSize:28,marginBottom:8}}>😕</div>
+                      <div style={{fontWeight:700,marginBottom:4}}>Couldn't generate report</div>
+                      <div style={{fontSize:12,color:"var(--muted)",marginBottom:12}}>{aiReport.error}</div>
+                      <button onClick={()=>{setAiReport(null);generateAIReport();}} style={{background:"var(--sports)",border:"none",borderRadius:10,color:"#fff",padding:"8px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>Try Again</button>
+                    </div>
+                  )}
+                  {/* Summary */}
+                  <div style={{background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(6,182,212,.08))",border:"1px solid rgba(16,185,129,.25)",borderRadius:14,padding:16,marginBottom:16}}>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--sports)",letterSpacing:1.2,marginBottom:8}}>AI SUMMARY</div>
+                    <div style={{fontSize:14,lineHeight:1.7,color:"rgba(240,240,250,.85)"}}>{aiReport.summary}</div>
+                  </div>
+
+                  {/* Keep */}
+                  {aiReport.keep?.length>0 && (
+                    <div style={{marginBottom:14}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--sports)",letterSpacing:1.2,marginBottom:8}}>✅ KEEP THESE</div>
+                      {aiReport.keep.map((k,i)=>(
+                        <div key={i} style={{background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13}}>
+                          <strong>{k.service}</strong> — {k.reason}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Drop */}
+                  {aiReport.drop?.length>0 && (
+                    <div style={{marginBottom:14}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"#ef4444",letterSpacing:1.2,marginBottom:8}}>✂️ CONSIDER CUTTING</div>
+                      {aiReport.drop.map((d,i)=>(
+                        <div key={i} style={{background:"rgba(239,68,68,.06)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:"10px 14px",marginBottom:8,fontSize:13}}>
+                          <strong>{d.service}</strong> — {d.reason}
+                          {d.savings && <span style={{marginLeft:8,background:"rgba(239,68,68,.15)",color:"#ef4444",borderRadius:6,padding:"1px 7px",fontSize:11,fontWeight:700}}>Save {d.savings}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tip */}
+                  {aiReport.tip && (
+                    <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:16}}>
+                      💡 <strong>Power tip:</strong> {aiReport.tip}
+                    </div>
+                  )}
+
+                  <button onClick={()=>{setAiReport(null);generateAIReport();}} style={{width:"100%",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:10,color:"var(--sports)",padding:"10px 0",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,cursor:"pointer"}}>
+                    🔄 Regenerate Report
+                  </button>
                 </div>
               )}
             </div>
@@ -1802,184 +2488,269 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
   );
 }
 
-// ─── MOOD SEARCH MODAL ───────────────────────────────────────────────────────
-const MOOD_SEARCH_LIMIT = 3;
-const AI_PICKS_LIMIT = 3;
-
-async function getMoodSearchCount(userId) {
-  const today = new Date().toISOString().slice(0,10);
-  const key = `moodSearch_${userId}_${today}`;
-  return parseInt(localStorage.getItem(key)||"0",10);
+// ─── MOOD SEARCH MODAL ────────────────────────────────────────────────────────
+// ─── MOOD SEARCH LIMIT (1 free per day) ──────────────────────────────────────
+function getMoodSearchCount() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem("streamhub_mood_v3") || "{}");
+  if (stored.date !== today) return 0;
+  return stored.count || 0;
 }
-async function incrementMoodSearchCount(userId) {
-  const today = new Date().toISOString().slice(0,10);
-  const key = `moodSearch_${userId}_${today}`;
-  const cur = parseInt(localStorage.getItem(key)||"0",10);
-  localStorage.setItem(key, String(cur+1));
-}
-async function getAIPicksCount(userId) {
-  const today = new Date().toISOString().slice(0,10);
-  const key = `aiPicks_${userId}_${today}`;
-  return parseInt(localStorage.getItem(key)||"0",10);
-}
-async function incrementAIPicksCount(userId) {
-  const today = new Date().toISOString().slice(0,10);
-  const key = `aiPicks_${userId}_${today}`;
-  const cur = parseInt(localStorage.getItem(key)||"0",10);
-  localStorage.setItem(key, String(cur+1));
+function incrementMoodSearchCount() {
+  const today = new Date().toDateString();
+  const count = getMoodSearchCount();
+  localStorage.setItem("streamhub_mood_v3", JSON.stringify({ date: today, count: count + 1 }));
 }
 
-function MoodSearchModal({ onClose, user, tier, userSubs, onUpgrade, showToast, onSelectMovie }) {
+// ─── AI PICKS LIMIT (weekly reset) ───────────────────────────────────────────
+function getAIPicksCount() {
+  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const stored = JSON.parse(localStorage.getItem("streamhub_aipicks_data") || "{}");
+  if (stored.week !== week) return 0;
+  return stored.count || 0;
+}
+function incrementAIPicksCount() {
+  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const count = getAIPicksCount();
+  localStorage.setItem("streamhub_aipicks_data", JSON.stringify({ week, count: count + 1 }));
+}
+
+function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
-  const [aiMessage, setAiMessage] = useState("");
-  const [usesLeft, setUsesLeft] = useState(null);
-  const [searched, setSearched] = useState(false);
+  const [result, setResult] = useState(null);
+  const freeMoodUsed = tier !== "premium" && getMoodSearchCount() >= 2;
 
-  const MOODS = [
-    { emoji:"😂", label:"Something funny" },
-    { emoji:"😭", label:"Good cry" },
-    { emoji:"😨", label:"Scared tonight" },
-    { emoji:"🤯", label:"Mind-blowing" },
-    { emoji:"🥰", label:"Feel-good vibes" },
-    { emoji:"🌙", label:"Late night watch" },
-    { emoji:"🎉", label:"Party mode" },
-    { emoji:"🧠", label:"Deep & thought-provoking" },
-    { emoji:"🔥", label:"Action-packed" },
-    { emoji:"💀", label:"Dark & gritty" },
-    { emoji:"✨", label:"Visually stunning" },
-    { emoji:"🏠", label:"Cozy night in" },
+  // Soft gate for non-premium users who used their daily free search
+  if (freeMoodUsed) return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,197,24,.3)",padding:32,textAlign:"center"}}>
+        <div style={{fontSize:52,marginBottom:12}}>🎭</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used both free Mood Searches today</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
+          Free accounts get <strong style={{color:"var(--gold)"}}>2 Mood Searches per day</strong>.<br/>
+          Upgrade to Premium for unlimited AI mood matching.
+        </div>
+        <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--gold)",marginBottom:8,letterSpacing:.5}}>✦ PREMIUM GETS</div>
+          {["Unlimited Mood Searches daily","12 AI picks weekly (vs 3)","Leaving Soon alerts","Full Watch History & Stats","Streaming Cost Calculator"].map((f,i)=>(
+            <div key={i} style={{display:"flex",gap:8,fontSize:12,color:"var(--muted)",marginBottom:i<4?6:0}}>
+              <span style={{color:"var(--gold)"}}>✓</span>{f}
+            </div>
+          ))}
+        </div>
+        <button onClick={()=>{onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+          Upgrade to Premium ✦
+        </button>
+        <div style={{fontSize:12,color:"var(--muted)"}}>Or come back tomorrow for your next free search 🕐</div>
+        <button onClick={onClose} style={{marginTop:10,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:12,cursor:"pointer"}}>Close</button>
+      </div>
+    </div>
+  );
+
+  const moods = [
+    "Something scary but not too gory 😱",
+    "Funny and lighthearted 😂",
+    "A good cry 😢",
+    "Action-packed and thrilling ⚡",
+    "Perfect for date night 💕",
+    "Something for the whole family 👨‍👩‍👧",
+    "Mind-bending and thought-provoking 🧠",
+    "Feel-good and uplifting ☀️",
+    "Dark and gritty 🖤",
+    "Epic adventure 🗺️",
   ];
 
-  useEffect(() => {
-    if (!user) return;
-    if (tier === "premium") { setUsesLeft(null); return; }
-    getMoodSearchCount(user.id).then(count => setUsesLeft(Math.max(0, MOOD_SEARCH_LIMIT - count)));
-  }, [user, tier]);
-
-  const doMoodSearch = async (moodText) => {
-    if (!user) { showToast("Sign in to use Mood Search! 👤"); return; }
-    if (tier !== "premium") {
-      const count = await getMoodSearchCount(user.id);
-      if (count >= MOOD_SEARCH_LIMIT) { onUpgrade(); onClose(); return; }
-    }
-    setLoading(true); setResults([]); setAiMessage(""); setSearched(true);
-    const activeMood = moodText || mood;
+  const search = async () => {
+    if (!mood.trim()) return;
+    setLoading(true);
     try {
-      const svcNames = userSubs.length > 0 ? SERVICES.filter(s=>userSubs.includes(s.id)).map(s=>s.name).join(", ") : "any service";
       const res = await fetch("/api/ai", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
           model:"claude-sonnet-4-6",
           max_tokens:1000,
-          system:`You are a streaming expert. Return ONLY valid JSON — no markdown, no extra text. Format: {"message":"brief friendly intro (1 sentence)","titles":[{"title":"exact title","type":"movie or tv","year":2020,"reason":"why this fits the mood in 8 words max"}]} — exactly 6 titles.`,
-          messages:[{role:"user",content:`Mood: "${activeMood}". Services available: ${svcNames}. Suggest 6 titles that perfectly match this mood.`}]
+          system:`You are an expert film and TV critic who knows every movie and show across ALL streaming platforms — Netflix, Disney+, Max, Hulu, Prime Video, Apple TV+, Peacock, Paramount+, Crunchyroll, ESPN+, and Tubi. When given a mood or vibe description, suggest 8 highly specific, varied titles that genuinely match. Include a mix of movies and shows. Include different genres, eras, and streaming platforms. Be specific — don't give generic blockbusters unless they truly fit. IMPORTANT: Each recommendation must be UNIQUE and genuinely match the described mood. Return ONLY valid JSON in this exact format with no markdown: {"items":[{"title":"exact title","year":2019,"type":"movie","reason":"one specific sentence why this matches the mood","genre":"Genre","platform":"Netflix","tmdb_search":"exact title for searching"}]}`,
+          messages:[{
+            role:"user",
+            content:`Find me 8 titles that match this mood/vibe: "${mood}"\n\nMake sure they are all different from each other, span different genres and platforms, and truly match what I described. No generic suggestions — be specific and creative.`
+          }]
         })
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        throw new Error(errData.error?.message || errData.error || `API error ${res.status}`);
+      }
       const data = await res.json();
-      const text = data.content?.find(b=>b.type==="text")?.text||"";
-      const clean = text.replace(/```json|```/g,"").trim();
+      const txt = data.content?.find(b=>b.type==="text")?.text||"";
+      if (!txt) throw new Error("Empty response from AI");
+      const clean = txt.replace(/```json|```/g,"").trim();
       const parsed = JSON.parse(clean);
-      setAiMessage(parsed.message||"");
-      const tmdbResults = await Promise.all((parsed.titles||[]).map(async t => {
-        try {
-          const endpoint = t.type==="tv" ? "/search/tv" : "/search/movie";
-          const searchRes = await tmdbFetch(`${endpoint}?query=${encodeURIComponent(t.title)}&language=en-US&page=1`);
-          const found = searchRes.results?.[0];
-          if (!found) return null;
-          const wpRes = await fetch(`${TMDB_BASE}/${t.type==="tv"?"tv":"movie"}/${found.id}/watch/providers`,{headers:tmdbHeaders});
-          const wpData = await wpRes.json();
-          const providers = getProviders(wpData);
-          return {...found, providers, category:t.type==="tv"?"tv":"movie", aiReason:t.reason};
-        } catch { return null; }
-      }));
-      setResults(tmdbResults.filter(Boolean));
-      if (tier !== "premium") await incrementMoodSearchCount(user.id);
-      if (tier !== "premium") setUsesLeft(prev => Math.max(0,(prev||MOOD_SEARCH_LIMIT)-1));
+      if (!parsed.items?.length) throw new Error("No results returned");
+      setResult(parsed);
+      if (tier !== "premium") incrementMoodSearchCount();
     } catch(e) {
-      showToast("Mood search failed — try again");
+      console.error("Mood search error:", e);
+      setResult({ error: e.message, items:[] });
     }
     setLoading(false);
   };
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"22px 22px 16px",borderBottom:"1px solid var(--border)",flexShrink:0,background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(245,197,24,.06))"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-            <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:3}}>🎭 Mood Search</div>
-              <div style={{fontSize:12,color:"var(--muted)"}}>Tell us how you feel — AI finds the perfect match</div>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"linear-gradient(180deg,#100828 0%,#0d0520 100%)",
+        borderRadius:"28px 28px 0 0",
+        width:"100%", maxWidth:640,
+        maxHeight:"92vh", overflow:"hidden",
+        display:"flex", flexDirection:"column",
+        border:"1px solid rgba(124,58,237,.4)",
+        borderBottom:"none",
+        boxShadow:"0 -20px 80px rgba(124,58,237,.4)",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding:"20px 20px 16px",
+          background:"linear-gradient(135deg,rgba(124,58,237,.25),rgba(255,107,157,.1))",
+          borderBottom:"1px solid rgba(124,58,237,.2)",
+          position:"relative",
+        }}>
+          <div style={{position:"absolute",top:-40,left:-40,width:150,height:150,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(50px)",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",top:-40,right:-40,width:150,height:150,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,position:"relative"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{
+                width:40,height:40,borderRadius:12,
+                background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:20,boxShadow:"0 4px 20px rgba(124,58,237,.5)",
+              }}>🎭</div>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,display:"flex",alignItems:"center",gap:8}}>
+                  Mood Search
+                  <span style={{background:"linear-gradient(90deg,#F5C518,#f59e0b)",color:"#000",fontSize:9,fontWeight:900,padding:"2px 8px",borderRadius:99,letterSpacing:.5}}>✦ PRO</span>
+                </div>
+                <div style={{fontSize:12,color:"rgba(196,181,253,.8)"}}>Describe any vibe — AI finds the perfect match</div>
+              </div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              {tier!=="premium" && usesLeft!==null && <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>{usesLeft}/{MOOD_SEARCH_LIMIT} left</div>}
-              {tier==="premium" && <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>✦ Unlimited</div>}
-              <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
+              {tier !== "premium" && (
+                <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
+                  2 free / day
+                </div>
+              )}
+              <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
             </div>
           </div>
-          <div style={{display:"flex",gap:8}}>
-            <input value={mood} onChange={e=>setMood(e.target.value)} onKeyDown={e=>e.key==="Enter"&&mood.trim()&&doMoodSearch(mood)} placeholder="Describe your mood or what you want to watch..." style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.12)",borderRadius:12,color:"var(--text)",padding:"10px 14px",fontSize:14,outline:"none",fontFamily:"var(--font-body)"}}/>
-            <button onClick={()=>mood.trim()&&doMoodSearch(mood)} disabled={loading||!mood.trim()} style={{background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"10px 18px",fontWeight:700,fontSize:13,cursor:"pointer",opacity:loading||!mood.trim()?0.5:1,flexShrink:0}}>
-              {loading?<span style={{display:"inline-block",width:16,height:16,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:"Search"}
-            </button>
+          {/* Example prompts as inspiration */}
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8,position:"relative"}}>
+            {['"scary but not gory"','"fun date night"','"mind-bending sci-fi"','"feel-good comedy"'].map(ex=>(
+              <button key={ex} onClick={()=>setMood(ex.replace(/"/g,""))}
+                style={{background:"rgba(124,58,237,.15)",border:"1px solid rgba(124,58,237,.3)",borderRadius:99,color:"#c4b5fd",padding:"4px 12px",fontSize:11,cursor:"pointer",fontStyle:"italic"}}>
+                {ex}
+              </button>
+            ))}
           </div>
         </div>
-        <div style={{overflowY:"auto",flex:1,padding:"16px 22px 22px"}}>
-          {!searched && (
-            <div>
-              <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10}}>QUICK MOODS</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-                {MOODS.map(m=>(
-                  <button key={m.label} onClick={()=>doMoodSearch(m.label)} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"10px 8px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",transition:"all .15s",color:"var(--text)",textAlign:"left"}}
-                    onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.2)";e.currentTarget.style.borderColor="rgba(124,58,237,.5)";}}
-                    onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.08)";e.currentTarget.style.borderColor="rgba(124,58,237,.2)";}}>
-                    <span style={{fontSize:20,flexShrink:0}}>{m.emoji}</span>
-                    <span style={{fontSize:12,fontWeight:600,lineHeight:1.3}}>{m.label}</span>
-                  </button>
+        <div style={{overflowY:"auto",padding:"16px 20px 24px",flex:1}}>
+          {/* Main input */}
+          <div style={{position:"relative",marginBottom:16}}>
+            <div style={{
+              position:"absolute",left:14,top:"50%",transform:"translateY(-50%)",
+              fontSize:20,pointerEvents:"none",
+            }}>🎭</div>
+            <input
+              value={mood} onChange={e=>setMood(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&search()}
+              placeholder='Type anything... "cozy rainy day movie" or "action like John Wick"'
+              autoFocus
+              style={{
+                width:"100%", background:"rgba(124,58,237,.1)",
+                border:"1.5px solid rgba(124,58,237,.5)",
+                borderRadius:16, color:"var(--text)",
+                padding:"14px 16px 14px 46px",
+                fontSize:14, outline:"none",
+                boxShadow:"0 4px 20px rgba(124,58,237,.15)",
+              }}
+            />
+            <button onClick={search} disabled={loading||!mood.trim()}
+              style={{
+                position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
+                background:mood.trim()?"linear-gradient(135deg,#7C3AED,#FF6B9D)":"rgba(255,255,255,.1)",
+                border:"none",borderRadius:10,color:"#fff",
+                padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,
+                fontSize:12,cursor:mood.trim()?"pointer":"default",
+                display:"flex",alignItems:"center",gap:6,
+                transition:"all .2s",opacity:!mood.trim()?0.5:1,
+              }}>
+              {loading?<span style={{display:"inline-block",width:14,height:14,border:"2px solid #fff",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>:<>✦ Find</>}
+            </button>
+          </div>
+
+          {/* Quick mood chips */}
+          {!result && (
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:10,color:"rgba(196,181,253,.6)",marginBottom:10,letterSpacing:1.5,fontWeight:700}}>QUICK PICKS — tap to try</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {moods.map(m=>(
+                  <button key={m} onClick={()=>setMood(m)}
+                    style={{
+                      background:mood===m?"rgba(124,58,237,.3)":"rgba(255,255,255,.05)",
+                      border:`1px solid ${mood===m?"rgba(124,58,237,.7)":"rgba(255,255,255,.1)"}`,
+                      borderRadius:99,color:mood===m?"#c4b5fd":"var(--muted)",
+                      padding:"7px 14px",fontSize:12,cursor:"pointer",
+                      transition:"all .2s",
+                    }}>{m}</button>
                 ))}
               </div>
             </div>
           )}
-          {loading && (
-            <div style={{textAlign:"center",padding:"40px 0"}}>
-              <div style={{width:48,height:48,border:"3px solid rgba(124,58,237,.2)",borderTop:"3px solid var(--purple)",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 16px"}}/>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:6}}>Finding your perfect match…</div>
-              <div style={{fontSize:13,color:"var(--muted)"}}>AI is searching across all streaming services</div>
-            </div>
-          )}
-          {!loading && searched && results.length > 0 && (
+          {/* Results */}
+          {result && (
             <div>
-              {aiMessage && <div style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"10px 14px",marginBottom:14,fontSize:13,color:"rgba(240,240,250,.8)",fontStyle:"italic"}}>✨ {aiMessage}</div>}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-                {results.map(m=>{
-                  const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
-                  const gr = safeGR(m.id);
-                  return (
-                    <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
-                      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor="rgba(124,58,237,.5)";}}
-                      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                      {poster ? <img src={poster} alt="" style={{width:"100%",height:120,objectFit:"cover"}}/> : <div style={{height:120,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                      <div style={{padding:"8px 10px"}}>
-                        <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
-                        <div style={{fontSize:11,color:"var(--purple)",fontStyle:"italic",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.aiReason}</div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{color:"var(--gold)",fontSize:11}}>★ {m.vote_average?.toFixed(1)||"—"}</span>
-                          {m.providers?.slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small/>)}
+              {result.error ? (
+                <div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:12,padding:20,textAlign:"center"}}>
+                  <div style={{fontSize:28,marginBottom:8}}>😕</div>
+                  <div style={{fontWeight:700,marginBottom:4}}>Couldn't get results</div>
+                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>{result.error}</div>
+                  <button onClick={()=>{setResult(null);search();}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>Try Again</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{fontSize:11,color:"rgba(196,181,253,.6)",marginBottom:12,letterSpacing:1.2,fontWeight:700}}>
+                    {result.items?.length || 0} RESULTS FOR "{mood.toUpperCase()}"
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {result.items?.map((item,i)=>(
+                      <div key={i} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:14,padding:"12px 14px",animation:`fadeUp .3s ${i*0.06}s both`,transition:"border-color .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.5)"}
+                        onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.2)"}>
+                        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10,marginBottom:5}}>
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>
+                              {item.title} <span style={{fontSize:12,color:"var(--muted)",fontWeight:400}}>({item.year})</span>
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
+                              <span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.type==="tv"?"📺 TV":"🎬 Movie"}</span>
+                              {item.genre&&<span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.genre}</span>}
+                              {item.platform&&<span style={{background:"rgba(124,58,237,.25)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#c4b5fd",fontWeight:700}}>{item.platform}</span>}
+                            </div>
+                          </div>
+                          <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
+                            style={{background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                            Search →
+                          </button>
                         </div>
+                        <div style={{fontSize:12,color:"rgba(196,181,253,.8)",lineHeight:1.5,fontStyle:"italic"}}>"{item.reason}"</div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {!loading && searched && results.length === 0 && (
-            <div style={{textAlign:"center",padding:"40px 0",color:"var(--muted)"}}>
-              <div style={{fontSize:40,marginBottom:12}}>🤔</div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>No results found</div>
-              <div style={{fontSize:13}}>Try a different mood or description</div>
+                    ))}
+                  </div>
+                  <button onClick={()=>{setResult(null);setMood("");}} style={{marginTop:12,width:"100%",background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:10,color:"var(--muted)",padding:"10px 0",fontSize:13,cursor:"pointer"}}>
+                    🔄 Try a different mood
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1989,79 +2760,127 @@ function MoodSearchModal({ onClose, user, tier, userSubs, onUpgrade, showToast, 
 }
 
 // ─── NEW RELEASES MODAL ───────────────────────────────────────────────────────
-function NewReleasesModal({ onClose, userSubs, onSelect }) {
+function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }) {
   const [releases, setReleases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  const myServices = SERVICES.filter(s => userSubs.includes(s.id));
+
   useEffect(() => {
-    const fetchNew = async () => {
+    const fetchNewReleases = async () => {
+      setLoading(true);
       try {
+        // Fetch new releases from TMDB - movies and TV
         const [movies, tv] = await Promise.all([
-          tmdbFetch("/movie/now_playing?language=en-US&page=1&region=US"),
+          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
           tmdbFetch("/tv/on_the_air?language=en-US&page=1"),
         ]);
-        const combined = [
-          ...(movies.results||[]).slice(0,10).map(m=>({...m,category:"movie"})),
-          ...(tv.results||[]).slice(0,10).map(t=>({...t,category:"tv"})),
-        ].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
-        const withProviders = await Promise.all(combined.map(async item => {
-          try {
-            const type = item.category==="tv" ? "tv" : "movie";
-            const wpRes = await fetch(`${TMDB_BASE}/${type}/${item.id}/watch/providers`,{headers:tmdbHeaders});
-            const wpData = await wpRes.json();
-            return {...item, providers:getProviders(wpData)};
-          } catch { return item; }
-        }));
-        setReleases(withProviders);
-      } catch(e) {}
+        const movieItems = (movies.results||[]).slice(0,10).map(m=>({...m,mediaType:"movie"}));
+        const tvItems = (tv.results||[]).slice(0,10).map(t=>({...t,mediaType:"tv"}));
+        // Merge and sort by popularity
+        const all = [...movieItems,...tvItems].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+        setReleases(all);
+      } catch(e) { setReleases([]); }
       setLoading(false);
     };
-    fetchNew();
+    fetchNewReleases();
   }, []);
 
-  const filtered = filter==="all" ? releases : filter==="subscribed"
-    ? releases.filter(r=>(r.providers||[]).some(p=>userSubs.includes(p)))
-    : releases.filter(r=>r.category===filter);
+  if (tier !== "premium") return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(6,182,212,.3)",padding:32,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:12}}>🆕</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>New Releases</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
+          See what just dropped on your streaming services — movies, shows, and series premieres, updated daily.
+        </div>
+        <button onClick={()=>{onUpgrade&&onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10}}>
+          Upgrade to Premium ✦
+        </button>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:13,cursor:"pointer"}}>Maybe later</button>
+      </div>
+    </div>
+  );
+
+  const filtered = filter === "all" ? releases : releases.filter(r => r.mediaType === filter);
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:620,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(6,182,212,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"22px 22px 14px",borderBottom:"1px solid var(--border)",flexShrink:0,background:"linear-gradient(135deg,rgba(6,182,212,.1),rgba(124,58,237,.06))"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(6,182,212,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+
+        {/* Header */}
+        <div style={{padding:"20px 24px 14px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(124,58,237,.06))",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-            <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>🆕 New Releases</div><div style={{fontSize:12,color:"var(--muted)"}}>What just dropped this week</div></div>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>🆕 New Releases</div>
+              <div style={{fontSize:12,color:"var(--muted)"}}>Latest drops across all streaming services</div>
+            </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-            {[["all","All"],["movie","Movies"],["tv","TV Shows"],["subscribed","My Services"]].map(([val,lbl])=>(
-              <button key={val} onClick={()=>setFilter(val)} style={{background:filter===val?"rgba(6,182,212,.2)":"rgba(255,255,255,.06)",border:`1px solid ${filter===val?"rgba(6,182,212,.5)":"rgba(255,255,255,.1)"}`,borderRadius:99,color:filter===val?"var(--cyan)":"var(--muted)",padding:"5px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>{lbl}</button>
+          {/* Filter tabs */}
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"all",label:"All"},{ id:"movie",label:"🎬 Movies"},{id:"tv",label:"📺 Shows"}].map(f=>(
+              <button key={f.id} onClick={()=>setFilter(f.id)}
+                style={{background:filter===f.id?"rgba(6,182,212,.2)":"rgba(255,255,255,.05)",border:`1px solid ${filter===f.id?"rgba(6,182,212,.5)":"transparent"}`,borderRadius:99,color:filter===f.id?"#06B6D4":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
+                {f.label}
+              </button>
             ))}
+            {myServices.length > 0 && (
+              <div style={{marginLeft:"auto",display:"flex",gap:4,alignItems:"center"}}>
+                <div style={{fontSize:10,color:"var(--muted)"}}>YOUR SERVICES:</div>
+                {myServices.slice(0,4).map(s=>(
+                  <div key={s.id} style={{background:s.color,borderRadius:6,width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff"}}>{s.logo}</div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-        <div style={{overflowY:"auto",flex:1,padding:"16px 22px 22px"}}>
-          {loading ? <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>{Array.from({length:9}).map((_,i)=><div key={i} className="skeleton" style={{height:180,borderRadius:12}}/>)}</div>
-          : filtered.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0"}}>No releases match your filter.</div>
-          : <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-              {filtered.map(m=>{
-                const poster=m.poster_path?`${TMDB_IMG}${m.poster_path}`:null;
-                const gr=safeGR(m.id);
+
+        {/* Content */}
+        <div style={{overflowY:"auto",flex:1,padding:20}}>
+          {loading ? (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
+              {[...Array(8)].map((_,i)=><div key={i} className="skeleton" style={{height:200,borderRadius:12}}/>)}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{textAlign:"center",padding:"40px 0",color:"var(--muted)"}}>No releases found.</div>
+          ) : (
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:12}}>
+              {filtered.map(item=>{
+                const gr = safeGR(item.id);
+                const poster = item.poster_path ? `${TMDB_IMG}${item.poster_path}` : null;
+                const title = item.title || item.name || "";
+                const date = item.release_date || item.first_air_date || "";
+                const daysAgo = date ? Math.floor((Date.now()-new Date(date))/86400000) : null;
                 return (
-                  <div key={m.id} onClick={()=>{onSelect(m);onClose();}} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
-                    onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(6,182,212,.4)";}}
+                  <div key={item.id} onClick={()=>{onSelect({...item,providers:[],category:item.mediaType});onClose();}}
+                    style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:"1px solid var(--border)",background:"var(--card)",transition:"all .2s"}}
+                    onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(6,182,212,.5)";}}
                     onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                    {poster?<img src={poster} alt="" style={{width:"100%",height:130,objectFit:"cover"}}/>:<div style={{height:130,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                    <div style={{padding:"8px 10px"}}>
-                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
-                      <div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}>
-                        <span style={{fontSize:10,color:"var(--gold)"}}>★ {m.vote_average?.toFixed(1)||"—"}</span>
-                        <span style={{fontSize:9,background:m.category==="tv"?"rgba(124,58,237,.2)":"rgba(245,197,24,.15)",color:m.category==="tv"?"var(--purple)":"var(--gold)",borderRadius:4,padding:"1px 5px",fontWeight:700}}>{m.category==="tv"?"TV":"Film"}</span>
-                        {(m.providers||[]).slice(0,1).map(p=><ServiceBadge key={p} platformId={p} small/>)}
+                    <div style={{height:180,position:"relative",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
+                      {poster && <img src={poster} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                      <div style={{position:"absolute",top:6,left:6,background:item.mediaType==="tv"?"rgba(124,58,237,.9)":"rgba(245,197,24,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:item.mediaType==="tv"?"#fff":"#000"}}>
+                        {item.mediaType==="tv"?"TV":"MOVIE"}
+                      </div>
+                      {daysAgo !== null && daysAgo <= 7 && (
+                        <div style={{position:"absolute",top:6,right:6,background:"rgba(16,185,129,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:"#fff"}}>
+                          {daysAgo === 0 ? "TODAY" : `${daysAgo}d ago`}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{padding:"8px 10px 10px"}}>
+                      <div style={{fontSize:12,fontWeight:700,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title}</div>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div style={{fontSize:10,color:"var(--muted)"}}>{date.slice(0,4)}</div>
+                        <div style={{fontSize:10,color:"var(--gold)"}}>★ {item.vote_average?.toFixed(1)||"—"}</div>
                       </div>
                     </div>
                   </div>
                 );
               })}
-            </div>}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -2069,905 +2888,2005 @@ function NewReleasesModal({ onClose, userSubs, onSelect }) {
 }
 
 // ─── PWA INSTALL PROMPT ───────────────────────────────────────────────────────
-function PWAInstallPrompt({ onDismiss }) {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); setShow(true); };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-  if (!show) return null;
-  const install = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    setShow(false); onDismiss();
-  };
+function InstallPrompt({ onDismiss }) {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   return (
-    <div style={{position:"fixed",bottom:80,left:16,right:16,zIndex:900,background:"var(--surface)",border:"1px solid rgba(245,197,24,.3)",borderRadius:16,padding:"14px 16px",display:"flex",alignItems:"center",gap:12,boxShadow:"0 8px 32px rgba(0,0,0,.6)",animation:"slideUp .3s cubic-bezier(.22,1,.36,1)"}}>
-      <div style={{width:42,height:42,borderRadius:10,background:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📺</div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:2}}>Install StreamHub</div>
-        <div style={{fontSize:12,color:"var(--muted)"}}>Add to home screen for quick access</div>
+    <div style={{
+      position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
+      zIndex:350, width:"calc(100% - 28px)", maxWidth:400,
+      background:"linear-gradient(135deg,rgba(7,7,14,.98),rgba(12,8,28,.98))",
+      border:"1px solid rgba(124,58,237,.4)",
+      borderRadius:18, padding:"16px 18px",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8)",
+      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer"}}>✕</button>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+        <img src="/icons/icon-72x72.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0}} />
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:2}}>Add to Home Screen</div>
+          <div style={{fontSize:12,color:"rgba(240,240,250,.5)"}}>Get the full app experience — free</div>
+        </div>
       </div>
-      <div style={{display:"flex",gap:8,flexShrink:0}}>
-        <button onClick={onDismiss} style={{background:"none",border:"1px solid var(--border)",borderRadius:8,color:"var(--muted)",padding:"6px 12px",fontSize:12,cursor:"pointer"}}>Not now</button>
-        <button onClick={install} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Install</button>
+      {isIOS ? (
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>Share</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub on your iPhone
+        </div>
+      ) : (
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>⋮ Menu</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SKELETON CARD (outside component to prevent remount) ───────────────────
+function SkeletonCard() {
+  return (
+    <div style={{borderRadius:"var(--radius)",overflow:"hidden",border:"1px solid var(--border)"}}>
+      <div className="skeleton" style={{height:200}} />
+      <div style={{padding:"10px 12px 12px",background:"var(--card)"}}>
+        <div className="skeleton" style={{height:14,marginBottom:8,width:"80%"}} />
+        <div className="skeleton" style={{height:11,width:"50%"}} />
       </div>
     </div>
+  );
+}
+
+// ─── DEEP LINK HELPER ────────────────────────────────────────────────────────
+// App URL schemes for mobile — tries to open the native app first,
+// falls back to website if app not installed
+const APP_SCHEMES = {
+  netflix:     { ios:"nflx://",                          android:"intent://www.netflix.com#Intent;scheme=https;package=com.netflix.mediaclient;end" },
+  disney:      { ios:"disneyplus://",                    android:"intent://www.disneyplus.com#Intent;scheme=https;package=com.disney.disneyplus;end" },
+  max:         { ios:"max://",                           android:"intent://play.max.com#Intent;scheme=https;package=com.hbo.hbonow;end" },
+  hulu:        { ios:"hulu://",                          android:"intent://www.hulu.com#Intent;scheme=https;package=com.hulu.plus;end" },
+  apple:       { ios:"videos://",                        android:null },
+  prime:       { ios:"aiv://",                           android:"intent://www.amazon.com#Intent;scheme=https;package=com.amazon.avod.thirdpartyclient;end" },
+  peacock:     { ios:"peacock://",                       android:"intent://www.peacocktv.com#Intent;scheme=https;package=com.peacocktv.peacockandroid;end" },
+  paramount:   { ios:"paramountplus://",                 android:"intent://www.paramountplus.com#Intent;scheme=https;package=com.cbs.app;end" },
+  crunchyroll: { ios:"crunchyroll://",                   android:"intent://www.crunchyroll.com#Intent;scheme=https;package=com.crunchyroll.crunchyroid;end" },
+  espnplus:    { ios:"sportscenter://",                  android:"intent://www.espn.com#Intent;scheme=https;package=com.espn.score_center;end" },
+  dazn:        { ios:"dazn://",                          android:"intent://www.dazn.com#Intent;scheme=https;package=com.dazn;end" },
+  fubo:        { ios:"fubo://",                          android:"intent://www.fubo.tv#Intent;scheme=https;package=tv.fubo.mobile;end" },
+  tubi:        { ios:"tubi://",                          android:"intent://tubitv.com#Intent;scheme=https;package=com.tubitv;end" },
+};
+
+function getWatchUrl(serviceId, title, webUrl) {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const scheme = APP_SCHEMES[serviceId];
+
+  if (!isMobile || !scheme) return webUrl + encodeURIComponent(title);
+
+  if (isIOS && scheme.ios) {
+    // Try app scheme — iOS will open app if installed, error if not
+    return scheme.ios;
+  }
+  if (isAndroid && scheme.android) {
+    return scheme.android;
+  }
+  // Fallback to web
+  return webUrl + encodeURIComponent(title);
+}
+
+function WatchButton({ serviceId, title, webUrl, style }) {
+  const svc = SERVICES.find(s => s.id === serviceId);
+  if (!svc) return null;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  const handleWatch = (e) => {
+    e.stopPropagation();
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const scheme = APP_SCHEMES[serviceId];
+
+    if (isMobileDevice && scheme) {
+      if (isIOS && scheme.ios) {
+        // Try to open app — if it fails after 1.5s, open website
+        const appUrl = scheme.ios;
+        const webFallback = svc.url + encodeURIComponent(title);
+        const start = Date.now();
+        window.location.href = appUrl;
+        setTimeout(() => {
+          // If we're still here after 1.5s, app didn't open — go to web
+          if (Date.now() - start < 2000) {
+            window.open(webFallback, "_blank");
+          }
+        }, 1500);
+        return;
+      }
+      if (isAndroid && scheme.android) {
+        window.location.href = scheme.android;
+        setTimeout(() => {
+          window.open(svc.url + encodeURIComponent(title), "_blank");
+        }, 1500);
+        return;
+      }
+    }
+    // Desktop — open website in new tab
+    window.open(svc.url + encodeURIComponent(title), "_blank");
+  };
+
+  return (
+    <button onClick={handleWatch}
+      style={{
+        display:"inline-flex", alignItems:"center", gap:8,
+        background:svc.color, borderRadius:10, color:"#fff",
+        padding:"9px 18px", fontFamily:"var(--font-head)",
+        fontWeight:800, fontSize:13, border:"none", cursor:"pointer",
+        boxShadow:`0 4px 16px ${svc.color}44`,
+        ...style
+      }}>
+      ▶ Watch on {svc.name}
+      {isMobile && <span style={{fontSize:10,opacity:.8}}>📱</span>}
+    </button>
   );
 }
 
 // ─── WELCOME BANNER ───────────────────────────────────────────────────────────
-function WelcomeBanner({ user, tier, onSignIn, onUpgrade }) {
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem("welcomeDismissed")==="1");
-  if (dismissed) return null;
-  if (user && tier==="premium") return null;
+function WelcomeBanner() {
   return (
-    <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(245,197,24,.08))",border:"1px solid rgba(124,58,237,.25)",borderRadius:16,padding:"16px 20px",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,flexWrap:"wrap",position:"relative"}}>
-      <button onClick={()=>{setDismissed(true);localStorage.setItem("welcomeDismissed","1");}} style={{position:"absolute",top:10,right:10,background:"none",border:"none",color:"var(--muted)",fontSize:16,cursor:"pointer",lineHeight:1}}>✕</button>
-      <div style={{flex:1,minWidth:200}}>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:4}}>{user?"🌟 Upgrade for the full experience":"👋 Welcome to StreamHub!"}</div>
-        <div style={{fontSize:13,color:"var(--muted)",lineHeight:1.6}}>{user?"Unlock Mood Search, AI picks, leaving-soon alerts, watch history & more.":"Search across every streaming service — Netflix, Hulu, Disney+, Prime & more."}</div>
-      </div>
-      <div style={{display:"flex",gap:10,flexShrink:0}}>
-        {!user && <button onClick={onSignIn} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign Up Free</button>}
-        <button onClick={user?onUpgrade:onSignIn} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"9px 18px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,cursor:"pointer"}}>{user?"Upgrade ✦":"Get Started →"}</button>
-      </div>
-    </div>
-  );
-}
+    <div style={{padding:"12px 14px 4px"}}>
+      <div style={{
+        background:"linear-gradient(135deg,rgba(124,58,237,.25) 0%,rgba(7,7,14,.9) 40%,rgba(245,197,24,.12) 100%)",
+        border:"1px solid rgba(245,197,24,.25)",
+        borderRadius:20,
+        padding:"20px 20px",
+        textAlign:"center",
+        position:"relative",
+        overflow:"hidden",
+        boxShadow:"0 8px 32px rgba(124,58,237,.2), 0 0 0 1px rgba(245,197,24,.08)",
+      }}>
+        {/* Decorative background orbs */}
+        <div style={{position:"absolute",top:-40,left:-40,width:180,height:180,borderRadius:"50%",background:"rgba(124,58,237,.15)",filter:"blur(40px)",pointerEvents:"none"}} />
+        <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,197,24,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
 
-// ─── SEARCH LIMIT WALL ────────────────────────────────────────────────────────
-function SearchLimitWall({ onSignUp, onUpgrade, isLoggedIn }) {
-  return (
-    <div style={{textAlign:"center",padding:"48px 20px",animation:"fadeUp .3s"}}>
-      <div style={{fontSize:52,marginBottom:16}}>🔍</div>
-      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>{isLoggedIn?"Daily Search Limit Reached":"Free Searches Used Up"}</div>
-      <div style={{color:"var(--muted)",fontSize:15,marginBottom:28,lineHeight:1.7,maxWidth:400,margin:"0 auto 28px"}}>
-        {isLoggedIn ? "You've used all your free searches for today. Upgrade to Premium for unlimited searches." : "You've used your free searches. Create a free account to get more — or upgrade for unlimited."}
-      </div>
-      <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-        {!isLoggedIn && <button onClick={onSignUp} style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.2)",borderRadius:12,color:"#fff",padding:"12px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>Create Free Account</button>}
-        <button onClick={onUpgrade} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+        {/* Badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:.8}}>
+          ✦ FREE TO START — NO CREDIT CARD REQUIRED
+        </div>
+
+        {/* THE STREAMHUB — main headline */}
+        <div style={{marginBottom:12}}>
+          <div style={{
+            fontFamily:"var(--font-head)", fontWeight:900,
+            lineHeight:1, letterSpacing:"-.03em",
+            marginBottom:4,
+          }}>
+            <span style={{
+              background:"linear-gradient(90deg,rgba(255,255,255,.7),rgba(255,255,255,.9))",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              fontSize:"clamp(16px,3.5vw,32px)", fontWeight:800, letterSpacing:".05em",
+              display:"block", marginBottom:-2,
+            }}>THE</span>
+            <span style={{
+              fontSize:"clamp(32px,8vw,72px)",
+              background:"linear-gradient(90deg,#F5C518 0%,#FFD700 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite",
+              filter:"drop-shadow(0 0 20px rgba(245,197,24,.6))",
+              display:"inline",
+            }}>Stream</span><span style={{
+              fontSize:"clamp(32px,8vw,72px)",
+              background:"linear-gradient(90deg,#7C3AED,#a78bfa,#7C3AED)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite reverse",
+              filter:"drop-shadow(0 0 20px rgba(124,58,237,.8))",
+              display:"inline",
+            }}>Hub</span>
+          </div>
+        </div>
+
+        {/* Subtext */}
+        <div style={{fontSize:"clamp(11px,2vw,15px)",color:"rgba(240,240,250,.55)",maxWidth:580,margin:"0 auto 16px",lineHeight:1.7}}>
+          Searches Netflix, Disney+, Max, Hulu, Crunchyroll, ESPN+, Tubi and more — all at once.
+        </div>
+
+        {/* Service dots */}
+        <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap"}}>
+          {[
+            {name:"Netflix",color:"#E50914"},
+            {name:"Disney+",color:"#0063E5"},
+            {name:"Max",color:"#002BE7"},
+            {name:"Hulu",color:"#1CE783"},
+            {name:"Prime",color:"#00A8E1"},
+            {name:"Crunchyroll",color:"#F47521"},
+            {name:"ESPN+",color:"#E31837"},
+            {name:"Tubi",color:"#FA4343"},
+          ].map(s=>(
+            <div key={s.name} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:600,color:"rgba(240,240,250,.6)"}}>
+              <div style={{width:7,height:7,borderRadius:"50%",background:s.color,flexShrink:0}} />
+              {s.name}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 // ─── SIGNUP PROMPT ────────────────────────────────────────────────────────────
-function SignupPrompt({ onSignUp }) {
-  return (
-    <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(245,197,24,.08))",border:"1px solid rgba(124,58,237,.25)",borderRadius:16,padding:"20px 24px",marginTop:20,textAlign:"center"}}>
-      <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:6}}>Save your discoveries</div>
-      <div style={{color:"var(--muted)",fontSize:14,marginBottom:16,lineHeight:1.6}}>Create a free account to build your watchlist, rate titles, and personalize your feed.</div>
-      <button onClick={onSignUp} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"11px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Sign Up Free →</button>
-    </div>
-  );
+// ─── SEARCH LIMIT WALL ────────────────────────────────────────────────────────
+const SEARCH_LIMIT = 10;
+
+function getSearchCount() {
+  const today = new Date().toDateString();
+  const stored = JSON.parse(localStorage.getItem("streamhub_search_data") || "{}");
+  // Reset if it's a new day
+  if (stored.date !== today) return 0;
+  return stored.count || 0;
 }
 
-// ─── PERSONALIZED RECS MODAL ─────────────────────────────────────────────────
-function PersonalizedRecsModal({ onClose, user, userRatings, watchlist, userSubs, tier, onUpgrade, onSelectMovie, showToast }) {
-  const [recs, setRecs] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [generated, setGenerated] = useState(false);
-  const [aiMessage, setAiMessage] = useState("");
-  const [usesLeft, setUsesLeft] = useState(null);
+function incrementSearchCount() {
+  const today = new Date().toDateString();
+  const count = getSearchCount();
+  localStorage.setItem("streamhub_search_data", JSON.stringify({ date: today, count: count + 1 }));
+}
 
-  useEffect(() => {
-    if (!user) return;
-    if (tier === "premium") { setUsesLeft(null); return; }
-    getAIPicksCount(user.id).then(count => setUsesLeft(Math.max(0, AI_PICKS_LIMIT - count)));
-  }, [user, tier]);
+function resetSearchCount() {
+  localStorage.removeItem("streamhub_search_data");
+}
 
-  const generate = async () => {
-    if (!user) { showToast("Sign in to get personalized picks! 👤"); return; }
-    if (tier !== "premium") {
-      const count = await getAIPicksCount(user.id);
-      if (count >= AI_PICKS_LIMIT) { onUpgrade(); onClose(); return; }
-    }
-    setLoading(true); setRecs([]); setAiMessage("");
-    const topRated = Object.entries(userRatings).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,r])=>({id,rating:r}));
-    const svcNames = userSubs.length > 0 ? SERVICES.filter(s=>userSubs.includes(s.id)).map(s=>s.name).join(", ") : "any service";
-    try {
-      const res = await fetch("/api/ai", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          model:"claude-sonnet-4-6", max_tokens:800,
-          system:`You are a streaming expert. Return ONLY valid JSON — no markdown. Format: {"message":"why you'll love these (1 sentence)","titles":[{"title":"exact title","type":"movie or tv","reason":"match reason in 8 words"}]} — exactly 8 titles.`,
-          messages:[{role:"user",content:`User's top-rated IDs: ${JSON.stringify(topRated)}. Watchlist size: ${watchlist.length}. Services: ${svcNames}. Recommend 8 titles they'll love.`}]
-        })
-      });
-      const data = await res.json();
-      const text = data.content?.find(b=>b.type==="text")?.text||"";
-      const clean = text.replace(/```json|```/g,"").trim();
-      const parsed = JSON.parse(clean);
-      setAiMessage(parsed.message||"");
-      const results = await Promise.all((parsed.titles||[]).map(async t => {
-        try {
-          const endpoint = t.type==="tv" ? "/search/tv" : "/search/movie";
-          const s = await tmdbFetch(`${endpoint}?query=${encodeURIComponent(t.title)}&language=en-US&page=1`);
-          const found = s.results?.[0];
-          if (!found) return null;
-          const wpRes = await fetch(`${TMDB_BASE}/${t.type==="tv"?"tv":"movie"}/${found.id}/watch/providers`,{headers:tmdbHeaders});
-          const wpData = await wpRes.json();
-          return {...found, providers:getProviders(wpData), category:t.type==="tv"?"tv":"movie", aiReason:t.reason};
-        } catch { return null; }
-      }));
-      setRecs(results.filter(Boolean));
-      setGenerated(true);
-      if (tier !== "premium") { await incrementAIPicksCount(user.id); setUsesLeft(prev=>Math.max(0,(prev||AI_PICKS_LIMIT)-1)); }
-    } catch(e) { showToast("Failed to generate picks — try again"); }
-    setLoading(false);
-  };
-
+function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"22px 22px 16px",borderBottom:"1px solid var(--border)",flexShrink:0,background:"linear-gradient(135deg,rgba(245,197,24,.1),rgba(124,58,237,.06))"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:3}}>✦ AI Picks For You</div>
-              <div style={{fontSize:12,color:"var(--muted)"}}>Personalized picks based on your taste</div>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              {tier!=="premium" && usesLeft!==null && <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>{usesLeft}/{AI_PICKS_LIMIT} left</div>}
-              {tier==="premium" && <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>✦ Unlimited</div>}
-              <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
-            </div>
-          </div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .3s"}}>
+      <div style={{
+        background:"linear-gradient(135deg,#0d0a1e,#140d28)",
+        border:"1px solid rgba(245,197,24,.4)",
+        borderRadius:24, padding:"36px 32px", maxWidth:420, width:"100%",
+        boxShadow:"0 32px 80px rgba(0,0,0,.8), 0 0 60px rgba(245,197,24,.1)",
+        textAlign:"center", animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+      }}>
+        {/* Logo */}
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+          style={{height:80,width:"auto",objectFit:"contain",marginBottom:20,filter:"drop-shadow(0 0 20px rgba(245,197,24,.5))"}} />
+
+        {/* Limit reached badge */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"5px 14px",marginBottom:16,fontSize:12,fontWeight:700,color:"#f87171"}}>
+          🔍 You've used all {SEARCH_LIMIT} free searches
         </div>
-        <div style={{overflowY:"auto",flex:1,padding:"20px 22px 22px"}}>
-          {!generated && !loading && (
-            <div style={{textAlign:"center",padding:"32px 0"}}>
-              <div style={{fontSize:52,marginBottom:16}}>🤖</div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Personalized Just for You</div>
-              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.7,maxWidth:380,margin:"0 auto 24px"}}>AI analyzes your ratings and watchlist to find titles you'll actually love — not just popular picks.</div>
-              {Object.keys(userRatings).length < 3 && <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:12,padding:"10px 14px",marginBottom:20,fontSize:13,color:"var(--gold)"}}>💡 Rate at least 3 titles for better recommendations (you have {Object.keys(userRatings).length})</div>}
-              <button onClick={generate} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:14,color:"#000",padding:"14px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 32px rgba(245,197,24,.3)"}}>✦ Generate My Picks</button>
-            </div>
-          )}
-          {loading && (
-            <div style={{textAlign:"center",padding:"48px 0"}}>
-              <div style={{width:48,height:48,border:"3px solid rgba(245,197,24,.2)",borderTop:"3px solid var(--gold)",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 16px"}}/>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:6}}>Analyzing your taste…</div>
-              <div style={{fontSize:13,color:"var(--muted)"}}>Matching your ratings with hidden gems</div>
-            </div>
-          )}
-          {generated && !loading && (
-            <div>
-              {aiMessage && <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.2)",borderRadius:12,padding:"10px 14px",marginBottom:14,fontSize:13,color:"rgba(240,240,250,.8)",fontStyle:"italic"}}>✨ {aiMessage}</div>}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:16}}>
-                {recs.map(m=>{
-                  const poster=m.poster_path?`${TMDB_IMG}${m.poster_path}`:null;
-                  const gr=safeGR(m.id);
-                  return (
-                    <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
-                      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}}
-                      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                      {poster?<img src={poster} alt="" style={{width:"100%",height:120,objectFit:"cover"}}/>:<div style={{height:120,background:`linear-gradient(135deg,${gr[0]},${gr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                      <div style={{padding:"8px 10px"}}>
-                        <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
-                        <div style={{fontSize:11,color:"var(--gold)",fontStyle:"italic",marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.aiReason}</div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{color:"var(--gold)",fontSize:11}}>★ {m.vote_average?.toFixed(1)||"—"}</span>
-                          {(m.providers||[]).slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small/>)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,marginBottom:8,lineHeight:1.2}}>
+          Create a free account<br/>to keep searching
+        </div>
+        <div style={{fontSize:14,color:"rgba(240,240,250,.5)",marginBottom:28,lineHeight:1.7}}>
+          It's completely free — no credit card needed
+        </div>
+
+        {/* Benefits */}
+        <div style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:"18px 20px",marginBottom:24,textAlign:"left"}}>
+          {[
+            {icon:"🔍", title:"Unlimited searches", desc:"Search as much as you want"},
+            {icon:"♥",  title:"Save to Watchlist", desc:"Up to 50 titles across all devices"},
+            {icon:"✦",  title:"AI Picks for you",  desc:"Personalized recommendations"},
+            {icon:"🆕", title:"New Releases",       desc:"Fresh drops on your services"},
+            {icon:"⭐", title:"Ratings & Reviews",  desc:"Rate and review any title"},
+          ].map((b,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<4?14:0}}>
+              <div style={{width:36,height:36,borderRadius:10,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{b.icon}</div>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)"}}>{b.title}</div>
+                <div style={{fontSize:11,color:"var(--muted)"}}>{b.desc}</div>
               </div>
-              <button onClick={()=>{setGenerated(false);setRecs([]);generate();}} style={{width:"100%",background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:10,color:"var(--gold)",padding:"10px 0",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,cursor:"pointer"}}>🔄 Generate New Picks</button>
+              <div style={{marginLeft:"auto",color:"var(--sports)",fontSize:14}}>✓</div>
             </div>
-          )}
+          ))}
+        </div>
+
+        {/* CTA */}
+        <button onClick={onSignup} style={{width:"100%",background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:14,color:"#000",padding:"15px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.35)"}}>
+          🚀 Create Free Account
+        </button>
+        <button onClick={onDismiss} style={{background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:13,cursor:"pointer",padding:"8px 0"}}>
+          Maybe later
+        </button>
+
+        {/* Premium tease */}
+        <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(255,255,255,.06)",fontSize:12,color:"rgba(240,240,250,.3)"}}>
+          Want even more? <span style={{color:"var(--gold)",fontWeight:700}}>Premium ($9.99/mo)</span> unlocks unlimited watchlist, ad-free, AI mood search & more ✦
         </div>
       </div>
     </div>
   );
 }
 
-// ─── ADVANCED STATS ───────────────────────────────────────────────────────────
-function AdvancedStats({ movies, userRatings, watchlist, tier }) {
-  if (tier !== "premium") return null;
-  const rated = Object.entries(userRatings);
-  if (rated.length === 0) return null;
-  const avgRating = rated.reduce((s,[,v])=>s+v,0)/rated.length;
-  const topGenres = {};
-  movies.forEach(m=>{(m.genre_ids||[]).forEach(g=>{topGenres[g]=(topGenres[g]||0)+1;});});
+// ─── SIGNUP PROMPT (30 second popup) ─────────────────────────────────────────
+function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
   return (
-    <div style={{background:"rgba(124,58,237,.06)",border:"1px solid rgba(124,58,237,.15)",borderRadius:14,padding:"14px 16px",marginBottom:16}}>
-      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--muted)",letterSpacing:1.2,marginBottom:10}}>✦ YOUR STATS</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-        {[["⭐",avgRating.toFixed(1),"Avg Rating"],["♥",watchlist.length,"Watchlist"],["✍",rated.length,"Rated"]].map(([icon,val,label])=>(
-          <div key={label} style={{textAlign:"center",background:"rgba(255,255,255,.03)",borderRadius:10,padding:"10px 6px"}}>
-            <div style={{fontSize:16,marginBottom:4}}>{icon}</div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,color:"var(--purple)"}}>{val}</div>
-            <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{label}</div>
+    <div style={{
+      position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
+      zIndex:290, width:"calc(100% - 28px)", maxWidth:460,
+      background:"linear-gradient(135deg,rgba(10,8,26,.98),rgba(18,10,36,.98))",
+      border:"1px solid rgba(245,197,24,.4)",
+      borderRadius:20, padding:"20px",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8), 0 0 40px rgba(245,197,24,.1)",
+      animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
+    }}>
+      <button onClick={onDismiss} style={{position:"absolute",top:12,right:14,background:"none",border:"none",color:"rgba(240,240,250,.25)",fontSize:16,cursor:"pointer"}}>✕</button>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+          style={{height:44,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Join free — it's worth it</div>
+          <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>
+            {searchesUsed > 0 ? `You've made ${searchesUsed} searches — keep going for free!` : "No credit card. No catch."}
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits grid */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+        {[
+          {icon:"♥",  text:"Save your Watchlist",   color:"var(--danger)"},
+          {icon:"✦",  text:"Get AI Picks for you",  color:"var(--gold)"},
+          {icon:"🔍", text:"Unlimited searches",     color:"var(--cyan)"},
+          {icon:"🆕", text:"New Releases Alert",     color:"var(--purple)"},
+        ].map((b,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:"9px 10px"}}>
+            <span style={{fontSize:16,color:b.color}}>{b.icon}</span>
+            <span style={{fontSize:11,fontWeight:600,color:"rgba(240,240,250,.8)",lineHeight:1.3}}>{b.text}</span>
           </div>
         ))}
       </div>
+
+      {/* CTA */}
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",boxShadow:"0 6px 20px rgba(245,197,24,.3)"}}>
+          🚀 Sign Up Free
+        </button>
+        <button onClick={onDismiss} style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.35)",padding:"12px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
+      </div>
     </div>
   );
 }
 
-// ─── MOBILE HERO ──────────────────────────────────────────────────────────────
-function MobileHero({ movie, onSelect, onToggleWatchlist, watchlist }) {
+// ─── PERSONALIZED AI RECOMMENDATIONS ─────────────────────────────────────────
+function PersonalizedRecsModal({ onClose, user, tier, onUpgrade, watchlist, userRatings, onResults }) {
+  const [loading, setLoading] = useState(false);
+  const [recs, setRecs] = useState(null);
+
+  const getRecs = async () => {
+    if (tier !== "premium") { onUpgrade(); onClose(); return; }
+    // Track weekly usage
+    incrementAIPicksCount();
+    setLoading(true);
+    try {
+      const recCount = tier === "premium" ? 6 : 3;
+      const topRated = Object.entries(userRatings)
+        .sort((a,b) => b[1]-a[1])
+        .slice(0, tier === "premium" ? 10 : 5)
+        .map(([id, rating]) => `Movie ID ${id} rated ${rating}/10`);
+      const watchlistSize = watchlist.length;
+      const prompt = `You are a personalized streaming expert. Based on this user's taste profile:
+- They have ${watchlistSize} titles saved to their watchlist
+- Their top rated titles (by ID and rating): ${topRated.join(", ") || "No ratings yet"}
+- Watchlist movie IDs: ${watchlist.slice(0, tier === "premium" ? 20 : 10).join(", ") || "Empty"}
+
+Suggest ${recCount} highly personalized movie or TV show recommendations. Focus on variety — mix genres but match the quality level of their rated titles. Return ONLY valid JSON:
+{"items":[{"title":"...","year":2023,"type":"movie or tv","reason":"personalized reason based on their taste in one sentence","genre":"...","tmdb_search":"exact title"}]}`;
+
+      const res = await fetch("/api/ai", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:800, messages:[{role:"user",content:prompt}] })
+      });
+      const data = await res.json();
+      const txt = data.content?.find(b=>b.type==="text")?.text||"{}";
+      const parsed = JSON.parse(txt.replace(/```json|```/g,"").trim());
+      setRecs(parsed.items||[]);
+    } catch(e) { setRecs([]); }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (user && tier==="premium") getRecs(); }, []);
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(245,197,24,.12),rgba(124,58,237,.08))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>✦ Personalized For You <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>PRO</span></div>
+            <div style={{fontSize:13,color:"var(--muted)"}}>AI picks based on your actual taste and watchlist</div>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",padding:20,flex:1}}>
+          {tier !== "premium" ? (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>✦</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Our AI studies your watchlist and ratings to suggest titles you'll actually love — not just popular picks, but YOUR kind of content.</div>
+              <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+            </div>
+          ) : loading ? (
+            <div style={{textAlign:"center",padding:"40px 0"}}>
+              <div style={{width:48,height:48,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 20px"}}/>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Analyzing your taste…</div>
+              <div style={{color:"var(--muted)",fontSize:13}}>Looking at your watchlist and ratings to find perfect matches</div>
+            </div>
+          ) : recs && recs.length > 0 ? (
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:16,color:"var(--muted)"}}>PICKED JUST FOR YOU</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {recs.map((item,i)=>(
+                  <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14,display:"flex",gap:12,alignItems:"flex-start",animation:`fadeUp .3s ${i*0.08}s both`}}>
+                    <div style={{width:44,height:44,borderRadius:10,background:`linear-gradient(135deg,${GR[i%GR.length][0]},${GR[i%GR.length][1]})`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,position:"relative"}}>
+                      {item.title.slice(0,2)}
+                      <span style={{position:"absolute",top:-6,right:-6,background:"var(--gold)",color:"#000",borderRadius:99,width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800}}>#{i+1}</span>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14}}>{item.title} <span style={{color:"var(--muted)",fontWeight:400,fontSize:12}}>({item.year})</span></div>
+                      <div style={{fontSize:11,color:"var(--gold)",marginBottom:3}}>{item.genre}</div>
+                      <div style={{fontSize:12,color:"var(--muted)",margin:"3px 0",lineHeight:1.5}}>{item.reason}</div>
+                      <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:8,color:"#000",padding:"5px 14px",fontSize:11,fontWeight:800,cursor:"pointer",marginTop:6}}>Find on StreamHub →</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={getRecs} style={{marginTop:16,width:"100%",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,color:"var(--gold)",padding:"11px 0",fontSize:13,fontWeight:700,cursor:"pointer"}}>✦ Refresh Recommendations</button>
+            </div>
+          ) : (
+            <div style={{textAlign:"center",padding:"40px 20px"}}>
+              <div style={{fontSize:48,marginBottom:16}}>📋</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:8}}>Add to your watchlist first!</div>
+              <div style={{color:"var(--muted)",fontSize:14,lineHeight:1.6}}>Save some titles and rate a few movies so our AI can learn your taste and make personalized picks.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ADVANCED STATS SECTION ───────────────────────────────────────────────────
+function AdvancedStats({ user, watchlist, userRatings, watchHistory, onOpenHistory, onOpenWatchlist }) {
+  const currentYear = new Date().getFullYear();
+  const thisYear = watchHistory.filter(h => new Date(h.watched_at).getFullYear() === currentYear);
+  const thisMonth = watchHistory.filter(h => new Date(h.watched_at).getMonth() === new Date().getMonth() && new Date(h.watched_at).getFullYear() === currentYear);
+  const movies = watchHistory.filter(h => h.movie_type === "movie");
+  const shows = watchHistory.filter(h => h.movie_type === "tv");
+  const avgRating = Object.values(userRatings).length > 0 ? (Object.values(userRatings).reduce((a,b)=>a+b,0)/Object.values(userRatings).length).toFixed(1) : "—";
+  const estHours = watchHistory.length > 0 ? `${Math.round(watchHistory.length * 1.8)}h` : "0h";
+  const streak = thisMonth.length;
+
+  const stats = [
+    { icon:"📺", value:watchHistory.length, label:"Total Watched",  color:"var(--cyan)",    onClick: onOpenHistory },
+    { icon:"🎬", value:movies.length,        label:"Movies",         color:"var(--gold)",    onClick: onOpenHistory },
+    { icon:"📡", value:shows.length,         label:"TV Shows",       color:"var(--purple)",  onClick: onOpenHistory },
+    { icon:"🗓️", value:thisYear.length,      label:`In ${currentYear}`, color:"var(--sports)", onClick: onOpenHistory },
+    { icon:"⏱️", value:estHours,             label:"Est. Hours",    color:"var(--anime)",   onClick: null },
+    { icon:"♥",  value:watchlist.length,     label:"Watchlisted",   color:"var(--danger)",  onClick: onOpenWatchlist },
+    { icon:"★",  value:Object.keys(userRatings).length, label:"Rated", color:"var(--gold)", onClick: null },
+    { icon:"📅", value:streak,               label:"This Month",    color:"var(--cyan)",    onClick: onOpenHistory },
+  ];
+
+  const ratingDist = [1,2,3,4,5,6,7,8,9,10].map(n => ({
+    rating: n,
+    count: Object.values(userRatings).filter(r => r === n).length
+  }));
+  const maxCount = Math.max(...ratingDist.map(r=>r.count), 1);
+
+  return (
+    <div style={{padding:"32px 0 20px",borderTop:"1px solid var(--border)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:24,padding:"0 24px"}}>
+        <span style={{fontSize:24}}>📊</span>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20}}>Your Streaming Stats</div>
+          <div style={{fontSize:13,color:"var(--muted)"}}>
+            {user ? "Click any card to explore your history" : "Sign in to track your stats"}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:12,padding:"0 24px",marginBottom:24}}>
+        {stats.map((s,i)=>(
+          <div key={i}
+            onClick={s.onClick||undefined}
+            style={{
+              background:"rgba(255,255,255,.03)",
+              border:`1px solid ${s.color}22`,
+              borderRadius:14, padding:"16px 14px", textAlign:"center",
+              transition:"all .2s",
+              cursor:s.onClick?"pointer":"default",
+              position:"relative",
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=`${s.color}66`;e.currentTarget.style.background=`${s.color}10`;e.currentTarget.style.transform=s.onClick?"translateY(-2px)":"none";}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}22`;e.currentTarget.style.background="rgba(255,255,255,.03)";e.currentTarget.style.transform="none";}}>
+            {s.onClick && <span style={{position:"absolute",top:8,right:8,fontSize:9,color:`${s.color}88`}}>→</span>}
+            <div style={{fontSize:22,marginBottom:6}}>{s.icon}</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:s.color,lineHeight:1}}>
+              {typeof s.value === "number" ? s.value.toLocaleString() : s.value}
+            </div>
+            <div style={{fontSize:11,color:"var(--muted)",marginTop:4,fontWeight:600}}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Ratings distribution */}
+      {Object.keys(userRatings).length > 0 && (
+        <div style={{padding:"0 24px",marginBottom:24}}>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,marginBottom:14,color:"var(--muted)",letterSpacing:.5}}>YOUR RATING DISTRIBUTION · Avg {avgRating}/10</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:5,height:60}}>
+            {ratingDist.map(({rating,count})=>(
+              <div key={rating} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <div style={{
+                  width:"100%",
+                  background:count>0?"var(--gold)":"rgba(255,255,255,.06)",
+                  borderRadius:"4px 4px 0 0",
+                  height:`${Math.max((count/maxCount)*52,count>0?4:2)}px`,
+                  transition:"height .5s",
+                }}/>
+                <span style={{fontSize:9,color:"var(--muted)",fontWeight:700}}>{rating}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fun facts */}
+      {watchHistory.length > 0 && (
+        <div style={{padding:"0 24px"}}>
+          <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.1),rgba(245,197,24,.06))",border:"1px solid rgba(245,197,24,.15)",borderRadius:16,padding:20}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--gold)",marginBottom:12,letterSpacing:.5}}>🎉 FUN FACTS</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>📺 You've watched approximately <strong style={{color:"var(--gold)"}}>{estHours}</strong> of content</div>
+              {movies.length > shows.length
+                ? <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>🎬 You're a <strong style={{color:"var(--gold)"}}>Movie Person</strong> — {movies.length} movies vs {shows.length} shows</div>
+                : shows.length > 0
+                  ? <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>📡 You're a <strong style={{color:"var(--purple)"}}>TV Show Fan</strong> — {shows.length} shows vs {movies.length} movies</div>
+                  : null}
+              {parseFloat(avgRating) >= 8 && <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>⭐ You're a tough critic — your average rating is <strong style={{color:"var(--gold)"}}>{avgRating}/10</strong></div>}
+              {watchlist.length >= 5 && <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>♥ You have <strong style={{color:"var(--anime)"}}>{watchlist.length} titles</strong> saved — that's a great weekend lineup!</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!user && (
+        <div style={{textAlign:"center",padding:"20px 24px",color:"var(--muted)",fontSize:14}}>
+          Sign in to track your personal streaming stats 📊
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── MOBILE HERO WITH TRAILER ────────────────────────────────────────────────
+function MobileHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
+  useEffect(() => {
+    if (!movie) return;
+    setTrailerKey(null); setShowTrailer(false);
+    const type = movie.first_air_date ? "tv" : "movie";
+    tmdbFetch(`/${type}/${movie.id}/videos?language=en-US`).then(data => {
+      const t = (data.results||[]).find(v=>v.type==="Trailer"&&v.site==="YouTube")||(data.results||[])[0];
+      if (t) setTrailerKey(t.key);
+    }).catch(()=>{});
+  }, [movie?.id]);
   if (!movie) return null;
-  const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
-  const title = movie.title||movie.name||"";
   const inWL = watchlist.includes(movie.id);
-  const providers = movie.providers||[];
   return (
-    <div onClick={()=>onSelect(movie)} style={{position:"relative",height:280,overflow:"hidden",cursor:"pointer",marginBottom:4}}>
-      {poster ? <img src={poster} alt={title} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.5}}/> : <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#0d0d1a,#1a0533)"}}/>}
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,rgba(7,7,14,.5) 100%)"}}/>
-      <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"16px 16px 20px"}}>
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.15)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",marginBottom:8,fontSize:10,fontWeight:700,color:"var(--gold)"}}>🔥 FEATURED</div>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,lineHeight:1.1,marginBottom:8,textShadow:"0 2px 12px rgba(0,0,0,.8)"}}>{title}</div>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          <span style={{color:"var(--gold)",fontWeight:700,fontSize:13}}>★ {movie.vote_average?.toFixed(1)||"—"}</span>
-          {providers.slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small/>)}
+    <div style={{margin:"0 14px 20px",borderRadius:16,overflow:"hidden",position:"relative",height:showTrailer?220:220}}>
+      {showTrailer && trailerKey
+        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2,borderRadius:16}} allow="autoplay; fullscreen" allowFullScreen />
+        : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
+      }
+      {!showTrailer && <>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(7,7,14,.95) 0%,transparent 60%)"}} />
+        <img src="/logo-clean.png" alt="" style={{position:"absolute",top:10,right:10,height:36,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,197,24,.6))",opacity:.85}} />
+      </>}
+      {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕</button>}
+      {!showTrailer && (
+        <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 14px 14px"}}>
+          <div style={{fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:4}}>🔥 FEATURED</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:6}}>{movie.title||movie.name}</div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+            <span style={{color:"var(--gold)",fontSize:12}}>★ {movie.vote_average?.toFixed(1)}</span>
+            {(movie.providers||[]).slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small />)}
+            <div style={{display:"flex",gap:6,marginLeft:"auto"}}>
+              <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,cursor:"pointer"}}>▶ Watch</button>
+              {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.25)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>🎬 Trailer</button>}
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:8,color:inWL?"var(--gold)":"#fff",padding:"6px 10px",fontSize:11,cursor:"pointer"}}>{inWL?"♥":"♡"}</button>
+            </div>
+          </div>
         </div>
-        <div style={{display:"flex",gap:8}}>
-          <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{flex:1,background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch</button>
-          <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"10px 16px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥":"♡"}</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-// ─── TABLET HERO ──────────────────────────────────────────────────────────────
-function TabletHero({ movie, onSelect, onToggleWatchlist, watchlist }) {
+// ─── TABLET HERO WITH TRAILER ─────────────────────────────────────────────────
+function TabletHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
+  useEffect(() => {
+    if (!movie) return;
+    setTrailerKey(null); setShowTrailer(false);
+    const type = movie.first_air_date ? "tv" : "movie";
+    tmdbFetch(`/${type}/${movie.id}/videos?language=en-US`).then(data => {
+      const t = (data.results||[]).find(v=>v.type==="Trailer"&&v.site==="YouTube")||(data.results||[])[0];
+      if (t) setTrailerKey(t.key);
+    }).catch(()=>{});
+  }, [movie?.id]);
   if (!movie) return null;
-  const backdrop = movie.backdrop_path ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}` : null;
-  const poster   = movie.poster_path   ? `${TMDB_IMG}${movie.poster_path}` : null;
-  const title    = movie.title||movie.name||"";
-  const inWL     = watchlist.includes(movie.id);
-  const providers = movie.providers||[];
+  const inWL = watchlist.includes(movie.id);
   return (
-    <div style={{position:"relative",height:340,overflow:"hidden",cursor:"pointer",marginBottom:8}} onClick={()=>onSelect(movie)}>
-      {backdrop ? <img src={backdrop} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:.45}}/> : <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#0d0d1a,#1a0533)"}}/>}
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.92) 0%,rgba(7,7,14,.4) 70%,transparent 100%)"}}/>
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 50%)"}}/>
-      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",padding:"0 32px",gap:24}}>
-        {poster && <img src={poster} alt={title} style={{height:200,borderRadius:12,boxShadow:"0 20px 50px rgba(0,0,0,.8)",objectFit:"cover",flexShrink:0}}/>}
-        <div style={{flex:1,maxWidth:420}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.15)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",marginBottom:12,fontSize:10,fontWeight:700,color:"var(--gold)"}}>🔥 FEATURED</div>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:28,lineHeight:1.1,marginBottom:10,textShadow:"0 2px 16px rgba(0,0,0,.8)"}}>{title}</div>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
-            <span style={{color:"var(--gold)",fontWeight:700,fontSize:14}}>★ {movie.vote_average?.toFixed(1)||"—"}</span>
-            {providers.slice(0,3).map(p=><ServiceBadge key={p} platformId={p}/>)}
-          </div>
-          <div style={{display:"flex",gap:10}}>
-            <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"11px 24px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch Now</button>
-            <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"11px 20px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
+    <div style={{position:"relative",height:300,overflow:"hidden",cursor:showTrailer?"default":"pointer"}} onClick={()=>!showTrailer&&onSelect(movie)}>
+      {showTrailer && trailerKey
+        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2}} allow="autoplay; fullscreen" allowFullScreen />
+        : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
+      }
+      {!showTrailer && <>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.5) 60%,rgba(7,7,14,.1) 100%)"}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 50%)"}}/>
+      </>}
+      {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:12,right:12,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"7px 14px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close</button>}
+      {!showTrailer && (
+        <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 24px 24px",display:"flex",alignItems:"flex-end",gap:20}}>
+          {movie.poster_path&&<img src={`${TMDB_IMG}${movie.poster_path}`} alt="" style={{height:150,borderRadius:12,boxShadow:"0 16px 40px rgba(0,0,0,.8)",flexShrink:0}}/>}
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:8}}>{movie.title||movie.name}</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+              <span style={{color:"var(--gold)",fontWeight:700}}>★ {movie.vote_average?.toFixed(1)}</span>
+              {(movie.providers||[]).slice(0,3).map(p=><ServiceBadge key={p} platformId={p}/>)}
+            </div>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 22px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch Now</button>
+              {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:10,color:"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>🎬 Trailer</button>}
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
-// ─── GENRE MAP / SEARCH HELPERS ───────────────────────────────────────────────
+// ─── GENRE SEARCH HELPERS ────────────────────────────────────────────────────
 const GENRE_MAP = {
-  "action":28, "comedy":35, "drama":18, "horror":27, "romance":10749,
-  "thriller":53, "sci-fi":878, "scifi":878, "animation":16, "documentary":99,
-  "fantasy":14, "mystery":9648, "crime":80, "adventure":12, "family":10751,
-  "history":36, "music":10402, "war":10752, "western":37, "biography":36,
+  "action":           { ids:"28",       type:"movie" },
+  "comedy":           { ids:"35",       type:"both"  },
+  "horror":           { ids:"27",       type:"both"  },
+  "romance":          { ids:"10749",    type:"both"  },
+  "sci-fi":           { ids:"878",      type:"both"  },
+  "scifi":            { ids:"878",      type:"both"  },
+  "science fiction":  { ids:"878",      type:"both"  },
+  "thriller":         { ids:"53",       type:"both"  },
+  "drama":            { ids:"18",       type:"both"  },
+  "animation":        { ids:"16",       type:"both"  },
+  "animated":         { ids:"16",       type:"both"  },
+  "documentary":      { ids:"99",       type:"both"  },
+  "doc":              { ids:"99",       type:"both"  },
+  "fantasy":          { ids:"14",       type:"both"  },
+  "mystery":          { ids:"9648",     type:"both"  },
+  "crime":            { ids:"80",       type:"both"  },
+  "adventure":        { ids:"12",       type:"both"  },
+  "family":           { ids:"10751",    type:"both"  },
+  "kids":             { ids:"10751",    type:"both"  },
+  "music":            { ids:"10402",    type:"both"  },
+  "western":          { ids:"37",       type:"movie" },
+  "war":              { ids:"10752",    type:"movie" },
+  "history":          { ids:"36",       type:"movie" },
+  "superhero":        { ids:"28,12,14", type:"both"  },
+  "anime":            { ids:"16",       type:"tv",   keyword:"210024" },
+  "sports":           { ids:"99",       type:"movie" },
+  "funny":            { ids:"35",       type:"both"  },
+  "scary":            { ids:"27",       type:"both"  },
+  "spooky":           { ids:"27",       type:"both"  },
+  "creepy":           { ids:"27",       type:"both"  },
+  "gory":             { ids:"27",       type:"both"  },
+  "not gory":         { ids:"27",       type:"both"  },
+  "sad":              { ids:"18",       type:"both"  },
+  "emotional":        { ids:"18",       type:"both"  },
+  "feel good":        { ids:"35,10751", type:"both"  },
+  "feel-good":        { ids:"35,10751", type:"both"  },
+  "feelgood":         { ids:"35,10751", type:"both"  },
+  "uplifting":        { ids:"35,10751", type:"both"  },
+  "lighthearted":     { ids:"35,10751", type:"both"  },
+  "romantic":         { ids:"10749",    type:"both"  },
+  "date night":       { ids:"10749,35", type:"both"  },
+  "love story":       { ids:"10749",    type:"both"  },
+  "christmas":        { ids:"10751",    type:"both"  },
+  "holiday":          { ids:"10751",    type:"both"  },
+  "mind bending":     { ids:"878,9648", type:"both"  },
+  "mind-bending":     { ids:"878,9648", type:"both"  },
+  "thought provoking":{ ids:"18,878",   type:"both"  },
+  "dark":             { ids:"80,53",    type:"both"  },
+  "gritty":           { ids:"80,18",    type:"both"  },
+  "intense":          { ids:"28,53",    type:"both"  },
+  "exciting":         { ids:"28,12",    type:"both"  },
+  "chill":            { ids:"35,10751", type:"both"  },
+  "relaxing":         { ids:"35,10751", type:"both"  },
+  "inspiring":        { ids:"18,99",    type:"both"  },
+  "suspense":         { ids:"53",       type:"both"  },
+  "suspenseful":      { ids:"53",       type:"both"  },
+  "new":              { ids:null,        type:"new"      },
+  "new releases":     { ids:null,        type:"new"      },
+  "new movies":       { ids:null,        type:"new"      },
+  "trending":         { ids:null,        type:"trending" },
+  "popular":          { ids:null,        type:"trending" },
+  "top rated":        { ids:null,        type:"top"      },
+  "best":             { ids:null,        type:"top"      },
+  "highest rated":    { ids:null,        type:"top"      },
 };
 
-function isGenreSearch(q) {
-  return !!GENRE_MAP[(q||"").toLowerCase().trim()];
-}
+const isGenreSearch = (q) => {
+  const lower = q.toLowerCase().trim();
+  // Exact match first
+  if (GENRE_MAP[lower]) return GENRE_MAP[lower];
+  // Partial match — check if any key is contained in the query
+  for (const [key, val] of Object.entries(GENRE_MAP)) {
+    if (lower.includes(key)) return val;
+  }
+  return null;
+};
 
-async function doGenreSearch(q) {
-  const genreId = GENRE_MAP[(q||"").toLowerCase().trim()];
-  if (!genreId) return [];
-  const data = await tmdbFetch(`/discover/movie?with_genres=${genreId}&sort_by=popularity.desc&language=en-US&page=1`);
-  const results = (data.results||[]).slice(0,20);
-  return await Promise.all(results.map(async m=>{
-    try {
-      const wpRes = await fetch(`${TMDB_BASE}/movie/${m.id}/watch/providers`,{headers:tmdbHeaders});
-      const wpData = await wpRes.json();
-      return {...m, providers:getProviders(wpData), category:"movie"};
-    } catch { return {...m, providers:[], category:"movie"}; }
-  }));
-}
+const doGenreSearch = async (cfg) => {
+  const addProviders = async (items, cat) =>
+    Promise.all((items||[]).slice(0,20).map(async m => {
+      const t = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
+      try { const wp=await tmdbFetch(`/${t}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category:cat}; }
+      catch { return {...m,providers:[],category:cat}; }
+    }));
+  if (cfg.type==="trending") { const d=await tmdbFetch("/trending/all/week?language=en-US&page=1"); return addProviders(d.results,"trending"); }
+  if (cfg.type==="top") { const [mv,tv]=await Promise.all([tmdbFetch("/movie/top_rated?language=en-US&page=1"),tmdbFetch("/tv/top_rated?language=en-US&page=1")]); return addProviders([...(mv.results||[]),...(tv.results||[])].slice(0,20),"movies"); }
+  if (cfg.type==="new") { const d=await tmdbFetch("/movie/now_playing?language=en-US&page=1"); return addProviders(d.results,"movies"); }
+  const kw = cfg.keyword ? `&with_keywords=${cfg.keyword}` : "";
+  const results = [];
+  if (cfg.type==="movie"||cfg.type==="both") { const d=await tmdbFetch(`/discover/movie?with_genres=${cfg.ids}&sort_by=popularity.desc&language=en-US&page=1${kw}`); results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"movie"}))); }
+  if (cfg.type==="tv"||cfg.type==="both") { const d=await tmdbFetch(`/discover/tv?with_genres=${cfg.ids}&sort_by=popularity.desc&language=en-US&page=1${kw}`); results.push(...(d.results||[]).slice(0,10).map(m=>({...m,media_type:"tv"}))); }
+  return addProviders(results.slice(0,20),"movies");
+};
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function StreamHub() {
+  const isMobile = useIsMobile();
   const device = useDevice();
-  const isMobile = device === "mobile";
-  const isTablet = device === "tablet";
 
-  // Auth state
+  // ── Auth state ──
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [tier, setTier] = useState("free");
-  const [loadingAuth, setLoadingAuth] = useState(true);
-
-  // UI state
-  const [view, setView] = useState("trending");
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showUpgrade, setShowUpgrade] = useState(false);
-  const [showSetup, setShowSetup] = useState(false);
-  const [showMood, setShowMood] = useState(false);
-  const [showLeaving, setShowLeaving] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [showCostCalc, setShowCostCalc] = useState(false);
-  const [showNewReleases, setShowNewReleases] = useState(false);
-  const [showPersonalized, setShowPersonalized] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [showPWAPrompt, setShowPWAPrompt] = useState(false);
 
-  // Content state
-  const [movies, setMovies] = useState([]);
-  const [featured, setFeatured] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // ── App state ──
+  const [view, setView] = useState("trending");
+  const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [searchLimitHit, setSearchLimitHit] = useState(false);
-  const [searchCount, setSearchCount] = useState(0);
-
-  // User data
+  const [movies, setMovies] = useState([]);
+  const [heroMovie, setHeroMovie] = useState(null);
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
+  const [loading, setLoading] = useState(true);
+  const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
   const [userRatings, setUserRatings] = useState({});
-  const [userSubs, setUserSubs] = useState([]);
-  const [watchHistory, setWatchHistory] = useState([]);
-  const [favoriteTeams, setFavoriteTeams] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("favoriteTeams")||"{}"); } catch { return {}; }
-  });
+  const [userSubs, setUserSubs] = useState(["netflix","disney","max"]);
+  const [showSetup, setShowSetup] = useState(false);
 
-  // Sports state
-  const [sportQuery, setSportQuery] = useState("");
-  const [showSoccerHub, setShowSoccerHub] = useState(false);
-
-  const showToast = (msg) => setToast(msg);
-
-  // Auth listener
+  // Load saved subs from localStorage on startup (for non-logged-in users)
   useEffect(() => {
-    supabase.auth.getSession().then(({data:{session}}) => {
-      if (session?.user) { setUser(session.user); loadUserData(session.user); }
-      setLoadingAuth(false);
+    const saved = localStorage.getItem("streamhub_subs");
+    const done  = localStorage.getItem("streamhub_setup_done");
+    if (saved) { try { setUserSubs(JSON.parse(saved)); } catch(e) {} }
+    if (!done)  setShowSetup(true);
+  }, []);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [tier, setTier] = useState("free");
+  const [toast, setToast] = useState(null);
+  const [filterPlat, setFilterPlat] = useState(null);
+  const [showLeavingSoon, setShowLeavingSoon] = useState(false);
+  const [showWatchHistory, setShowWatchHistory] = useState(false);
+  const [showNewReleases, setShowNewReleases] = useState(false);
+  const [showCostCalc, setShowCostCalc] = useState(false);
+
+  const [favoriteTeams, setFavoriteTeams] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); }
+    catch { return {}; }
+  });
+  const toggleFavoriteTeam = (sport, teamName) => {
+    setFavoriteTeams(prev => {
+      const updated = { ...prev };
+      if (teamName === "_clear" || updated[sport] === teamName) delete updated[sport];
+      else updated[sport] = teamName;
+      localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
+      return updated;
     });
-    const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,session) => {
-      if (session?.user) { setUser(session.user); loadUserData(session.user); }
-      else { setUser(null); setProfile(null); setTier("free"); setWatchlist([]); setUserRatings({}); setUserSubs([]); setWatchHistory([]); }
+  };
+  const [showMoodSearch, setShowMoodSearch] = useState(false);
+  const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
+  const [watchHistory, setWatchHistory] = useState([]);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [showSearchLimit, setShowSearchLimit] = useState(false);
+  const [searchesUsed, setSearchesUsed] = useState(getSearchCount());
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+  // Show PWA install prompt after 60s on mobile
+  useEffect(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const dismissed = localStorage.getItem("streamhub_install_dismissed");
+    if (!isMobile || dismissed) return;
+    const timer = setTimeout(() => setShowInstallPrompt(true), 60000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show signup prompt after 30 seconds for non-logged-in users
+  useEffect(() => {
+    if (user) { resetSearchCount(); setSearchesUsed(0); return; }
+    const dismissed = localStorage.getItem("streamhub_signup_dismissed");
+    if (dismissed) return;
+    const timer = setTimeout(() => setShowSignupPrompt(true), 30000);
+    return () => clearTimeout(timer);
+  }, [user]);
+  const searchTimer = useRef(null);
+
+  const showToast = msg => setToast(msg);
+
+  // ── Auth listener ──
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data:{ session } }) => {
+      setUser(session?.user||null);
+      if (session?.user) loadUserData(session.user);
     });
+    const { data:{ subscription } } = supabase.auth.onAuthStateChange((_ev, session) => {
+      setUser(session?.user||null);
+      if (session?.user) loadUserData(session.user);
+      else { setWatchlist([]); setUserRatings({}); }
+    });
+
+    // ── Handle Stripe payment success ──────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
+      // Clean the URL
+      window.history.replaceState({}, "", "/");
+      // Wait for auth to load then upgrade
+      const upgradeUser = async () => {
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from("profiles").update({ tier:"premium" }).eq("id", session.user.id);
+          setTier("premium");
+          showToast("🎉 Welcome to Premium! All features unlocked.");
+        } else {
+          // Store flag so we can upgrade after they sign in
+          localStorage.setItem("streamhub_pending_upgrade", "true");
+          showToast("Payment received! Sign in to activate Premium.");
+        }
+      };
+      setTimeout(upgradeUser, 1500);
+    }
+
+    // ── Upgrade pending from before sign-in ─────────────────────────
+    if (localStorage.getItem("streamhub_pending_upgrade") === "true") {
+      const tryPendingUpgrade = async () => {
+        const { data:{ session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await supabase.from("profiles").update({ tier:"premium" }).eq("id", session.user.id);
+          setTier("premium");
+          localStorage.removeItem("streamhub_pending_upgrade");
+          showToast("🎉 Premium activated! Welcome.");
+        }
+      };
+      setTimeout(tryPendingUpgrade, 2000);
+    }
+
     return () => subscription.unsubscribe();
   }, []);
 
   const loadUserData = async (u) => {
-    const [profRes, wlRes, ratRes, histRes] = await Promise.allSettled([
-      supabase.from("profiles").select("*").eq("id",u.id).single(),
-      supabase.from("watchlist").select("movie_id").eq("user_id",u.id),
-      supabase.from("ratings").select("movie_id,rating").eq("user_id",u.id),
-      supabase.from("watch_history").select("*").eq("user_id",u.id).order("watched_at",{ascending:false}),
-    ]);
-    if (profRes.status==="fulfilled"&&profRes.value.data) {
-      const p = profRes.value.data;
-      setProfile(p);
-      setTier(p.tier||"free");
-      setUserSubs(p.subscriptions||[]);
-      if (!p.subscriptions||p.subscriptions.length===0) setTimeout(()=>setShowSetup(true),800);
+    // Load profile
+    let { data:prof } = await supabase.from("profiles").select("*").eq("id",u.id).single();
+    if (!prof) {
+      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false });
+      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false };
     }
-    if (wlRes.status==="fulfilled") setWatchlist((wlRes.value.data||[]).map(r=>r.movie_id));
-    if (ratRes.status==="fulfilled") { const map={}; (ratRes.value.data||[]).forEach(r=>{map[r.movie_id]=r.rating;}); setUserRatings(map); }
-    if (histRes.status==="fulfilled") setWatchHistory(histRes.value.data||[]);
+    setProfile(prof);
+    setTier(prof.tier||"free");
+
+    // Load subscriptions from profile
+    if (prof.subscriptions) {
+      try {
+        const subs = typeof prof.subscriptions === "string" ? JSON.parse(prof.subscriptions) : prof.subscriptions;
+        setUserSubs(subs);
+        localStorage.setItem("streamhub_subs", JSON.stringify(subs));
+      } catch(e) {}
+    }
+
+    // Hide setup if user already completed it
+    if (prof.setup_done) {
+      setShowSetup(false);
+      localStorage.setItem("streamhub_setup_done", "true");
+    }
+
+    // Load watchlist
+    const { data:wl } = await supabase.from("watchlist").select("movie_id").eq("user_id",u.id);
+    setWatchlist((wl||[]).map(w=>w.movie_id));
+    // Load ratings
+    const { data:rt } = await supabase.from("ratings").select("movie_id,rating").eq("user_id",u.id);
+    const ratMap = {};
+    (rt||[]).forEach(r=>ratMap[r.movie_id]=r.rating);
+    setUserRatings(ratMap);
+    // Load watch history for stats
+    const { data:wh } = await supabase.from("watch_history").select("*").eq("user_id",u.id).order("watched_at",{ascending:false});
+    setWatchHistory(wh||[]);
   };
 
-  // Load trending content
+  // ── Fetch featured rows for homepage ──
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
+    const loadFeatured = async () => {
       try {
-        const [trending, trendingTV, netflixRes, disneyRes, hboRes, animeRes] = await Promise.all([
-          tmdbFetch("/trending/movie/week?language=en-US"),
-          tmdbFetch("/trending/tv/week?language=en-US"),
-          tmdbFetch("/discover/movie?with_watch_providers=8&watch_region=US&sort_by=popularity.desc&language=en-US&page=1"),
-          tmdbFetch("/discover/movie?with_watch_providers=337&watch_region=US&sort_by=popularity.desc&language=en-US&page=1"),
-          tmdbFetch("/discover/movie?with_watch_providers=1899&watch_region=US&sort_by=popularity.desc&language=en-US&page=1"),
-          tmdbFetch("/discover/tv?with_genres=16&with_watch_providers=283&watch_region=US&sort_by=popularity.desc&language=en-US&page=1"),
+        const [trendData, newData, topData, animeData, sportsData] = await Promise.all([
+          tmdbFetch("/trending/all/week?language=en-US&page=1"),
+          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
+          tmdbFetch("/movie/top_rated?language=en-US&page=1"),
+          tmdbFetch("/discover/tv?with_keywords=210024&sort_by=popularity.desc&language=en-US&page=1"),
+          tmdbFetch("/discover/movie?with_genres=99&with_keywords=6075|1284|2702&sort_by=popularity.desc&language=en-US&page=1"),
         ]);
-        const addProviders = async (items, type="movie") => {
-          return Promise.all(items.slice(0,12).map(async item => {
-            try {
-              const wpRes = await fetch(`${TMDB_BASE}/${type}/${item.id}/watch/providers`,{headers:tmdbHeaders});
-              const wpData = await wpRes.json();
-              return {...item, providers:getProviders(wpData), category:type};
-            } catch { return {...item, providers:[], category:type}; }
+        const addProviders = async (items, category) => {
+          return Promise.all((items||[]).slice(0,20).map(async m => {
+            const type = m.media_type==="tv"||(m.first_air_date&&!m.release_date)?"tv":"movie";
+            try { const wp=await tmdbFetch(`/${type}/${m.id}/watch/providers`); return {...m,providers:getProviders(wp),category}; }
+            catch { return {...m,providers:[],category}; }
           }));
         };
-        const [tMovies, tTV, nfx, dis, hbo, ani] = await Promise.all([
-          addProviders(trending.results||[]),
-          addProviders(trendingTV.results||[], "tv"),
-          addProviders(netflixRes.results||[]),
-          addProviders(disneyRes.results||[]),
-          addProviders(hboRes.results||[]),
-          addProviders(animeRes.results||[], "tv"),
+        const [trending,newReleases,topRated,anime,sports] = await Promise.all([
+          addProviders(trendData.results,"trending"),
+          addProviders(newData.results,"movies"),
+          addProviders(topData.results,"movies"),
+          addProviders(animeData.results,"anime"),
+          addProviders(sportsData.results,"sports"),
         ]);
-        const all = [...tMovies,...tTV,...nfx,...dis,...hbo,...ani];
-        setMovies(all);
-        setFeatured(tMovies[0]||all[0]||null);
-      } catch(e) {}
-      setLoading(false);
+        setFeaturedRows({ trending, newReleases, topRated, anime, sports });
+        if (trending.length > 0) setHeroMovie(trending[Math.floor(Math.random()*Math.min(5,trending.length))]);
+      } catch(e) { console.error(e); }
     };
-    load();
+    loadFeatured();
   }, []);
 
-  // Search logic
-  const doSearch = async (q) => {
-    if (!q.trim()) { setSearchResults([]); setSearch(""); return; }
-    const sportInfo = getEspnSport(q);
-    if (q.toLowerCase()==="soccer_hub") { setView("sports"); setSportQuery(""); setShowSoccerHub(true); setSearch(""); return; }
-    if (sportInfo || q.toLowerCase().includes("world cup") || q.toLowerCase().includes("wwe") || q.toLowerCase().includes("wrestling") || q.toLowerCase().includes("ufc") || q.toLowerCase().includes("mma") || q.toLowerCase().includes("nfl") || q.toLowerCase().includes("nba") || q.toLowerCase().includes("mlb") || q.toLowerCase().includes("nhl") || q.toLowerCase().includes("formula") || q.toLowerCase().includes("f1") || q.toLowerCase().includes("college football") || q.toLowerCase().includes("olympics")) {
-      setView("sports"); setSportQuery(q); setShowSoccerHub(false); setSearch(q); return;
-    }
-    if (isGenreSearch(q)) {
-      setSearching(true); setSearch(q); setSearchResults([]);
-      const results = await doGenreSearch(q);
-      setSearchResults(results); setSearching(false); return;
-    }
-    const SEARCH_LIMIT = user ? (tier==="premium" ? Infinity : 10) : 3;
-    if (searchCount >= SEARCH_LIMIT) { setSearchLimitHit(true); return; }
-    setSearching(true); setSearch(q); setSearchResults([]);
-    try {
-      const [mRes, tvRes] = await Promise.all([
-        tmdbFetch(`/search/movie?query=${encodeURIComponent(q)}&language=en-US&page=1`),
-        tmdbFetch(`/search/tv?query=${encodeURIComponent(q)}&language=en-US&page=1`),
-      ]);
-      const combined = [...(mRes.results||[]).map(m=>({...m,category:"movie"})),...(tvRes.results||[]).map(t=>({...t,category:"tv"}))].sort((a,b)=>(b.popularity||0)-(a.popularity||0)).slice(0,20);
-      const withProviders = await Promise.all(combined.map(async item=>{
+  // ── Fetch TMDB content ──
+  useEffect(() => {
+    const viewMap = {
+      trending: "/trending/all/week",
+      movies:   "/movie/popular",
+      tv:       "/tv/popular",
+      anime:    "/discover/tv?with_keywords=210024&sort_by=popularity.desc",
+      sports:   "/discover/movie?with_genres=99&with_keywords=6075|1284|2702&sort_by=popularity.desc",
+      watchlist: null,
+    };
+    const path = viewMap[view];
+    if (!path) { setLoading(false); return; }
+    setLoading(true);
+    tmdbFetch(`${path}${path.includes('?')?'&':'?'}language=en-US&page=1`).then(async data => {
+      const results = (data.results||[]).slice(0,20);
+      const withProviders = await Promise.all(results.map(async m => {
+        const type = m.media_type==="tv"||(m.first_air_date&&!m.release_date) ? "tv" : "movie";
         try {
-          const type=item.category==="tv"?"tv":"movie";
-          const wpRes=await fetch(`${TMDB_BASE}/${type}/${item.id}/watch/providers`,{headers:tmdbHeaders});
-          const wpData=await wpRes.json();
-          return {...item,providers:getProviders(wpData)};
-        } catch { return item; }
+          const wp = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
+          return { ...m, providers: getProviders(wp), category: view };
+        } catch { return { ...m, providers:[], category:view }; }
       }));
-      setSearchResults(withProviders);
-      setSearchCount(c=>c+1);
-      track("search",{search_term:q});
-    } catch(e) {}
-    setSearching(false);
-  };
+      setMovies(withProviders);
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  }, [view]);
 
-  const handleSearch = (e) => { e.preventDefault(); doSearch(searchInput); };
+  // ── Smart Search ──
+  useEffect(() => {
+    if (!search.trim()) { setSearchResults([]); return; }
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      // Enforce search limit for non-logged-in users
+      if (!user) {
+        const count = getSearchCount();
+        if (count >= SEARCH_LIMIT) {
+          setShowSearchLimit(true);
+          setSearching(false);
+          return;
+        }
+        incrementSearchCount();
+        setSearchesUsed(getSearchCount());
+      }
+      setSearching(true);
+      track("search", { search_term: search.trim(), is_mood_search: !!isGenreSearch(search) });
+      try {
+        const genreConfig = isGenreSearch(search);
+        if (genreConfig) {
+          // Genre/mood search
+          const results = await doGenreSearch(genreConfig);
+          setSearchResults(results);
+        } else {
+          // Title search
+          const data = await tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=1`);
+          const results = (data.results||[]).filter(r=>r.media_type!=="person").slice(0,20);
+          const withProviders = await Promise.all(results.map(async m => {
+            const type = m.media_type==="tv" ? "tv" : "movie";
+            try {
+              const wp = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
+              return { ...m, providers:getProviders(wp), category:m.media_type };
+            } catch { return { ...m, providers:[], category:m.media_type }; }
+          }));
+          setSearchResults(withProviders);
+        }
+      } catch(e) { console.error(e); }
+      setSearching(false);
+    }, 500);
+  }, [search]);
 
-  const handleSetView = (v) => {
-    setView(v); setSearch(""); setSearchInput(""); setSearchResults([]); setSearchLimitHit(false);
-    if (v!=="sports") { setSportQuery(""); setShowSoccerHub(false); }
-  };
-
+  // ── Watchlist ──
   const toggleWatchlist = async (movieId) => {
-    if (!user) { setShowAuth(true); return; }
+    if (!user) {
+      showToast("Sign up free to save your watchlist! 👤");
+      track("watchlist_attempt_no_auth");
+      return; // Just toast - don't show blocking prompt
+    }
     const inWL = watchlist.includes(movieId);
-    setWatchlist(prev => inWL ? prev.filter(id=>id!==movieId) : [...prev,movieId]);
-    if (inWL) { await supabase.from("watchlist").delete().eq("user_id",user.id).eq("movie_id",movieId); }
-    else { await supabase.from("watchlist").insert({user_id:user.id,movie_id:movieId}); showToast("Added to watchlist! ♥"); }
+    const FREE_WL_LIMIT = 50;
+    if (!inWL && tier !== "premium" && watchlist.length >= FREE_WL_LIMIT) {
+      showToast("Upgrade to Premium for unlimited watchlist! ✦");
+      setShowUpgrade(true);
+      return;
+    }
+    if (inWL) {
+      setWatchlist(prev=>prev.filter(x=>x!==movieId));
+      await supabase.from("watchlist").delete().eq("user_id",user.id).eq("movie_id",movieId);
+      showToast("Removed from watchlist");
+      track("watchlist_remove", { movie_id: movieId });
+    } else {
+      setWatchlist(prev=>[...prev,movieId]);
+      await supabase.from("watchlist").insert({user_id:user.id,movie_id:movieId});
+      showToast("Added to watchlist ♥");
+      track("watchlist_add", { movie_id: movieId });
+    }
   };
 
-  const handleRate = (movieId, rating) => {
-    setUserRatings(prev=>({...prev,[movieId]:rating}));
-  };
-
-  const handleSaveSubs = async (subs) => {
+  const handleSaveUserSubs = async (subs) => {
     setUserSubs(subs);
-    if (user) await supabase.from("profiles").update({subscriptions:subs}).eq("id",user.id);
+    localStorage.setItem("streamhub_subs", JSON.stringify(subs));
+    localStorage.setItem("streamhub_setup_done", "true");
+    setShowSetup(false);
+    track("setup_complete", { services_count: subs.length });
+    if (user) {
+      await supabase.from("profiles").update({
+        subscriptions: JSON.stringify(subs),
+        setup_done: true,
+      }).eq("id", user.id);
+    }
   };
 
-  const handleToggleFavoriteTeam = (sport, teamName) => {
-    setFavoriteTeams(prev => {
-      const next = {...prev};
-      if (teamName === "_clear") { delete next[sport]; }
-      else { next[sport] = teamName; }
-      localStorage.setItem("favoriteTeams", JSON.stringify(next));
-      return next;
-    });
+  // Load saved subs from localStorage on startup
+  useEffect(() => {
+    const saved = localStorage.getItem("streamhub_subs");
+    if (saved) {
+      try { setUserSubs(JSON.parse(saved)); } catch(e) {}
+    }
+  }, []);
+
+  const handleSelectMovie = (movie) => {
+    if (!movie) return;
+    setSelectedMovie(movie);
   };
 
-  const handleSignOut = async () => { await supabase.auth.signOut(); showToast("Signed out 👋"); };
+  const handleSportSearch = (query) => {
+    setSearch(query);
+    setView("sports");
+  };
 
-  const displayMovies = search ? searchResults : movies;
-  const trending  = displayMovies.filter(m=>!m.category||m.category==="movie"||m.category==="trending").slice(0,20);
-  const tvShows   = displayMovies.filter(m=>m.category==="tv").slice(0,20);
-  const animeList = displayMovies.filter(m=>m.category==="anime"||((m.genre_ids||[]).includes(16)&&m.category==="tv")).slice(0,20);
-  const allMovies = [...new Map([...displayMovies].map(m=>[m.id,m])).values()];
+  const handleSetView = (v) => { setView(v); track("tab_change", { tab: v }); };
 
-  const navTabs = CATEGORY_TABS;
+  const handleRate = (movieId, val) => {
+    setUserRatings(p=>({...p,[movieId]:val}));
+  };
 
-  // ── MOBILE LAYOUT ──────────────────────────────────────────────────────────
-  if (isMobile) {
-    return (
-      <div style={{minHeight:"100vh",paddingBottom:80}}>
-        <GlobalStyles/>
-        <Analytics/>
-        {showToast&&toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+  const markAsWatched = async (movie) => {
+    if (!user) return showToast("Sign in to track history! 👤");
+    await supabase.from("watch_history").upsert({
+      user_id: user.id,
+      movie_id: movie.id,
+      movie_title: movie.title||movie.name||"",
+      movie_poster: movie.poster_path||null,
+      movie_type: movie.first_air_date ? "tv" : "movie",
+    }, { onConflict:"user_id,movie_id" });
+    showToast("Added to watch history ✅");
+    track("mark_watched", { movie_title: movie.title||movie.name, movie_type: movie.first_air_date?"tv":"movie" });
+  };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setShowProfile(false);
+    showToast("Signed out 👋");
+    track("sign_out");
+  };
+
+  // ── Display movies ──
+  const displayMovies = search.trim() ? searchResults : view==="watchlist"
+    ? movies.filter(m=>watchlist.includes(m.id))
+    : movies;
+
+  const filtered = displayMovies.filter(m => !filterPlat || m.providers?.includes(filterPlat));
+
+  const subscribed = SERVICES.filter(s=>userSubs.includes(s.id));
+  const unsubscribed = SERVICES.filter(s=>!userSubs.includes(s.id));
+
+  // ─── MOBILE LAYOUT ──────────────────────────────────────────────────────────
+  if (isMobile) return (
+    <>
+      <GlobalStyles />
+      <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:80}}>
         {/* Mobile Header */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid var(--border)",padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
-          <Logo size={22}/>
-          <form onSubmit={handleSearch} style={{flex:1,display:"flex",gap:8}}>
-            <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} placeholder="Search movies, shows, sports…"
-              style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,color:"var(--text)",padding:"8px 12px",fontSize:13,outline:"none",fontFamily:"var(--font-body)"}}/>
-            <button type="submit" style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"8px 14px",fontWeight:700,fontSize:13,cursor:"pointer"}}>🔍</button>
-          </form>
-          <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{background:"rgba(255,255,255,.08)",border:"1px solid var(--border)",borderRadius:"50%",width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"var(--text)",flexShrink:0}}>
-            {user?(profile?.avatar_url?<img src={profile.avatar_url} style={{width:30,height:30,borderRadius:"50%",objectFit:"cover",border:tier==="premium"?"2px solid var(--gold)":"none"}} alt=""/>:"👤"):"👤"}
-          </button>
+        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)",paddingTop:"env(safe-area-inset-top)"}}>
+          {/* Top row - logo + buttons */}
+          <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
+            {/* Logo - wider to fill space */}
+            <div style={{flex:1,display:"flex",flexDirection:"column",gap:2}}>
+              <img
+                src="/logo-clean.png"
+                alt="The StreamHub"
+                onError={e=>e.target.style.display="none"}
+                style={{
+                  height:64,
+                  width:"auto",
+                  maxWidth:200,
+                  objectFit:"contain",
+                  filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+                  animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+                }}
+              />
+
+            </div>
+            {tier==="premium"
+              ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
+              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
+            }
+            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
+          </div>
+          {/* Search bar - full width, prominent */}
+          <div style={{padding:"0 14px 10px",position:"relative"}}>
+            <span style={{position:"absolute",left:26,top:"50%",transform:"translateY(-60%)",color:"var(--gold)",fontSize:16}}>🔍</span>
+            <input
+              value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search by title, genre or mood…"
+              style={{
+                width:"100%", background:"rgba(255,255,255,.1)",
+                border:"1.5px solid rgba(245,197,24,.4)",
+                borderRadius:14, color:"var(--text)",
+                padding:"12px 16px 12px 38px",
+                fontSize:15, outline:"none",
+                boxShadow:"0 2px 16px rgba(245,197,24,.1)",
+              }}
+            />
+          </div>
+          {/* Service filter chips */}
+          <div style={{overflowX:"auto",padding:"0 14px 10px",display:"flex",gap:6,scrollbarWidth:"none"}}>
+            <button onClick={()=>setFilterPlat(null)} style={{background:!filterPlat?"var(--gold)":"rgba(255,255,255,.05)",border:`1px solid ${!filterPlat?"var(--gold)":"var(--border)"}`,borderRadius:99,color:!filterPlat?"#000":"var(--muted)",padding:"5px 14px",fontSize:11,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"}}>All</button>
+            {SERVICES.map(s=>{
+              const active=filterPlat===s.id;
+              return <button key={s.id} onClick={()=>setFilterPlat(active?null:s.id)} style={{background:active?`${s.color}30`:"rgba(255,255,255,.04)",border:`1px solid ${active?s.color:"rgba(255,255,255,.07)"}`,borderRadius:99,color:active?"#fff":"var(--muted)",padding:"5px 12px",fontSize:11,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
+                <span style={{background:active?s.color:"rgba(255,255,255,.1)",borderRadius:4,width:14,height:14,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:800,color:"#fff"}}>{s.logo}</span>{s.name}
+              </button>;
+            })}
+          </div>
         </div>
 
-        {/* Mobile Content */}
-        <div style={{padding:"12px 12px 0"}}>
-          <WelcomeBanner user={user} tier={tier} onSignIn={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)}/>
+        {/* WelcomeBanner for new users — above brand banner */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
 
-          {/* Mobile Quick Tools */}
-          <div style={{display:"flex",gap:8,marginBottom:12,overflowX:"auto",scrollbarWidth:"none",paddingBottom:2}}>
+        {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
+        {!search.trim() && view==="trending" && (
+          <div style={{
+            margin:"4px 14px 16px",
+            borderRadius:20,
+            overflow:"hidden",
+            position:"relative",
+            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
+            border:"1px solid rgba(124,58,237,.35)",
+            boxShadow:"0 8px 40px rgba(124,58,237,.25), inset 0 1px 0 rgba(255,255,255,.06)",
+            padding:"18px 16px 16px",
+            textAlign:"center",
+          }}>
+            {/* glow blobs */}
+            <div style={{position:"absolute",top:-30,left:-30,width:120,height:120,borderRadius:"50%",background:"rgba(124,58,237,.25)",filter:"blur(40px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,107,157,.2)",filter:"blur(40px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:160,height:80,borderRadius:"50%",background:"rgba(6,182,212,.12)",filter:"blur(30px)",pointerEvents:"none"}}/>
+            {/* tagline */}
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:800,
+              fontSize:20, letterSpacing:"-.02em", marginBottom:12,
+              background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+              backgroundSize:"200% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 3s linear infinite",
+              position:"relative",
+            }}>Your AI Streaming Assistant</div>
+            {/* pills */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",width:"100%"}}>
+              {[
+                {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+              ].map((item,i)=>(
+                <div key={item.word} style={{display:"flex",alignItems:"center",gap:5}}>
+                  <div style={{
+                    background:item.bg, borderRadius:99,
+                    padding:"7px 11px",
+                    fontFamily:"var(--font-head)", fontWeight:900,
+                    fontSize:11, letterSpacing:1.5, color:"#000",
+                    boxShadow:`0 0 14px ${item.glow}, 0 0 28px ${item.glow}66`,
+                    whiteSpace:"nowrap",
+                  }}>{item.word}</div>
+                  {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:12,fontWeight:700}}>—</span>}
+                </div>
+              ))}
+            </div>
+            {/* mood search CTA */}
+            <button onClick={()=>setShowMoodSearch(true)}
+              style={{marginTop:12,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5,position:"relative"}}>
+              🎭 Try Mood Search — describe any vibe
+            </button>
+          </div>
+        )}
+
+        {/* Search status */}
+        {search.trim() && (
+          <div style={{padding:"12px 14px 0",fontSize:13,color:"var(--muted)"}}>
+            {searching?"Searching…":`${searchResults.length} results for "${search}"`}
+          </div>
+        )}
+
+        {/* Mobile Premium Tools Strip */}
+        <div style={{padding:"0 14px 16px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+          <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
-              {label:"🎭 Mood",onClick:()=>{if(!user){setShowAuth(true);return;}setShowMood(true);},premium:true},
-              {label:"✦ AI Picks",onClick:()=>{if(!user){setShowAuth(true);return;}setShowPersonalized(true);},premium:true},
-              {label:"🆕 New",onClick:()=>setShowNewReleases(true),premium:false},
-              {label:"🚨 Leaving",onClick:()=>{if(!user){setShowAuth(true);return;}setShowLeaving(true);},premium:true},
-              {label:"💰 Cost",onClick:()=>{if(!user){setShowAuth(true);return;}setShowCostCalc(true);},premium:true},
-            ].map(t=>(
-              <button key={t.label} onClick={t.onClick} style={{flexShrink:0,background:t.premium&&tier!=="premium"?"rgba(245,197,24,.08)":"rgba(255,255,255,.07)",border:`1px solid ${t.premium&&tier!=="premium"?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)"}`,borderRadius:99,color:t.premium&&tier!=="premium"?"var(--gold)":"var(--text)",padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-                {t.label}{t.premium&&tier!=="premium"?" ✦":""}
+              {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
+              {icon:"🎭",label:"Mood Search",sub:"Describe any vibe",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+              {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+              {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
+              {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+            ].map(item=>(
+              <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:100,transition:"all .2s"}}
+                onTouchStart={e=>e.currentTarget.style.background=`${item.color}15`}
+                onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.04)"}>
+                <span style={{fontSize:24}}>{item.icon}</span>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--text)",textAlign:"center",whiteSpace:"nowrap"}}>{item.label}{tier!=="premium"&&<span style={{marginLeft:4,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99,verticalAlign:"middle"}}>PRO</span>}</div>
+                <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",whiteSpace:"nowrap"}}>{item.sub}</div>
               </button>
             ))}
           </div>
-
-          {view === "sports" ? (
-            <div>
-              <SportsTabHeader onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}}/>
-              {showSoccerHub
-                ? <SoccerHub onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}} favoriteTeams={favoriteTeams}/>
-                : sportQuery
-                  ? <LiveSportsSection sportQuery={sportQuery} favoriteTeams={favoriteTeams} onToggleFavorite={handleToggleFavoriteTeam}/>
-                  : <SportCategoryGrid onSearch={(q)=>{if(q==="soccer_hub"){setShowSoccerHub(true);}else{setSportQuery(q);}}} favoriteTeams={favoriteTeams}/>
-              }
-              {!sportQuery && !showSoccerHub && <SportsStreamingGuide onSearch={setSportQuery}/>}
-            </div>
-          ) : (
-            <div>
-              {!search && <MobileHero movie={featured} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist}/>}
-              {/* Sports Hub Promo */}
-              <SportsHubPromo onNavigate={(v)=>{handleSetView(v);setSearch("");}}/>
-              {/* Mobile Premium Tools Strip */}
-              {tier!=="premium" && !search && (
-                <div style={{background:"linear-gradient(135deg,rgba(245,197,24,.08),rgba(124,58,237,.06))",border:"1px solid rgba(245,197,24,.15)",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,marginBottom:4}}>✦ Upgrade to Premium</div>
-                  <div style={{fontSize:12,color:"var(--muted)",marginBottom:8}}>Mood Search · AI Picks · Leaving Soon · Watch History · Cost Calculator</div>
-                  <button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:12,cursor:"pointer"}}>Upgrade — $9.99/mo</button>
-                </div>
-              )}
-              {searchLimitHit ? <SearchLimitWall onSignUp={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)} isLoggedIn={!!user}/>
-              : searching ? <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>{Array.from({length:6}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : search && searchResults.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>No results for "{search}"</div>
-              : search ? (
-                <div>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:12}}>{searchResults.length} results for "{search}"</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-                    {searchResults.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                  </div>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
-                </div>
-              ) : loading ? <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>{Array.from({length:6}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : (
-                <div>
-                  <FeaturedRow title="Trending Now" icon="🔥" movies={movies.slice(0,12)} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>
-                  <FeaturedRow title="TV Shows" icon="📺" movies={tvShows} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)"/>
-                  <FeaturedRow title="Anime" icon="✦" movies={animeList} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)"/>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Mobile Bottom Nav */}
-        <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderTop:"1px solid var(--border)",display:"flex",zIndex:200,paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
-          {navTabs.map(tab=>{
-            const active = tab.id==="search" ? !!search : view===tab.id&&!search;
-            const isSports = tab.id==="sports";
-            return (
-              <button key={tab.id} onClick={()=>{if(tab.id==="search"){const q=prompt("Search…");if(q){setSearchInput(q);doSearch(q);}}else{handleSetView(tab.id);}}}
-                style={{flex:1,background:"none",border:"none",color:active?tab.color:"var(--muted)",padding:"10px 4px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",position:"relative",animation:isSports?"sportsTabPulse 3s ease-in-out infinite":undefined}}>
-                <span style={{fontSize:18,display:"inline-block",animation:active&&tab.anim?`${tab.anim} 0.8s ease-in-out`:undefined}}>{tab.icon}</span>
-                <span style={{fontSize:9,fontWeight:active?700:500,letterSpacing:.3,whiteSpace:"nowrap"}}>{tab.label}</span>
-                {isSports && <div style={{position:"absolute",top:6,right:"calc(50% - 16px)",width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.5s infinite",boxShadow:"0 0 6px #ef4444"}}/>}
-                {active && <div style={{position:"absolute",top:0,left:"20%",right:"20%",height:2,background:tab.color,borderRadius:"0 0 2px 2px"}}/>}
-              </button>
-            );
-          })}
-        </div>
+        {/* Mobile Hero + Featured Rows for trending */}
+        {view==="trending"&&!search.trim() ? (
+          <div>
+            {/* Mobile Hero */}
+            {heroMovie && (
+              <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
+            )}
 
-        {/* Modals */}
-        {showAuth    && <AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-        {showProfile && user && <ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={handleSignOut} onUpgrade={()=>{setShowProfile(false);setShowUpgrade(true);}} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={setSelectedMovie}/>}
-        {showUpgrade && <UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>{setTier("premium");showToast("Welcome to Premium! ✦");setShowUpgrade(false);}}/>}
-        {showSetup   && <SetupModal userSubs={userSubs} onSave={handleSaveSubs} onClose={()=>setShowSetup(false)} isFirst={userSubs.length===0}/>}
-        {showMood    && <MoodSearchModal onClose={()=>setShowMood(false)} user={user} tier={tier} userSubs={userSubs} onUpgrade={()=>{setShowMood(false);setShowUpgrade(true);}} showToast={showToast} onSelectMovie={setSelectedMovie}/>}
-        {showLeaving && <LeavingSoonModal onClose={()=>setShowLeaving(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowLeaving(false);setShowUpgrade(true);}}/>}
-        {showHistory && <WatchHistoryModal onClose={()=>setShowHistory(false)} user={user} tier={tier} onUpgrade={()=>{setShowHistory(false);setShowUpgrade(true);}}/>}
-        {showCostCalc && <CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>{setShowCostCalc(false);setShowUpgrade(true);}}/>}
-        {showNewReleases && <NewReleasesModal onClose={()=>setShowNewReleases(false)} userSubs={userSubs} onSelect={setSelectedMovie}/>}
-        {showPersonalized && <PersonalizedRecsModal onClose={()=>setShowPersonalized(false)} user={user} userRatings={userRatings} watchlist={watchlist} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowPersonalized(false);setShowUpgrade(true);}} onSelectMovie={setSelectedMovie} showToast={showToast}/>}
-        {selectedMovie && <MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} showToast={showToast} onSelectSimilar={setSelectedMovie}/>}
-        {showPWAPrompt && <PWAInstallPrompt onDismiss={()=>setShowPWAPrompt(false)}/>}
-      </div>
-    );
-  }
-
-  // ── TABLET LAYOUT ──────────────────────────────────────────────────────────
-  if (isTablet) {
-    return (
-      <div style={{minHeight:"100vh",paddingBottom:80}}>
-        <GlobalStyles/>
-        <Analytics/>
-        {showToast&&toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
-
-        {/* Tablet Header */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.96)",backdropFilter:"blur(16px)",borderBottom:"1px solid var(--border)",padding:"12px 20px",display:"flex",alignItems:"center",gap:12}}>
-          <Logo size={26}/>
-          <form onSubmit={handleSearch} style={{flex:1,display:"flex",gap:8}}>
-            <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} placeholder="Search movies, shows, sports, or a mood…"
-              style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"var(--text)",padding:"10px 16px",fontSize:14,outline:"none",fontFamily:"var(--font-body)"}}/>
-            <button type="submit" style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"10px 18px",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:"var(--font-head)"}}>Search</button>
-          </form>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            {tier!=="premium"&&<button onClick={()=>setShowUpgrade(true)} style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,color:"var(--gold)",padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>✦ Premium</button>}
-            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{background:"rgba(255,255,255,.08)",border:"1px solid var(--border)",borderRadius:"50%",width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
-              {user?(profile?.avatar_url?<img src={profile.avatar_url} style={{width:32,height:32,borderRadius:"50%",objectFit:"cover",border:tier==="premium"?"2px solid var(--gold)":"none"}} alt=""/>:"👤"):"👤"}
-            </button>
-          </div>
-        </div>
-
-        {/* Tablet Content */}
-        <div style={{padding:"16px 20px 0"}}>
-          <WelcomeBanner user={user} tier={tier} onSignIn={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)}/>
-
-          {view==="sports" ? (
-            <div>
-              <SportsTabHeader onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}}/>
-              {showSoccerHub
-                ? <SoccerHub onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}} favoriteTeams={favoriteTeams}/>
-                : sportQuery
-                  ? <LiveSportsSection sportQuery={sportQuery} favoriteTeams={favoriteTeams} onToggleFavorite={handleToggleFavoriteTeam}/>
-                  : <SportCategoryGrid onSearch={(q)=>{if(q==="soccer_hub"){setShowSoccerHub(true);}else{setSportQuery(q);}}} favoriteTeams={favoriteTeams}/>
-              }
-              {!sportQuery && !showSoccerHub && <SportsStreamingGuide onSearch={setSportQuery}/>}
-            </div>
-          ) : (
-            <div>
-              {!search && <TabletHero movie={featured} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist}/>}
-              {/* Tablet Premium Tools */}
-              <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-                {[
-                  {label:"🎭 Mood Search",onClick:()=>{if(!user){setShowAuth(true);return;}setShowMood(true);},premium:true},
-                  {label:"✦ AI Picks",onClick:()=>{if(!user){setShowAuth(true);return;}setShowPersonalized(true);},premium:true},
-                  {label:"🆕 New Releases",onClick:()=>setShowNewReleases(true),premium:false},
-                  {label:"🚨 Leaving Soon",onClick:()=>{if(!user){setShowAuth(true);return;}setShowLeaving(true);},premium:true},
-                  {label:"💰 Cost Calculator",onClick:()=>{if(!user){setShowAuth(true);return;}setShowCostCalc(true);},premium:true},
-                ].map(t=>(
-                  <button key={t.label} onClick={t.onClick} style={{background:t.premium&&tier!=="premium"?"rgba(245,197,24,.08)":"rgba(255,255,255,.07)",border:`1px solid ${t.premium&&tier!=="premium"?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)"}`,borderRadius:99,color:t.premium&&tier!=="premium"?"var(--gold)":"var(--text)",padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>
-                    {t.label}{t.premium&&tier!=="premium"?" ✦":""}
-                  </button>
-                ))}
+            {/* Mobile Featured Rows */}
+            {[
+              {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
+              {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
+              {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
+              {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
+            ].map(row=>(
+              <div key={row.key} style={{marginBottom:24}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
+                  <span>{row.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:row.color}}>{row.title}</div>
+                </div>
+                <div style={{display:"flex",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none"}}>
+                  {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
+                    <div key={m.id} style={{flexShrink:0,width:130}}>
+                      <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
+                    </div>
+                  ))}
+                </div>
               </div>
-              {/* Sports Hub Promo for Tablet */}
-              <SportsHubPromo onNavigate={(v)=>{setView(v);setSearch("");}}/>
-              {/* Tablet Premium upsell */}
-              {tier!=="premium"&&!search&&(
-                <div style={{background:"linear-gradient(135deg,rgba(245,197,24,.08),rgba(124,58,237,.06))",border:"1px solid rgba(245,197,24,.15)",borderRadius:14,padding:"14px 18px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,flexWrap:"wrap"}}>
-                  <div><div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:4}}>✦ Unlock Everything</div><div style={{fontSize:13,color:"var(--muted)"}}>Mood Search · AI Picks · Leaving Soon · Watch History · Cost Calculator</div></div>
-                  <button onClick={()=>setShowUpgrade(true)} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 20px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",flexShrink:0}}>Upgrade — $9.99/mo</button>
-                </div>
-              )}
-              {searchLimitHit ? <SearchLimitWall onSignUp={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)} isLoggedIn={!!user}/>
-              : searching ? <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>{Array.from({length:6}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : search && searchResults.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:15}}>No results for "{search}"</div>
-              : search ? (
-                <div>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,marginBottom:14}}>{searchResults.length} results for "{search}"</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>{searchResults.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}</div>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
-                </div>
-              ) : loading ? <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>{Array.from({length:9}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : (
-                <div>
-                  <FeaturedRow title="Trending Now" icon="🔥" movies={movies.slice(0,12)} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>
-                  <FeaturedRow title="TV Shows" icon="📺" movies={tvShows} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)"/>
-                  <FeaturedRow title="Anime" icon="✦" movies={animeList} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)"/>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Tablet Bottom Nav */}
-        <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderTop:"1px solid var(--border)",display:"flex",justifyContent:"center",gap:4,padding:"8px 20px",paddingBottom:"env(safe-area-inset-bottom,8px)",zIndex:200}}>
-          {navTabs.map(tab=>{
-            const active = view===tab.id&&!search;
-            const isSports = tab.id==="sports";
-            return (
-              <button key={tab.id} onClick={()=>tab.id!=="search"?handleSetView(tab.id):null}
-                style={{background:active?`${tab.color}18`:"none",border:active?`1px solid ${tab.color}40`:"1px solid transparent",color:active?tab.color:"var(--muted)",padding:"8px 18px",borderRadius:12,display:"flex",alignItems:"center",gap:8,cursor:"pointer",fontSize:13,fontWeight:active?700:500,position:"relative",transition:"all .2s",animation:isSports?"sportsTabPulse 3s ease-in-out infinite":undefined}}>
-                <span style={{fontSize:16,animation:active&&tab.anim?`${tab.anim} 0.8s ease-in-out`:undefined}}>{tab.icon}</span>
-                {tab.label}
-                {isSports && <div style={{position:"absolute",top:6,right:10,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.5s infinite",boxShadow:"0 0 6px #ef4444"}}/>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Modals */}
-        {showAuth    && <AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-        {showProfile && user && <ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={handleSignOut} onUpgrade={()=>{setShowProfile(false);setShowUpgrade(true);}} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={setSelectedMovie}/>}
-        {showUpgrade && <UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>{setTier("premium");showToast("Welcome to Premium! ✦");setShowUpgrade(false);}}/>}
-        {showSetup   && <SetupModal userSubs={userSubs} onSave={handleSaveSubs} onClose={()=>setShowSetup(false)} isFirst={userSubs.length===0}/>}
-        {showMood    && <MoodSearchModal onClose={()=>setShowMood(false)} user={user} tier={tier} userSubs={userSubs} onUpgrade={()=>{setShowMood(false);setShowUpgrade(true);}} showToast={showToast} onSelectMovie={setSelectedMovie}/>}
-        {showLeaving && <LeavingSoonModal onClose={()=>setShowLeaving(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowLeaving(false);setShowUpgrade(true);}}/>}
-        {showHistory && <WatchHistoryModal onClose={()=>setShowHistory(false)} user={user} tier={tier} onUpgrade={()=>{setShowHistory(false);setShowUpgrade(true);}}/>}
-        {showCostCalc && <CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>{setShowCostCalc(false);setShowUpgrade(true);}}/>}
-        {showNewReleases && <NewReleasesModal onClose={()=>setShowNewReleases(false)} userSubs={userSubs} onSelect={setSelectedMovie}/>}
-        {showPersonalized && <PersonalizedRecsModal onClose={()=>setShowPersonalized(false)} user={user} userRatings={userRatings} watchlist={watchlist} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowPersonalized(false);setShowUpgrade(true);}} onSelectMovie={setSelectedMovie} showToast={showToast}/>}
-        {selectedMovie && <MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} showToast={showToast} onSelectSimilar={setSelectedMovie}/>}
-      </div>
-    );
-  }
-
-  // ── DESKTOP LAYOUT ─────────────────────────────────────────────────────────
-  return (
-    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column"}}>
-      <GlobalStyles/>
-      <Analytics/>
-      {showToast&&toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
-
-      {/* Desktop Header */}
-      <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.96)",backdropFilter:"blur(20px)",borderBottom:"1px solid var(--border)",padding:"0 40px"}}>
-        <div style={{maxWidth:1600,margin:"0 auto",height:64,display:"flex",alignItems:"center",gap:20}}>
-          <Logo size={28}/>
-          {/* Nav tabs */}
-          <nav style={{display:"flex",gap:2,marginLeft:16}}>
-            {navTabs.filter(t=>t.id!=="search").map(tab=>{
-              const active = view===tab.id&&!search;
-              const isSports = tab.id==="sports";
-              return (
-                <button key={tab.id} onClick={()=>handleSetView(tab.id)}
-                  style={{background:active?`${tab.color}15`:"none",border:"none",color:active?tab.color:"var(--muted)",padding:"8px 14px",borderRadius:10,fontFamily:"var(--font-head)",fontWeight:active?700:500,fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",gap:6,position:"relative",transition:"all .2s",animation:isSports&&!active?"sportsTabPulse 3s ease-in-out infinite":undefined}}>
-                  <span style={{animation:active&&tab.anim?`${tab.anim} 0.8s ease-in-out`:undefined}}>{tab.icon}</span>
-                  {tab.label}
-                  {isSports && <div style={{position:"absolute",top:5,right:8,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.5s infinite",boxShadow:"0 0 6px #ef4444"}}/>}
-                </button>
-              );
-            })}
-          </nav>
-          {/* Search */}
-          <form onSubmit={handleSearch} style={{flex:1,maxWidth:440,margin:"0 16px",position:"relative"}}>
-            <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} placeholder="Search movies, shows, sports, anime…"
-              style={{width:"100%",background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"var(--text)",padding:"10px 48px 10px 16px",fontSize:14,outline:"none",fontFamily:"var(--font-body)"}}
-              onFocus={e=>e.target.style.borderColor="rgba(245,197,24,.4)"} onBlur={e=>e.target.style.borderColor="rgba(255,255,255,.1)"}/>
-            <button type="submit" style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--muted)",fontSize:16,cursor:"pointer"}}>🔍</button>
-          </form>
-          {/* Header actions */}
-          <div style={{display:"flex",alignItems:"center",gap:10,marginLeft:"auto"}}>
-            {tier!=="premium"&&<button onClick={()=>setShowUpgrade(true)} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:99,color:"#000",padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:12,cursor:"pointer",animation:"badgePop 2s ease-in-out infinite"}}>✦ Go Premium</button>}
-            <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:"50%",width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",overflow:"hidden",boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.4)":"none",outline:tier==="premium"?"2px solid var(--gold)":"none",outlineOffset:2}}>
-              {user?(profile?.avatar_url?<img src={profile.avatar_url} style={{width:36,height:36,objectFit:"cover",borderRadius:"50%"}} alt=""/>:"👤"):"👤"}
-            </button>
+            ))}
           </div>
-        </div>
-      </header>
-
-      {/* Desktop Main */}
-      <div style={{flex:1,display:"flex",maxWidth:1600,width:"100%",margin:"0 auto",padding:"0 40px",gap:32}}>
-        {/* Main content area */}
-        <main style={{flex:1,minWidth:0,paddingTop:32}}>
-          <WelcomeBanner user={user} tier={tier} onSignIn={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)}/>
-
-          {view==="sports" ? (
-            <div>
-              <SportsTabHeader onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}}/>
-              {showSoccerHub
-                ? <SoccerHub onSearch={(q)=>{setSportQuery(q);setShowSoccerHub(false);}} favoriteTeams={favoriteTeams}/>
-                : sportQuery
-                  ? <LiveSportsSection sportQuery={sportQuery} favoriteTeams={favoriteTeams} onToggleFavorite={handleToggleFavoriteTeam}/>
-                  : <SportCategoryGrid onSearch={(q)=>{if(q==="soccer_hub"){setShowSoccerHub(true);}else{setSportQuery(q);}}} favoriteTeams={favoriteTeams}/>
-              }
-              {!sportQuery && !showSoccerHub && <SportsStreamingGuide onSearch={setSportQuery}/>}
-            </div>
-          ) : (
-            <div>
-              {!search && <HeroBanner movie={featured} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist}/>}
-              {searchLimitHit ? <SearchLimitWall onSignUp={()=>setShowAuth(true)} onUpgrade={()=>setShowUpgrade(true)} isLoggedIn={!!user}/>
-              : searching ? <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginTop:24}}>{Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : search && searchResults.length===0 ? <div style={{textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:16}}>No results found for "{search}"</div>
-              : search ? (
-                <div style={{marginTop:24}}>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:18,marginBottom:16}}>{searchResults.length} results for "{search}"</div>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{searchResults.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>)}</div>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
+        ) : view==="sports" ? (
+          /* ── DEDICATED SPORTS HUB ── */
+          <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
+            {!search.trim() ? (
+              <>
+                <SportsTabHeader onSearch={handleSportSearch}/>
+                <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                <SportsStreamingGuide onSearch={handleSportSearch}/>
+              </>
+            ) : (
+              <>
+                <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
+                {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+                  {loading ? Array.from({length:4}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
                 </div>
-              ) : loading ? <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginTop:24}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
-              : (
-                <div>
-                  <FeaturedRow title="Trending Now" icon="🔥" movies={movies.slice(0,16)} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist}/>
-                  <FeaturedRow title="TV Shows" icon="📺" movies={tvShows} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)"/>
-                  <FeaturedRow title="Anime" icon="✦" movies={animeList} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={setSelectedMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)"/>
-                  {!user&&<SignupPrompt onSignUp={()=>setShowAuth(true)}/>}
-                </div>
-              )}
-            </div>
-          )}
-        </main>
-
-        {/* Desktop Sidebar */}
-        <aside style={{width:280,paddingTop:32,flexShrink:0}}>
-          <div style={{position:"sticky",top:96,display:"flex",flexDirection:"column",gap:12}}>
-            {/* Sports Hub Promo */}
-            <SportsHubPromo onNavigate={(v)=>{setView(v);setSearch("");}}/>
-            {/* Premium Tools */}
-            <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:16,padding:16,display:"flex",flexDirection:"column",gap:8}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--muted)",letterSpacing:1.2,marginBottom:4}}>PREMIUM TOOLS</div>
-              {[
-                {icon:"🎭",label:"Mood Search",desc:"AI finds your perfect match",onClick:()=>{if(!user){setShowAuth(true);return;}if(tier!=="premium"){setShowUpgrade(true);return;}setShowMood(true);},locked:tier!=="premium"},
-                {icon:"✦",label:"AI Picks",desc:"Personalized recommendations",onClick:()=>{if(!user){setShowAuth(true);return;}if(tier!=="premium"){setShowUpgrade(true);return;}setShowPersonalized(true);},locked:tier!=="premium"},
-                {icon:"🆕",label:"New Releases",desc:"What just dropped",onClick:()=>setShowNewReleases(true),locked:false},
-                {icon:"🚨",label:"Leaving Soon",desc:"Don't miss these titles",onClick:()=>{if(!user){setShowAuth(true);return;}if(tier!=="premium"){setShowUpgrade(true);return;}setShowLeaving(true);},locked:tier!=="premium"},
-                {icon:"📺",label:"Watch History",desc:"Track your viewing stats",onClick:()=>{if(!user){setShowAuth(true);return;}if(tier!=="premium"){setShowUpgrade(true);return;}setShowHistory(true);},locked:tier!=="premium"},
-                {icon:"💰",label:"Cost Calculator",desc:"Optimize your subscriptions",onClick:()=>{if(!user){setShowAuth(true);return;}if(tier!=="premium"){setShowUpgrade(true);return;}setShowCostCalc(true);},locked:tier!=="premium"},
-              ].map(t=>(
-                <button key={t.label} onClick={t.onClick} style={{background:"rgba(255,255,255,.04)",border:`1px solid ${t.locked?"rgba(245,197,24,.15)":"rgba(255,255,255,.07)"}`,borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",textAlign:"left",transition:"all .2s",color:"var(--text)"}}
-                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.08)";e.currentTarget.style.borderColor=t.locked?"rgba(245,197,24,.35)":"rgba(255,255,255,.18)";}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.04)";e.currentTarget.style.borderColor=t.locked?"rgba(245,197,24,.15)":"rgba(255,255,255,.07)";}}>
-                  <span style={{fontSize:18,flexShrink:0}}>{t.icon}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.label}</div>
-                    <div style={{fontSize:11,color:"var(--muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.desc}</div>
-                  </div>
-                  {t.locked && <span style={{fontSize:10,color:"var(--gold)",fontWeight:700,flexShrink:0}}>✦</span>}
-                </button>
-              ))}
-              {tier!=="premium" && (
-                <button onClick={()=>setShowUpgrade(true)} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"10px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,cursor:"pointer",marginTop:4}}>Upgrade — $9.99/mo</button>
-              )}
-            </div>
-            {/* Subscriptions */}
-            <div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:16,padding:16}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--muted)",letterSpacing:1.2}}>MY SERVICES</div>
-                <button onClick={()=>user?setShowSetup(true):setShowAuth(true)} style={{background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",textDecoration:"underline"}}>Edit</button>
-              </div>
-              {userSubs.length===0 ? <div style={{fontSize:12,color:"var(--muted)",textAlign:"center",padding:"10px 0"}}>No services selected.<br/><button onClick={()=>user?setShowSetup(true):setShowAuth(true)} style={{background:"none",border:"none",color:"var(--gold)",fontSize:12,cursor:"pointer",marginTop:4,textDecoration:"underline"}}>Add Services →</button></div>
-              : <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                  {userSubs.map(s=>{ const svc=SERVICES.find(sv=>sv.id===s); if(!svc) return null; return <div key={s} style={{background:svc.color,borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:800,color:"#fff"}}>{svc.logo}</div>; })}
-                </div>}
-            </div>
-            <AdvancedStats movies={movies} userRatings={userRatings} watchlist={watchlist} tier={tier}/>
+              </>
+            )}
           </div>
-        </aside>
+        ) : (
+          /* Regular grid */
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
+            {loading&&!search
+              ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>)
+              : filtered.length===0
+                ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"60px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Tap ♡ to save titles!":"No results found."}</div>
+                : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)
+            }
+          </div>
+        )}
+
+        <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
+
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+
+        {/* Spacer so content scrolls fully above bottom nav + tagline */}
+        <div style={{height:160}} />
+
       </div>
 
       {/* Modals */}
-      {showAuth    && <AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile && user && <ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={handleSignOut} onUpgrade={()=>{setShowProfile(false);setShowUpgrade(true);}} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={setSelectedMovie}/>}
-      {showUpgrade && <UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>{setTier("premium");showToast("Welcome to Premium! ✦");setShowUpgrade(false);}}/>}
-      {showSetup   && <SetupModal userSubs={userSubs} onSave={handleSaveSubs} onClose={()=>setShowSetup(false)} isFirst={userSubs.length===0}/>}
-      {showMood    && <MoodSearchModal onClose={()=>setShowMood(false)} user={user} tier={tier} userSubs={userSubs} onUpgrade={()=>{setShowMood(false);setShowUpgrade(true);}} showToast={showToast} onSelectMovie={setSelectedMovie}/>}
-      {showLeaving && <LeavingSoonModal onClose={()=>setShowLeaving(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowLeaving(false);setShowUpgrade(true);}}/>}
-      {showHistory && <WatchHistoryModal onClose={()=>setShowHistory(false)} user={user} tier={tier} onUpgrade={()=>{setShowHistory(false);setShowUpgrade(true);}}/>}
-      {showCostCalc && <CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>{setShowCostCalc(false);setShowUpgrade(true);}}/>}
-      {showNewReleases && <NewReleasesModal onClose={()=>setShowNewReleases(false)} userSubs={userSubs} onSelect={setSelectedMovie}/>}
-      {showPersonalized && <PersonalizedRecsModal onClose={()=>setShowPersonalized(false)} user={user} userRatings={userRatings} watchlist={watchlist} userSubs={userSubs} tier={tier} onUpgrade={()=>{setShowPersonalized(false);setShowUpgrade(true);}} onSelectMovie={setSelectedMovie} showToast={showToast}/>}
-      {selectedMovie && <MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} showToast={showToast} onSelectSimilar={setSelectedMovie}/>}
-    </div>
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
+    </>
+  );
+
+  // ─── TABLET LAYOUT ───────────────────────────────────────────────────────────
+  if (device === "tablet") return (
+    <>
+      <GlobalStyles />
+      <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:72}}>
+        {/* Tablet Header */}
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)",paddingTop:"env(safe-area-inset-top)"}}>
+          <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
+            <div style={{flex:1,position:"relative",maxWidth:400}}>
+              <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
+                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.12)"}}
+                onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.3)";}}
+                onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.12)";}}
+              />
+            </div>
+            <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
+              {tier==="premium"
+                ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
+                :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.35)",cursor:"pointer"}}>Upgrade ✦</button>
+              }
+              {!user
+                ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
+                :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
+              }
+            </div>
+          </div>
+          {/* Service chips only - no category tabs since bottom nav handles navigation */}
+          <div style={{overflowX:"auto",padding:"0 20px 10px",display:"flex",gap:6,scrollbarWidth:"none"}}>
+            <button onClick={()=>setFilterPlat(null)} style={{background:!filterPlat?"var(--gold)":"rgba(255,255,255,.05)",border:`1px solid ${!filterPlat?"var(--gold)":"var(--border)"}`,borderRadius:99,color:!filterPlat?"#000":"var(--muted)",padding:"5px 16px",fontSize:12,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"}}>All</button>
+            {SERVICES.map(s=>{const active=filterPlat===s.id;return(
+              <button key={s.id} onClick={()=>setFilterPlat(active?null:s.id)} style={{background:active?`${s.color}30`:"rgba(255,255,255,.04)",border:`1px solid ${active?s.color:"rgba(255,255,255,.08)"}`,borderRadius:99,color:active?"#fff":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
+                <span style={{background:active?s.color:"rgba(255,255,255,.1)",borderRadius:4,width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:800,color:"#fff"}}>{s.logo}</span>{s.name}
+              </button>
+            );})}
+          </div>
+        </header>
+
+        {/* Tablet Hero with Trailer */}
+        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
+
+        {/* 🎭 AI BRAND BANNER — tablet, above hero */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{
+            margin:"12px 20px 0",
+            borderRadius:24,
+            overflow:"hidden",
+            position:"relative",
+            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
+            border:"1px solid rgba(124,58,237,.35)",
+            boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.07)",
+            padding:"22px 106px",
+          }}>
+            {/* glow blobs */}
+            <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
+            {/* Left glowing logo — absolutely centered vertically */}
+            <img src="/logo-clean.png" alt="" style={{
+              position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
+              height:72, width:"auto", objectFit:"contain",
+              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+            }}/>
+            {/* Center content */}
+            <div style={{textAlign:"center"}}>
+              <div style={{
+                fontFamily:"var(--font-head)", fontWeight:800,
+                fontSize:22, letterSpacing:"-.02em", marginBottom:12, lineHeight:1.2,
+                background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                backgroundSize:"200% auto",
+                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                animation:"gradientShift 3s linear infinite",
+              }}>Your AI Streaming Assistant</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"nowrap"}}>
+                {[
+                  {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                  {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                  {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                ].map((item,i)=>(
+                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{
+                      background:item.bg, borderRadius:99,
+                      padding:"8px 16px",
+                      fontFamily:"var(--font-head)", fontWeight:900,
+                      fontSize:12, letterSpacing:2, color:"#000",
+                      boxShadow:`0 0 16px ${item.glow}, 0 0 32px ${item.glow}55`,
+                      whiteSpace:"nowrap",
+                    }}>{item.word}</div>
+                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:14,fontWeight:700}}>—</span>}
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>setShowMoodSearch(true)}
+                style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5}}>
+                🎭 Try Mood Search — describe any vibe
+              </button>
+            </div>
+            {/* Right glowing logo — absolutely centered vertically */}
+            <img src="/logo-clean.png" alt="" style={{
+              position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
+              height:72, width:"auto", objectFit:"contain",
+              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
+            }}/>
+          </div>
+        )}
+
+        {/* Tablet Hero with Trailer */}
+        {view==="trending"&&!search.trim()&&heroMovie&&(
+          <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
+        )}
+
+        {/* Tablet Grid */}
+        <div style={{padding:"20px 20px 120px"}}>
+          {/* Tablet Premium Tools */}
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+              {[
+                {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
+                {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these titles",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+                {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
+                {icon:"💰",label:"Cost Calculator",sub:"See your streaming spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+              ].map(item=>(
+                <button key={item.label} onClick={item.onClick}
+                  style={{background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",width:"100%"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background=`${item.color}12`;e.currentTarget.style.borderColor=item.color;}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.04)";e.currentTarget.style.borderColor=`${item.color}44`;}}>
+                  <span style={{fontSize:28}}>{item.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)",textAlign:"center"}}>
+                    {item.label}
+                    {tier!=="premium"&&<span style={{marginLeft:5,background:"var(--gold)",color:"#000",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:99}}>PRO</span>}
+                  </div>
+                  <div style={{fontSize:11,color:"var(--muted)",textAlign:"center"}}>{item.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+          {view==="trending"&&!search.trim() ? (
+            <div>
+              {[{title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+                <div key={row.key} style={{marginBottom:32}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+                    <span style={{fontSize:18}}>{row.icon}</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : view==="sports" ? (
+            /* ── DEDICATED SPORTS HUB — tablet ── */
+            <div>
+              {!search.trim() ? (
+                <>
+                  <SportsTabHeader onSearch={handleSportSearch}/>
+                  <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                  <SportsStreamingGuide onSearch={handleSportSearch}/>
+                </>
+              ) : (
+                <>
+                  <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
+                  {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:16}}>
+                {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
+                {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
+              </div>
+              {loading&&!search
+                ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
+                :filtered.length===0
+                  ?<div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty!":"No results found."}</div>
+                  :<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+                    {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                  </div>
+              }
+            </>
+          )}
+        </div>
+
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+
+        {/* Spacer so content scrolls above bottom nav */}
+        <div style={{height:100}} />
+
+        {/* Tablet Bottom Nav */}
+        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
+          {[
+            {id:"trending",icon:"🔥",label:"Trending",color:"#F5C518",anim:"flameDance"},
+            {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
+            {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
+            {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
+            {id:"sports",  icon:"🏆",label:"Sports Hub",color:"#10B981",anim:"trophyBounce", special:true},
+            {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F5C518",anim:null},
+          ].map(t=>{
+            const active=view===t.id;
+            return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
+              style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",cursor:"pointer"}}>
+              {t.special ? (
+                <div style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>
+                  {!active && <div style={{position:"absolute",inset:-4,borderRadius:"50%",animation:"sportsTabPulse 2s ease-in-out infinite",pointerEvents:"none"}}/>}
+                  <span style={{fontSize:22,lineHeight:1,display:"inline-block",animation:`trophyBounce 2s ease-in-out infinite, sportsGlow ${active?"1s":"2s"} ease-in-out infinite`,filter:active?`drop-shadow(0 0 12px #10B981) drop-shadow(0 0 24px rgba(245,197,24,.5))`:`drop-shadow(0 0 6px rgba(16,185,129,.6))`}}>🏆</span>
+                  <div style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s ease-in-out infinite",boxShadow:"0 0 6px #ef4444"}}/>
+                </div>
+              ) : (
+                <span style={{fontSize:22,lineHeight:1,filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",display:"inline-block",animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
+              )}
+              <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)",color:t.special?(active?"#10B981":"rgba(16,185,129,.8)"):(active?t.color:"rgba(240,240,250,.35)")}}>{t.label}</span>
+              {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:36,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
+            </button>;
+          })}
+          <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:"rgba(240,240,250,.35)",cursor:"pointer"}}>
+            <span style={{fontSize:22}}>👤</span>
+            <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Profile</span>
+          </button>
+        </div>
+      </div>
+
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
+    </>
+  );
+
+  // ─── DESKTOP LAYOUT ──────────────────────────────────────────────────────────
+  return (
+    <>
+      <GlobalStyles />
+      <div style={{minHeight:"100vh",background:"var(--bg)"}}>
+        {/* Header */}
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
+          <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
+            {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
+              <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
+                style={{background:view===t.id?`${t.color}15`:"none",border:"none",color:view===t.id?t.color:"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,transition:"all .2s",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap",boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",cursor:"pointer"}}>
+                <span style={{display:"inline-block",position:"relative",
+                    animation:t.special?`trophyBounce 2s ease-in-out infinite, sportsGlow ${view===t.id?"1s":"2.5s"} ease-in-out infinite`:view===t.id&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>
+                  {t.icon}
+                  {t.special&&<span style={{position:"absolute",top:-2,right:-3,width:6,height:6,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",boxShadow:"0 0 5px #ef4444"}}/>}
+                </span>
+                {t.label}
+              </button>
+            ))}
+          </nav>
+          {/* Search bar */}
+          <div style={{flex:1,minWidth:160,maxWidth:320,position:"relative",marginLeft:8}}>
+            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15,zIndex:1}}>🔍</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
+              style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.5)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:13,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.15)"}}
+              onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.35)";}}
+              onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.5)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.15)";}}
+            />
+          </div>
+          {/* Right buttons */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0}}>
+            {tier==="premium"
+              ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ PREMIUM</span>
+              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
+            }
+            {!user
+              ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
+              :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                width:36,height:36,borderRadius:"50%",
+                background:"var(--purple)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                color:"#fff",flexShrink:0,cursor:"pointer",
+                overflow:"hidden",padding:0,
+                transition:"all .3s",
+              }}>
+                {user && profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                }
+              </button>
+            }
+          </div>
+        </header>
+
+        {/* 🎭 AI BRAND BANNER — full width, above all three columns */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{
+            margin:"0",
+            padding:"0 24px 0",
+            maxWidth:1440,
+            marginLeft:"auto",
+            marginRight:"auto",
+          }}>
+            {!user && <WelcomeBanner />}
+            <div style={{
+              borderRadius:24,
+              overflow:"hidden",
+              position:"relative",
+              background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
+              border:"1px solid rgba(124,58,237,.4)",
+              boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.08)",
+              padding:"24px 32px",
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              marginBottom:20,
+            }}>
+              {/* glow blobs */}
+              <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"rgba(124,58,237,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
+              <div style={{position:"absolute",bottom:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
+              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:100,background:"rgba(6,182,212,.07)",filter:"blur(60px)",pointerEvents:"none"}}/>
+              {/* Left glowing logo */}
+              <img src="/logo-clean.png" alt="" style={{
+                height:90, width:"auto", objectFit:"contain", flexShrink:0,
+                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
+              }}/>
+              {/* Center content — absolutely centered in the banner */}
+              <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",textAlign:"center",width:"60%",pointerEvents:"none"}}>
+                <div style={{
+                  fontFamily:"var(--font-head)", fontWeight:800,
+                  fontSize:30, letterSpacing:"-.02em", marginBottom:14,
+                  background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                  backgroundSize:"200% auto",
+                  WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+                  animation:"gradientShift 3s linear infinite",
+                  whiteSpace:"nowrap",
+                }}>Your AI Streaming Assistant</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12,pointerEvents:"all"}}>
+                  {[
+                    {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                    {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
+                    {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                  ].map((item,i)=>(
+                    <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{
+                        background:item.bg, borderRadius:99,
+                        padding:"10px 26px",
+                        fontFamily:"var(--font-head)", fontWeight:900,
+                        fontSize:14, letterSpacing:3, color:"#000",
+                        boxShadow:`0 0 20px ${item.glow}, 0 0 40px ${item.glow}55`,
+                        whiteSpace:"nowrap",
+                      }}>{item.word}</div>
+                      {i<2 && <span style={{color:"rgba(255,255,255,.3)",fontSize:20,fontWeight:700}}>—</span>}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={()=>setShowMoodSearch(true)}
+                  style={{
+                    background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",
+                    borderRadius:99,color:"#c4b5fd",padding:"7px 20px",
+                    fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",
+                    cursor:"pointer",letterSpacing:.5,pointerEvents:"all",
+                    transition:"all .2s",whiteSpace:"nowrap",
+                  }}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.4)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
+                  🎭 Try Mood Search — describe any vibe, AI finds the match
+                </button>
+              </div>
+              {/* Right glowing logo */}
+              <img src="/logo-clean.png" alt="" style={{
+                height:90, width:"auto", objectFit:"contain", flexShrink:0,
+                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
+              }}/>
+            </div>
+          </div>
+        )}
+
+        <div style={{display:"flex",padding:`${(view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
+          {/* Left Sidebar */}
+          <aside style={{width:168,flexShrink:0}}>
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>MY SERVICES</div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {subscribed.map(s=>(
+                  <button key={s.id} onClick={()=>setFilterPlat(filterPlat===s.id?null:s.id)} style={{background:filterPlat===s.id?`${s.color}22`:"rgba(255,255,255,.04)",border:filterPlat===s.id?`1px solid ${s.color}66`:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"8px 12px",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:8,transition:"all .2s"}}>
+                    <span style={{background:s.color,borderRadius:5,width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:"#fff",flexShrink:0}}>{s.logo}</span>{s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>AVAILABLE</div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {unsubscribed.map(s=>(
+                  <button key={s.id} onClick={()=>setFilterPlat(filterPlat===s.id?null:s.id)} style={{background:"rgba(255,255,255,.02)",border:`1px solid ${filterPlat===s.id?`${s.color}44`:"rgba(255,255,255,.05)"}`,borderRadius:10,color:"var(--muted)",padding:"6px 12px",fontSize:11,display:"flex",alignItems:"center",gap:8,opacity:.65}}>
+                    <span style={{background:"rgba(255,255,255,.1)",borderRadius:5,width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,flexShrink:0}}>{s.logo}</span>{s.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filterPlat&&<button onClick={()=>setFilterPlat(null)} style={{marginTop:12,width:"100%",background:"none",border:"1px solid var(--border)",borderRadius:9,color:"var(--muted)",padding:"6px 0",fontSize:12}}>Clear filter ✕</button>}
+          </aside>
+
+          {/* Main */}
+          <main style={{flex:1,minWidth:0}}>
+            {/* Homepage hero + rows */}
+            {view==="trending"&&!search.trim() ? (
+              <div>
+                <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
+                  <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
+                </div>
+                <div style={{paddingTop:24}}>
+                  <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
+                  <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
+                  <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
+                  <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                </div>
+              </div>
+            ) : view==="sports" ? (
+              /* ── DEDICATED SPORTS HUB — desktop ── */
+              <div>
+                {!search.trim() ? (
+                  <>
+                    <SportsTabHeader onSearch={handleSportSearch}/>
+                    <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                    <SportsStreamingGuide onSearch={handleSportSearch}/>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
+                    {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
+                      {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>
+                    {search.trim()
+                      ? searching?"Searching…":`${searchResults.length} results for "${search}"`
+                      : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label
+                    }
+                    {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
+                  </div>
+                  {!user&&<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"8px 18px",fontWeight:700,fontSize:13}}>👤 Sign in to save watchlist</button>}
+                </div>
+                {loading&&!search
+                  ? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
+                  : filtered.length===0
+                    ? <div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty. Click ♡ to save titles!":"No results found."}</div>
+                    : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
+                        {filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
+                      </div>
+                }
+              </>
+            )}
+          </main>
+
+          {/* Right Sidebar */}
+          <aside style={{width:220,flexShrink:0}}>
+            {!user&&(
+              <div style={{background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.25)",borderRadius:"var(--radius)",padding:16,marginBottom:16,textAlign:"center"}}>
+                <div style={{fontSize:24,marginBottom:8}}>👤</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:6}}>Create an Account</div>
+                <div style={{fontSize:12,color:"var(--muted)",marginBottom:12,lineHeight:1.5}}>Save your watchlist, write reviews and sync across devices.</div>
+                <button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{width:"100%",background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 0",fontWeight:700,fontSize:13,cursor:"pointer"}}>Sign Up Free</button>
+              </div>
+            )}
+
+            {/* Premium Tools */}
+            <div style={{marginTop:16}}>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                {[
+                  {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
+                  {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
+                  {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
+                  {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+                ].map(item=>(
+                  <button key={item.label} onClick={item.onClick}
+                    style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:10,padding:"9px 10px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",textAlign:"left",width:"100%"}}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=item.color;e.currentTarget.style.background=`${item.color}10`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="rgba(255,255,255,.03)";}}>
+                    <span style={{fontSize:18}}>{item.icon}</span>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:700,color:"var(--text)",display:"flex",alignItems:"center",gap:5}}>{item.label}{tier!=="premium"&&<span style={{background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99}}>PRO</span>}</div>
+                      <div style={{fontSize:10,color:"var(--muted)"}}>{item.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </aside>
+        </div>
+
+        {/* Footer */}
+        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,197,24,.2)"}}>
+        {/* Advanced Stats Section */}
+        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
+
+          {/* Footer hero tagline */}
+          <div style={{
+            padding:"48px 40px 32px",
+            background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)",
+            textAlign:"center",position:"relative",
+          }}>
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:800,
+              fontSize:"clamp(24px,3vw,42px)",
+              letterSpacing:"-.01em", marginBottom:10,
+              background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#FF6B9D,#F5C518)",
+              backgroundSize:"300% auto",
+              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+              animation:"gradientShift 4s linear infinite",
+            }}>Your AI Streaming Assistant</div>
+            <div style={{
+              fontSize:12, letterSpacing:4, marginBottom:36,
+              color:"rgba(240,240,250,.55)", display:"inline-block",
+              background:"rgba(255,255,255,.05)",
+              padding:"6px 20px", borderRadius:99,
+              border:"1px solid rgba(255,255,255,.1)",
+            }}>THE STREAMHUB</div>
+
+            {/* Word pills */}
+            <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
+              {[
+                {word:"SEARCH", color:"#000",    bg:"#F5C518",  shadow:"rgba(245,197,24,.6)"},
+                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
+                {word:"FIND",   color:"#fff",    bg:"#06B6D4",  shadow:"rgba(6,182,212,.5)"},
+                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
+                {word:"ENJOY",  color:"#fff",    bg:"#FF6B9D",  shadow:"rgba(255,107,157,.5)"},
+              ].map((p,i)=>(
+                <span key={i} style={{
+                  fontFamily:"var(--font-head)", fontWeight:800,
+                  fontSize: p.word==="·" ? 28 : 20,
+                  color:p.color, letterSpacing: p.word==="·" ? 0 : 4,
+                  background:p.bg, borderRadius:99,
+                  padding: p.word==="·" ? "0 8px" : "10px 32px",
+                  display:"inline-flex", alignItems:"center",
+                  boxShadow: p.shadow!=="none" ? `0 0 28px ${p.shadow}, 0 4px 12px rgba(0,0,0,.4)` : "none",
+                  animation: p.word!=="·" ? `badgePop 3s ease-in-out infinite` : "none",
+                  animationDelay:`${i*0.4}s`,
+                }}>{p.word}</span>
+              ))}
+            </div>
+
+            {/* Bottom bar */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:14}}>
+                <img src="/logo-clean.png" alt="The StreamHub" style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
+                <div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
+                    <span style={{color:"#F5C518"}}>The Stream</span>
+                    <span style={{color:"#7C3AED"}}>Hub</span>
+                  </div>
+                  <div style={{fontSize:10,color:"var(--gold)",letterSpacing:1,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
+                </div>
+              </div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
+              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                {["Netflix","Disney+","Max","Hulu","Crunchyroll","ESPN+","DAZN"].map(n=>(
+                  <span key={n} style={{fontSize:10,color:"rgba(240,240,250,.2)",letterSpacing:.5}}>{n}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Left side tagline banner removed */}
+        {/* Right side tagline banner removed */}
+      </div>
+
+      {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
+      {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
+      {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
+      {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
+      {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
+      {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      <Analytics />
+    </>
   );
 }
+       
