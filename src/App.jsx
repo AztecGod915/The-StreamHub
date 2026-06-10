@@ -352,6 +352,13 @@ function downloadICS(evt) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
+function openLink(url) {
+  const a = document.createElement("a");
+  a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+  a.style.display = "none";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 // ─── GAME DETAIL MODAL ───────────────────────────────────────────────────────
 function GameDetailModal({ evt, onClose }) {
   const [showReminder, setShowReminder] = useState(false);
@@ -472,16 +479,12 @@ function GameDetailModal({ evt, onClose }) {
               {showReminder && (
                 <div className="fadeUp" style={{marginTop:8,display:"flex",gap:8,flexWrap:"wrap"}}>
                   {[
-                    { label:"Google Calendar", icon:"📅", href:reminderLinks.google,  color:"#4285F4", newTab:true  },
-                    { label:"Apple Calendar",  icon:"🍎", href:null,                  color:"#555",    ics:true     },
-                    { label:"Outlook",         icon:"📧", href:reminderLinks.outlook, color:"#0078D4", newTab:true  },
+                    { label:"Google Calendar", icon:"📅", color:"#4285F4", action:()=>openLink(reminderLinks.google)  },
+                    { label:"Apple Calendar",  icon:"🍎", color:"#555555", action:()=>downloadICS(evt)                },
+                    { label:"Outlook",         icon:"📧", color:"#0078D4", action:()=>openLink(reminderLinks.outlook) },
                   ].map(cal=>(
                     <button key={cal.label}
-                      onClick={()=>{
-                        if (cal.ics) { downloadICS(evt); }
-                        else window.open(cal.href,"_blank","noopener");
-                        setTimeout(()=>setShowReminder(false),300);
-                      }}
+                      onClick={()=>{ cal.action(); setTimeout(()=>setShowReminder(false),300); }}
                       style={{
                         flex:1, minWidth:90, textAlign:"center",
                         background:`${cal.color}15`, border:`1px solid ${cal.color}40`,
@@ -1066,12 +1069,11 @@ function SportsStreamingGuide({ onSearch }) {
 }
 
 const CATEGORY_TABS = [
-  { id:"trending", label:"Trending",  icon:"🔥", color:"#F5C518", anim:"flameDance" },
-  { id:"movies",   label:"Movies",    icon:"🎬", color:"var(--cyan)", anim:null },
-  { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA", anim:"tvFlicker" },
+  { id:"trending", label:"Trending",  icon:"🔥", color:"#F5C518",  anim:"flameDance" },
+  { id:"movies",   label:"Movies",    icon:"🎬", color:"#06B6D4",  anim:null },
+  { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
-  { id:"sports",   label:"Sports Hub",icon:"🏆", color:"var(--sports)", anim:"trophyBounce", special:true },
-  { id:"search",   label:"Search",    icon:"🔍", color:"var(--gold)", anim:null },
+  { id:"watchlist",label:"Watchlist", icon:"❤️", color:"#ef4444",  anim:null },
 ];
 
 const GR = [
@@ -2097,41 +2099,44 @@ function useDevice() {
 }
 function useIsMobile() { return useDevice() === "mobile"; }
 
-function MobileBottomNav({ view, setView, watchlist, onProfile }) {
+function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"trending", icon:"🔥", label:"Trending",  color:"#F5C518", anim:"flameDance"},
-    {id:"movies",   icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
-    {id:"tv",       icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
-    {id:"anime",    icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
-    {id:"sports",   icon:"🏆", label:"Sports",    color:"#10B981", anim:"trophyBounce"},
-    {id:"watchlist",icon:"♥",  label:"Watchlist", color:"#F5C518", anim:null},
+    {id:"trending",  icon:"🔥", label:"Trending",  color:"#F5C518", anim:"flameDance"},
+    {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
+    {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
+    {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
+    {id:"watchlist", icon:"❤️", label:"Watchlist", color:"#ef4444", anim:null},
   ];
   return (
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.12)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
         const active = view===t.id;
         const count = t.id==="watchlist"&&watchlist.length>0 ? watchlist.length : 0;
         return (
           <button key={t.id} onClick={()=>setView(t.id)}
-            style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",transition:"color .2s",cursor:"pointer"}}>
+            style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?t.color:"rgba(240,240,250,.38)",position:"relative",transition:"color .2s",cursor:"pointer"}}>
+            {/* Active background pill */}
+            {active && <div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:40,height:32,borderRadius:10,background:`${t.color}14`,pointerEvents:"none"}}/>}
             <span style={{
-              fontSize:20, lineHeight:1,
+              fontSize:21, lineHeight:1,
               filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",
-              transition:"filter .2s",
-              display:"inline-block",
+              transition:"filter .2s", display:"inline-block",
               animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none",
+              position:"relative", zIndex:1,
             }}>{t.icon}</span>
-            <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3}}>{t.label}</span>
-            {count>0&&<span style={{position:"absolute",top:6,left:"50%",marginLeft:6,background:"var(--gold)",color:"#000",borderRadius:99,minWidth:16,height:16,fontSize:9,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px"}}>{count}</span>}
-            {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:32,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
+            <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3,position:"relative",zIndex:1}}>{t.label}</span>
+            {count>0&&<span style={{position:"absolute",top:4,left:"50%",marginLeft:7,background:"#ef4444",color:"#fff",borderRadius:99,minWidth:16,height:16,fontSize:8,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px",boxShadow:"0 0 6px rgba(239,68,68,.6)"}}>{count>99?"99+":count}</span>}
+            {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
           </button>
         );
       })}
       {/* Profile button */}
       <button onClick={onProfile}
-        style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:"rgba(240,240,250,.35)",cursor:"pointer"}}>
-        <span style={{fontSize:20,lineHeight:1}}>👤</span>
-        <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3}}>Profile</span>
+        style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:"rgba(240,240,250,.38)",cursor:"pointer",position:"relative"}}>
+        {tier==="premium" && <div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:40,height:32,borderRadius:10,background:"rgba(245,197,24,.08)",pointerEvents:"none"}}/>}
+        <span style={{fontSize:21,lineHeight:1,position:"relative",zIndex:1}}>👤</span>
+        <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3,position:"relative",zIndex:1}}>Profile</span>
+        {tier==="premium" && <div style={{position:"absolute",top:3,right:"calc(50% - 18px)",width:7,height:7,borderRadius:"50%",background:"var(--gold)",boxShadow:"0 0 5px var(--gold)"}}/>}
       </button>
     </div>
   );
@@ -4364,7 +4369,7 @@ export default function StreamHub() {
           </div>
         )}
 
-        <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
+        <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
         <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
@@ -4524,6 +4529,31 @@ export default function StreamHub() {
         <div style={{padding:"20px 20px 120px"}}>
           {/* Tablet Premium Tools */}
           <div style={{marginBottom:24}}>
+            {/* Sports Hub Button */}
+            <button onClick={()=>{setView("sports");setSearch("");}}
+              style={{
+                width:"100%", marginBottom:14,
+                background:"linear-gradient(135deg,rgba(7,15,7,.95),rgba(10,30,15,.95))",
+                border:"1.5px solid rgba(16,185,129,.4)", borderRadius:16,
+                padding:"14px 18px", display:"flex", alignItems:"center",
+                justifyContent:"space-between", cursor:"pointer",
+                boxShadow:"0 4px 20px rgba(16,185,129,.12)",
+              }}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{position:"relative",width:44,height:44,borderRadius:12,background:"rgba(16,185,129,.15)",border:"1px solid rgba(16,185,129,.3)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <span style={{fontSize:22,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
+                  <div style={{position:"absolute",top:-3,right:-3,width:10,height:10,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",border:"1.5px solid var(--bg)",boxShadow:"0 0 6px #ef4444"}}/>
+                </div>
+                <div style={{textAlign:"left"}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:"#fff",marginBottom:2}}>Sports Hub</div>
+                  <div style={{fontSize:12,color:"rgba(16,185,129,.8)"}}>Live scores · Schedules · World Cup 🔴</div>
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.35)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:800,color:"#ef4444"}}>LIVE</div>
+                <span style={{color:"rgba(16,185,129,.6)",fontSize:18}}>›</span>
+              </div>
+            </button>
             <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
@@ -4610,7 +4640,6 @@ export default function StreamHub() {
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
-            {id:"sports",  icon:"🏆",label:"Sports Hub",color:"#10B981",anim:"trophyBounce", special:true},
             {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F5C518",anim:null},
           ].map(t=>{
             const active=view===t.id;
@@ -4893,6 +4922,31 @@ export default function StreamHub() {
 
             {/* Premium Tools */}
             <div style={{marginTop:16}}>
+              {/* Sports Hub Button */}
+              <button onClick={()=>{setView("sports");setSearch("");}}
+                style={{
+                  width:"100%", marginBottom:12,
+                  background:"linear-gradient(135deg,rgba(7,15,7,.95),rgba(10,30,15,.95))",
+                  border:"1.5px solid rgba(16,185,129,.4)", borderRadius:14,
+                  padding:"12px 14px", display:"flex", alignItems:"center",
+                  justifyContent:"space-between", cursor:"pointer",
+                  boxShadow:"0 4px 16px rgba(16,185,129,.1)",
+                  transition:"all .2s",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.7)";e.currentTarget.style.boxShadow="0 4px 20px rgba(16,185,129,.25)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.4)";e.currentTarget.style.boxShadow="0 4px 16px rgba(16,185,129,.1)";}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{position:"relative",width:36,height:36,borderRadius:10,background:"rgba(16,185,129,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <span style={{fontSize:18,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
+                    <div style={{position:"absolute",top:-2,right:-2,width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",border:"1.5px solid var(--bg)"}}/>
+                  </div>
+                  <div>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"#fff"}}>Sports Hub</div>
+                    <div style={{fontSize:10,color:"rgba(16,185,129,.7)"}}>Live · Scores · Schedules</div>
+                  </div>
+                </div>
+                <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.35)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:800,color:"#ef4444"}}>LIVE</div>
+              </button>
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:7}}>
                 {[
