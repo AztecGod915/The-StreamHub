@@ -2,6 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 
+// ─── VAPID KEY HELPER ─────────────────────────────────────────────────────────
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
 // ─── GOOGLE ANALYTICS EVENT TRACKER ──────────────────────────────────────────
 const track = (eventName, params = {}) => {
   try {
@@ -223,16 +231,92 @@ const WC_TEAMS = [
 ];
 
 // ─── FAVORITE TEAMS MODAL ────────────────────────────────────────────────────
+// ─── ALL-TEAMS LISTS ─────────────────────────────────────────────────────────
+const ALL_TEAMS = {
+  "NFL": ["Arizona Cardinals","Atlanta Falcons","Baltimore Ravens","Buffalo Bills","Carolina Panthers","Chicago Bears","Cincinnati Bengals","Cleveland Browns","Dallas Cowboys","Denver Broncos","Detroit Lions","Green Bay Packers","Houston Texans","Indianapolis Colts","Jacksonville Jaguars","Kansas City Chiefs","Las Vegas Raiders","Los Angeles Chargers","Los Angeles Rams","Miami Dolphins","Minnesota Vikings","New England Patriots","New Orleans Saints","New York Giants","New York Jets","Philadelphia Eagles","Pittsburgh Steelers","San Francisco 49ers","Seattle Seahawks","Tampa Bay Buccaneers","Tennessee Titans","Washington Commanders"],
+  "NBA": ["Atlanta Hawks","Boston Celtics","Brooklyn Nets","Charlotte Hornets","Chicago Bulls","Cleveland Cavaliers","Dallas Mavericks","Denver Nuggets","Detroit Pistons","Golden State Warriors","Houston Rockets","Indiana Pacers","Los Angeles Clippers","Los Angeles Lakers","Memphis Grizzlies","Miami Heat","Milwaukee Bucks","Minnesota Timberwolves","New Orleans Pelicans","New York Knicks","Oklahoma City Thunder","Orlando Magic","Philadelphia 76ers","Phoenix Suns","Portland Trail Blazers","Sacramento Kings","San Antonio Spurs","Toronto Raptors","Utah Jazz","Washington Wizards"],
+  "MLB": ["Arizona Diamondbacks","Atlanta Braves","Baltimore Orioles","Boston Red Sox","Chicago Cubs","Chicago White Sox","Cincinnati Reds","Cleveland Guardians","Colorado Rockies","Detroit Tigers","Houston Astros","Kansas City Royals","Los Angeles Angels","Los Angeles Dodgers","Miami Marlins","Milwaukee Brewers","Minnesota Twins","New York Mets","New York Yankees","Oakland Athletics","Philadelphia Phillies","Pittsburgh Pirates","San Diego Padres","San Francisco Giants","Seattle Mariners","St. Louis Cardinals","Tampa Bay Rays","Texas Rangers","Toronto Blue Jays","Washington Nationals"],
+  "NHL": ["Anaheim Ducks","Boston Bruins","Buffalo Sabres","Calgary Flames","Carolina Hurricanes","Chicago Blackhawks","Colorado Avalanche","Columbus Blue Jackets","Dallas Stars","Detroit Red Wings","Edmonton Oilers","Florida Panthers","Los Angeles Kings","Minnesota Wild","Montreal Canadiens","Nashville Predators","New Jersey Devils","New York Islanders","New York Rangers","Ottawa Senators","Philadelphia Flyers","Pittsburgh Penguins","San Jose Sharks","Seattle Kraken","St. Louis Blues","Tampa Bay Lightning","Toronto Maple Leafs","Utah Hockey Club","Vancouver Canucks","Vegas Golden Knights","Washington Capitals","Winnipeg Jets"],
+  "UFC": ["Ilia Topuria","Jon Jones","Islam Makhachev","Alex Pereira","Leon Edwards","Sean O'Malley","Dricus du Plessis","Merab Dvalishvili","Tom Aspinall","Shavkat Rakhmonov","Conor McGregor","Khamzat Chimaev","Charles Oliveira","Justin Gaethje","Max Holloway","Amanda Nunes","Zhang Weili","Valentina Shevchenko","Alexa Grasso","Julianna Peña"],
+  "WWE": ["Cody Rhodes","Roman Reigns","Seth Rollins","CM Punk","Drew McIntyre","Gunther","Sami Zayn","Kevin Owens","Rhea Ripley","Becky Lynch","Charlotte Flair","Bianca Belair","John Cena","Randy Orton","The Rock","Dominik Mysterio","Jey Uso","Damian Priest","Liv Morgan","Nia Jax"],
+  "MLS": ["Atlanta United","Austin FC","Charlotte FC","Chicago Fire","FC Cincinnati","Colorado Rapids","Columbus Crew","D.C. United","FC Dallas","Houston Dynamo","Inter Miami CF","LA Galaxy","LAFC","Minnesota United","CF Montréal","Nashville SC","New England Revolution","New York City FC","New York Red Bulls","Orlando City","Philadelphia Union","Portland Timbers","Real Salt Lake","San Jose Earthquakes","Seattle Sounders","Sporting Kansas City","Toronto FC","Vancouver Whitecaps"],
+};
+
+function getTeamsForSport(sportDisplay, events, espnTeams) {
+  if (!sportDisplay) return [];
+  for (const [key, teams] of Object.entries(ALL_TEAMS)) {
+    if (sportDisplay.toUpperCase().includes(key)) return teams.map(n=>({name:n,flag:"🏅"}));
+  }
+  if (espnTeams.length > 0) return espnTeams;
+  if (sportDisplay.includes("World Cup")||sportDisplay.includes("FIFA")) return WC_TEAMS;
+  return [...new Set([...events.map(e=>e.home?.name),...events.map(e=>e.away?.name)])].filter(Boolean).sort().map(n=>({name:n,flag:"🏅"}));
+}
+
 function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) {
   const [search, setSearch] = useState("");
   const [espnTeams, setEspnTeams] = useState([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
-  const isWC = sport?.toLowerCase().includes("world cup") || sport?.toLowerCase().includes("fifa");
-  const isSoccer = sport && (SOCCER_LEAGUES.some(l=>l.name===sport||l.id===sport) || isWC);
 
-  // Find league ID from sport display name
   const leagueEntry = SOCCER_LEAGUES.find(l=>l.name===sport);
   const leagueId = leagueEntry?.id;
+
+  useEffect(() => {
+    if (!leagueId) return;
+    setLoadingTeams(true);
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/teams?limit=100`)
+      .then(r=>r.json())
+      .then(data=>{
+        setEspnTeams((data.sports?.[0]?.leagues?.[0]?.teams||[]).map(t=>({name:t.team.displayName||t.team.name,flag:"⚽"})));
+        setLoadingTeams(false);
+      })
+      .catch(()=>setLoadingTeams(false));
+  }, [leagueId]);
+
+  const allTeams = getTeamsForSport(sport, events, espnTeams);
+  const teams = allTeams.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()));
+  const currentFav = favoriteTeams[sport||""];
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:600,maxHeight:"80vh",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.2)"}}>
+        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid var(--border)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>⭐ Pick Your Team</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} — {allTeams.length} teams available</div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search team or player..."
+            style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none",boxSizing:"border-box"}}/>
+          {currentFav && (
+            <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.25)",borderRadius:10,padding:"8px 12px"}}>
+              <span style={{fontSize:13,fontWeight:700}}>⭐ Following: <strong>{currentFav}</strong></span>
+              <button onClick={()=>{onToggle(sport,"_clear");onClose();}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Unfollow</button>
+            </div>
+          )}
+        </div>
+        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
+          {loadingTeams ? Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:56,borderRadius:10}}/>) :
+           teams.length===0 ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div> :
+           teams.map(t=>{
+            const isFav = currentFav===t.name;
+            return (
+              <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
+                style={{background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.03)",border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"10px 8px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)"}}
+                onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(245,197,24,.4)"}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}>
+                <span style={{fontSize:18,flexShrink:0}}>{t.flag||"🏅"}</span>
+                <span style={{fontSize:12,fontWeight:isFav?700:500,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis"}}>{t.name}</span>
+                {isFav && <span style={{marginLeft:"auto",color:"var(--gold)",fontSize:12,flexShrink:0}}>⭐</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
   // Fetch all teams from ESPN for soccer leagues
   useEffect(() => {
@@ -1259,7 +1343,7 @@ function AuthModal({ onClose, showToast }) {
 }
 
 // ─── PROFILE MODAL ────────────────────────────────────────────────────────────
-function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie }) {
+function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
@@ -1417,6 +1501,28 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               <button onClick={onEditSubs} style={{background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:12,color:"var(--text)",padding:"12px 16px",fontWeight:600,fontSize:14,textAlign:"left",cursor:"pointer"}}>⚙️ Manage Subscriptions</button>
               {tier!=="premium" && <button onClick={()=>{onUpgrade();onClose();}} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>}
+
+              {/* Notification opt-in */}
+              <div style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 16px",marginTop:4}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+                  <div>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:3}}>🔔 Game & Content Alerts</div>
+                    <div style={{fontSize:12,color:"var(--muted)"}}>
+                      {notifPermission==="granted"
+                        ? "✅ Notifications enabled — you'll get game alerts & weekly picks"
+                        : notifPermission==="denied"
+                          ? "❌ Blocked in browser settings — enable in site permissions"
+                          : "Get notified when your team plays & weekly streaming picks"}
+                    </div>
+                  </div>
+                  {notifPermission!=="granted" && notifPermission!=="denied" && (
+                    <button onClick={onRequestNotif}
+                      style={{background:"linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2))",border:"1px solid rgba(16,185,129,.4)",borderRadius:10,color:"var(--sports)",padding:"8px 14px",fontWeight:800,fontSize:12,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"var(--font-head)"}}>
+                      Enable
+                    </button>
+                  )}
+                </div>
+              </div>
               <button onClick={onSignOut} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,color:"var(--danger)",padding:"12px 0",fontWeight:600,fontSize:14,cursor:"pointer"}}>Sign Out</button>
             </div>
           )}
@@ -3780,6 +3886,35 @@ export default function StreamHub() {
   }, []);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [tier, setTier] = useState("free");
+  const [notifPermission, setNotifPermission] = useState(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
+
+  // Register push subscription and store in Supabase
+  const registerPush = async (userId) => {
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      if (!vapidKey) return;
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+      await supabase.from("push_subscriptions").upsert({
+        user_id: userId,
+        subscription: JSON.stringify(sub),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } catch(e) { console.warn("Push registration failed:", e); }
+  };
+
+  const requestNotifications = async () => {
+    if (!user) { setShowAuth(true); return; }
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+    if (perm === "granted") { await registerPush(user.id); showToast("🔔 Notifications enabled!"); }
+  };
   const [toast, setToast] = useState(null);
   const [filterPlat, setFilterPlat] = useState(null);
   const [showLeavingSoon, setShowLeavingSoon] = useState(false);
@@ -4382,7 +4517,7 @@ export default function StreamHub() {
       {/* Modals */}
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -4667,7 +4802,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -5051,7 +5186,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
