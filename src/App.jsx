@@ -231,6 +231,24 @@ const WC_TEAMS = [
 ];
 
 // ─── FAVORITE TEAMS MODAL ────────────────────────────────────────────────────
+// ─── TEAM LOGO DATA ───────────────────────────────────────────────────────────
+const TEAM_LOGOS = {
+  // NBA
+  "Atlanta Hawks":{abbr:"atl",l:"nba"},"Boston Celtics":{abbr:"bos",l:"nba"},"Brooklyn Nets":{abbr:"bkn",l:"nba"},"Charlotte Hornets":{abbr:"cha",l:"nba"},"Chicago Bulls":{abbr:"chi",l:"nba"},"Cleveland Cavaliers":{abbr:"cle",l:"nba"},"Dallas Mavericks":{abbr:"dal",l:"nba"},"Denver Nuggets":{abbr:"den",l:"nba"},"Detroit Pistons":{abbr:"det",l:"nba"},"Golden State Warriors":{abbr:"gs",l:"nba"},"Houston Rockets":{abbr:"hou",l:"nba"},"Indiana Pacers":{abbr:"ind",l:"nba"},"Los Angeles Clippers":{abbr:"lac",l:"nba"},"Los Angeles Lakers":{abbr:"lal",l:"nba"},"Memphis Grizzlies":{abbr:"mem",l:"nba"},"Miami Heat":{abbr:"mia",l:"nba"},"Milwaukee Bucks":{abbr:"mil",l:"nba"},"Minnesota Timberwolves":{abbr:"min",l:"nba"},"New Orleans Pelicans":{abbr:"no",l:"nba"},"New York Knicks":{abbr:"ny",l:"nba"},"Oklahoma City Thunder":{abbr:"okc",l:"nba"},"Orlando Magic":{abbr:"orl",l:"nba"},"Philadelphia 76ers":{abbr:"phi",l:"nba"},"Phoenix Suns":{abbr:"phx",l:"nba"},"Portland Trail Blazers":{abbr:"por",l:"nba"},"Sacramento Kings":{abbr:"sac",l:"nba"},"San Antonio Spurs":{abbr:"sa",l:"nba"},"Toronto Raptors":{abbr:"tor",l:"nba"},"Utah Jazz":{abbr:"utah",l:"nba"},"Washington Wizards":{abbr:"wsh",l:"nba"},
+  // NFL
+  "Arizona Cardinals":{abbr:"ari",l:"nfl"},"Atlanta Falcons":{abbr:"atl",l:"nfl"},"Baltimore Ravens":{abbr:"bal",l:"nfl"},"Buffalo Bills":{abbr:"buf",l:"nfl"},"Carolina Panthers":{abbr:"car",l:"nfl"},"Chicago Bears":{abbr:"chi",l:"nfl"},"Cincinnati Bengals":{abbr:"cin",l:"nfl"},"Cleveland Browns":{abbr:"cle",l:"nfl"},"Dallas Cowboys":{abbr:"dal",l:"nfl"},"Denver Broncos":{abbr:"den",l:"nfl"},"Detroit Lions":{abbr:"det",l:"nfl"},"Green Bay Packers":{abbr:"gb",l:"nfl"},"Houston Texans":{abbr:"hou",l:"nfl"},"Indianapolis Colts":{abbr:"ind",l:"nfl"},"Jacksonville Jaguars":{abbr:"jax",l:"nfl"},"Kansas City Chiefs":{abbr:"kc",l:"nfl"},"Las Vegas Raiders":{abbr:"lv",l:"nfl"},"Los Angeles Chargers":{abbr:"lac",l:"nfl"},"Los Angeles Rams":{abbr:"lar",l:"nfl"},"Miami Dolphins":{abbr:"mia",l:"nfl"},"Minnesota Vikings":{abbr:"min",l:"nfl"},"New England Patriots":{abbr:"ne",l:"nfl"},"New Orleans Saints":{abbr:"no",l:"nfl"},"New York Giants":{abbr:"nyg",l:"nfl"},"New York Jets":{abbr:"nyj",l:"nfl"},"Philadelphia Eagles":{abbr:"phi",l:"nfl"},"Pittsburgh Steelers":{abbr:"pit",l:"nfl"},"San Francisco 49ers":{abbr:"sf",l:"nfl"},"Seattle Seahawks":{abbr:"sea",l:"nfl"},"Tampa Bay Buccaneers":{abbr:"tb",l:"nfl"},"Tennessee Titans":{abbr:"ten",l:"nfl"},"Washington Commanders":{abbr:"wsh",l:"nfl"},
+  // MLB
+  "Arizona Diamondbacks":{abbr:"ari",l:"mlb"},"Atlanta Braves":{abbr:"atl",l:"mlb"},"Baltimore Orioles":{abbr:"bal",l:"mlb"},"Boston Red Sox":{abbr:"bos",l:"mlb"},"Chicago Cubs":{abbr:"chc",l:"mlb"},"Chicago White Sox":{abbr:"cws",l:"mlb"},"Cincinnati Reds":{abbr:"cin",l:"mlb"},"Cleveland Guardians":{abbr:"cle",l:"mlb"},"Colorado Rockies":{abbr:"col",l:"mlb"},"Detroit Tigers":{abbr:"det",l:"mlb"},"Houston Astros":{abbr:"hou",l:"mlb"},"Kansas City Royals":{abbr:"kc",l:"mlb"},"Los Angeles Angels":{abbr:"laa",l:"mlb"},"Los Angeles Dodgers":{abbr:"lad",l:"mlb"},"Miami Marlins":{abbr:"mia",l:"mlb"},"Milwaukee Brewers":{abbr:"mil",l:"mlb"},"Minnesota Twins":{abbr:"min",l:"mlb"},"New York Mets":{abbr:"nym",l:"mlb"},"New York Yankees":{abbr:"nyy",l:"mlb"},"Oakland Athletics":{abbr:"oak",l:"mlb"},"Philadelphia Phillies":{abbr:"phi",l:"mlb"},"Pittsburgh Pirates":{abbr:"pit",l:"mlb"},"San Diego Padres":{abbr:"sd",l:"mlb"},"San Francisco Giants":{abbr:"sf",l:"mlb"},"Seattle Mariners":{abbr:"sea",l:"mlb"},"St. Louis Cardinals":{abbr:"stl",l:"mlb"},"Tampa Bay Rays":{abbr:"tb",l:"mlb"},"Texas Rangers":{abbr:"tex",l:"mlb"},"Toronto Blue Jays":{abbr:"tor",l:"mlb"},"Washington Nationals":{abbr:"wsh",l:"mlb"},
+  // NHL
+  "Anaheim Ducks":{abbr:"ana",l:"nhl"},"Boston Bruins":{abbr:"bos",l:"nhl"},"Buffalo Sabres":{abbr:"buf",l:"nhl"},"Calgary Flames":{abbr:"cgy",l:"nhl"},"Carolina Hurricanes":{abbr:"car",l:"nhl"},"Chicago Blackhawks":{abbr:"chi",l:"nhl"},"Colorado Avalanche":{abbr:"col",l:"nhl"},"Columbus Blue Jackets":{abbr:"cbj",l:"nhl"},"Dallas Stars":{abbr:"dal",l:"nhl"},"Detroit Red Wings":{abbr:"det",l:"nhl"},"Edmonton Oilers":{abbr:"edm",l:"nhl"},"Florida Panthers":{abbr:"fla",l:"nhl"},"Los Angeles Kings":{abbr:"la",l:"nhl"},"Minnesota Wild":{abbr:"min",l:"nhl"},"Montreal Canadiens":{abbr:"mtl",l:"nhl"},"Nashville Predators":{abbr:"nsh",l:"nhl"},"New Jersey Devils":{abbr:"njd",l:"nhl"},"New York Islanders":{abbr:"nyi",l:"nhl"},"New York Rangers":{abbr:"nyr",l:"nhl"},"Ottawa Senators":{abbr:"ott",l:"nhl"},"Philadelphia Flyers":{abbr:"phi",l:"nhl"},"Pittsburgh Penguins":{abbr:"pit",l:"nhl"},"San Jose Sharks":{abbr:"sjs",l:"nhl"},"Seattle Kraken":{abbr:"sea",l:"nhl"},"St. Louis Blues":{abbr:"stl",l:"nhl"},"Tampa Bay Lightning":{abbr:"tb",l:"nhl"},"Toronto Maple Leafs":{abbr:"tor",l:"nhl"},"Utah Hockey Club":{abbr:"utah",l:"nhl"},"Vancouver Canucks":{abbr:"van",l:"nhl"},"Vegas Golden Knights":{abbr:"vgk",l:"nhl"},"Washington Capitals":{abbr:"wsh",l:"nhl"},"Winnipeg Jets":{abbr:"wpg",l:"nhl"},
+};
+
+function getTeamLogo(name) {
+  const t = TEAM_LOGOS[name];
+  if (!t) return null;
+  return `https://a.espncdn.com/i/teamlogos/${t.l}/500/${t.abbr}.png`;
+}
+
 // ─── ALL-TEAMS LISTS ─────────────────────────────────────────────────────────
 const ALL_TEAMS = {
   "NFL": ["Arizona Cardinals","Atlanta Falcons","Baltimore Ravens","Buffalo Bills","Carolina Panthers","Chicago Bears","Cincinnati Bengals","Cleveland Browns","Dallas Cowboys","Denver Broncos","Detroit Lions","Green Bay Packers","Houston Texans","Indianapolis Colts","Jacksonville Jaguars","Kansas City Chiefs","Las Vegas Raiders","Los Angeles Chargers","Los Angeles Rams","Miami Dolphins","Minnesota Vikings","New England Patriots","New Orleans Saints","New York Giants","New York Jets","Philadelphia Eagles","Pittsburgh Steelers","San Francisco 49ers","Seattle Seahawks","Tampa Bay Buccaneers","Tennessee Titans","Washington Commanders"],
@@ -310,7 +328,7 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
             <div>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>⭐ Pick Your Team</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} — {allTeams.length} teams available</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} — {allTeams.length} teams</div>
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
@@ -323,19 +341,33 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
             </div>
           )}
         </div>
-        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:8}}>
-          {loadingTeams ? Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:56,borderRadius:10}}/>) :
+        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}>
+          {loadingTeams ? Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:72,borderRadius:12}}/>) :
            teams.length===0 ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div> :
            teams.map(t=>{
             const isFav = currentFav===t.name;
+            const logo = getTeamLogo(t.name);
             return (
               <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
-                style={{background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.03)",border:`1px solid ${isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}`,borderRadius:12,padding:"10px 8px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)"}}
-                onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(245,197,24,.4)"}
-                onMouseLeave={e=>e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.5)":"rgba(255,255,255,.08)"}>
-                <span style={{fontSize:18,flexShrink:0}}>{t.flag||"🏅"}</span>
-                <span style={{fontSize:12,fontWeight:isFav?700:500,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis"}}>{t.name}</span>
-                {isFav && <span style={{marginLeft:"auto",color:"var(--gold)",fontSize:12,flexShrink:0}}>⭐</span>}
+                style={{
+                  background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)",
+                  border:`2px solid ${isFav?"rgba(245,197,24,.6)":"rgba(255,255,255,.1)"}`,
+                  borderRadius:14,padding:"12px 10px",
+                  display:"flex",alignItems:"center",gap:10,
+                  cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)",
+                  boxShadow:isFav?"0 0 12px rgba(245,197,24,.2)":"none",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.5)";e.currentTarget.style.background="rgba(255,255,255,.07)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.6)":"rgba(255,255,255,.1)";e.currentTarget.style.background=isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)";}}>
+                {/* Logo or emoji */}
+                {logo
+                  ? <img src={logo} alt={t.name} style={{width:36,height:36,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>
+                  : <span style={{fontSize:24,flexShrink:0,lineHeight:1}}>{t.flag||"🏅"}</span>
+                }
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:12,fontWeight:isFav?800:600,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.name}</div>
+                  {isFav && <div style={{fontSize:10,color:"var(--gold)",marginTop:2}}>⭐ Following</div>}
+                </div>
               </button>
             );
           })}
@@ -2800,11 +2832,11 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
           model:"claude-sonnet-4-6",
-          max_tokens:1000,
-          system:`You are an expert film and TV critic who knows every movie and show across ALL streaming platforms — Netflix, Disney+, Max, Hulu, Prime Video, Apple TV+, Peacock, Paramount+, Crunchyroll, ESPN+, and Tubi. When given a mood or vibe description, suggest 8 highly specific, varied titles that genuinely match. Include a mix of movies and shows. Include different genres, eras, and streaming platforms. Be specific — don't give generic blockbusters unless they truly fit. IMPORTANT: Each recommendation must be UNIQUE and genuinely match the described mood. Return ONLY valid JSON in this exact format with no markdown: {"items":[{"title":"exact title","year":2019,"type":"movie","reason":"one specific sentence why this matches the mood","genre":"Genre","platform":"Netflix","tmdb_search":"exact title for searching"}]}`,
+          max_tokens:500,
+          system:`You are an expert film and TV critic. When given a mood or vibe, suggest exactly 3 highly specific titles that genuinely match. Include a mix of movie and TV types. Be specific — no generic blockbusters unless they truly fit. Return ONLY valid JSON, no markdown: {"items":[{"title":"exact title","year":2019,"type":"movie","reason":"one specific sentence why this fits","genre":"Genre","platform":"Netflix","tmdb_search":"exact title"}]}`,
           messages:[{
             role:"user",
-            content:`Find me 8 titles that match this mood/vibe: "${mood}"\n\nMake sure they are all different from each other, span different genres and platforms, and truly match what I described. No generic suggestions — be specific and creative.`
+            content:`Give me 3 titles that perfectly match this mood: "${mood}". Make them varied and specific.`
           }]
         })
       });
