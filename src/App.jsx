@@ -1395,6 +1395,139 @@ function StarPicker({ value, onChange, size=18, readOnly=false }) {
   );
 }
 
+// ─── STREAK TRACKER ──────────────────────────────────────────────────────────
+function getStreak() {
+  try {
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    const data = JSON.parse(localStorage.getItem("streamhub_streak")||"{}");
+    if (data.lastVisit===today) return data.streak||1;
+    const streak = data.lastVisit===yesterday ? (data.streak||1)+1 : 1;
+    localStorage.setItem("streamhub_streak", JSON.stringify({lastVisit:today,streak}));
+    return streak;
+  } catch { return 1; }
+}
+
+function getStreakEmoji(streak) {
+  if (streak>=30) return "🏆";
+  if (streak>=14) return "🔥";
+  if (streak>=7)  return "⚡";
+  if (streak>=3)  return "✨";
+  return "🌱";
+}
+
+// ─── SHARE HELPERS ────────────────────────────────────────────────────────────
+async function nativeShare(title, text, url) {
+  if (navigator.share) {
+    try { await navigator.share({title, text, url}); return true; }
+    catch(e) { return false; }
+  }
+  return false;
+}
+
+function getShareLinks(text, url) {
+  const encoded = encodeURIComponent(text+" "+url);
+  return {
+    twitter:   `https://twitter.com/intent/tweet?text=${encoded}`,
+    facebook:  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
+    whatsapp:  `https://wa.me/?text=${encoded}`,
+    reddit:    `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`,
+  };
+}
+
+function ShareModal({ title, text, url, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const fullUrl = url || "https://thestreamhub.app";
+  const links = getShareLinks(text, fullUrl);
+
+  const copyLink = () => {
+    navigator.clipboard?.writeText(fullUrl+"\n\n"+text).catch(()=>{});
+    setCopied(true);
+    setTimeout(()=>setCopied(false), 2000);
+  };
+
+  const tryNativeShare = async () => {
+    const shared = await nativeShare(title, text, fullUrl);
+    if (shared) onClose();
+  };
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1400,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,border:"1px solid var(--border)",borderBottom:"none",boxShadow:"0 -20px 60px rgba(0,0,0,.6)",overflow:"hidden"}}>
+        <div style={{padding:"20px 20px 16px",borderBottom:"1px solid var(--border)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17}}>Share</div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer"}}>✕</button>
+          </div>
+          <div style={{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"10px 12px",fontSize:12,color:"var(--muted)",lineHeight:1.5}}>{text}</div>
+        </div>
+        <div style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
+          {/* Native share on mobile */}
+          {"share" in navigator && (
+            <button onClick={tryNativeShare}
+              style={{background:"linear-gradient(135deg,var(--purple),#6d28d9)",border:"none",borderRadius:12,color:"#fff",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              📤 Share via Phone
+            </button>
+          )}
+          {/* Platform buttons */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            {[
+              {label:"𝕏 Twitter / X",     href:links.twitter,  color:"#000",   text:"#fff"},
+              {label:"💬 WhatsApp",         href:links.whatsapp, color:"#25D366",text:"#fff"},
+              {label:"👾 Reddit",           href:links.reddit,   color:"#FF4500",text:"#fff"},
+              {label:"📘 Facebook",         href:links.facebook, color:"#1877F2",text:"#fff"},
+            ].map(p=>(
+              <a key={p.label} href={p.href} target="_blank" rel="noopener noreferrer"
+                style={{background:p.color,borderRadius:10,padding:"10px 0",textAlign:"center",fontSize:12,fontWeight:700,color:p.text,textDecoration:"none",display:"block"}}>
+                {p.label}
+              </a>
+            ))}
+          </div>
+          {/* Copy link */}
+          <button onClick={copyLink}
+            style={{background:copied?"rgba(16,185,129,.15)":"rgba(255,255,255,.05)",border:`1px solid ${copied?"rgba(16,185,129,.4)":"var(--border)"}`,borderRadius:10,color:copied?"var(--sports)":"var(--muted)",padding:"11px 0",fontSize:13,fontWeight:700,cursor:"pointer",transition:"all .2s"}}>
+            {copied?"✅ Copied!":"🔗 Copy Link"}
+          </button>
+        </div>
+        <div style={{height:16}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── DAILY PICK BANNER ────────────────────────────────────────────────────────
+function DailyPickBanner({ movie, onSelect, onShare }) {
+  if (!movie) return null;
+  const dayOfYear = Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/(1000*60*60*24));
+  const poster = movie.poster_path ? `${TMDB_IMG}${movie.poster_path}` : null;
+  const provider = movie.providers?.[0];
+  const svc = SERVICES.find(s=>s.id===provider);
+
+  return (
+    <div style={{margin:"0 14px 16px",borderRadius:16,overflow:"hidden",background:"linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.12))",border:"1px solid rgba(124,58,237,.35)",position:"relative",cursor:"pointer"}}
+      onClick={()=>onSelect(movie)}>
+      <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)"}}/>
+      {poster&&<img src={poster} alt="" style={{position:"absolute",right:0,top:0,height:"100%",width:120,objectFit:"cover",maskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)",WebkitMaskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)"}}/>}
+      <div style={{position:"relative",padding:"14px 16px 14px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+          <div style={{background:"var(--purple)",borderRadius:99,padding:"3px 10px",fontSize:9,fontWeight:900,color:"#fff",letterSpacing:.8}}>🎯 TODAY'S PICK — DAY {dayOfYear}</div>
+          {svc&&<div style={{background:svc.color,borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:800,color:"#fff"}}>{svc.name}</div>}
+        </div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,marginBottom:4,maxWidth:"75%"}}>{movie.title||movie.name}</div>
+        <div style={{fontSize:11,color:"rgba(240,240,250,.6)",marginBottom:10,maxWidth:"70%",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{movie.overview?.slice(0,80)}...</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{background:"rgba(255,255,255,.15)",borderRadius:8,padding:"5px 12px",fontSize:11,fontWeight:700}}>▶ Watch Now</div>
+          <button onClick={e=>{e.stopPropagation();onShare(movie);}}
+            style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,color:"var(--text)",cursor:"pointer"}}>
+            📤 Share
+          </button>
+          <div style={{marginLeft:"auto",color:"var(--gold)",fontSize:13,fontWeight:700}}>★ {movie.vote_average?.toFixed(1)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function Toast({ msg, onDone }) {
   useEffect(()=>{const t=setTimeout(onDone,3000);return()=>clearTimeout(t);},[]);
@@ -1517,7 +1650,7 @@ function AuthModal({ onClose, showToast }) {
 }
 
 // ─── PROFILE MODAL ────────────────────────────────────────────────────────────
-function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif }) {
+function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
@@ -1644,6 +1777,11 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                 ? <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>✦ PREMIUM</span>
                 : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
               }
+              {streak>1 && (
+                <span style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6,marginLeft:6}}>
+                  {getStreakEmoji(streak)} {streak} day streak
+                </span>
+              )}
             </div>
           </div>
 
@@ -1918,6 +2056,10 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
               🎬 Trailer
             </button>
           )}
+          <button onClick={()=>showToast&&showToast("Share opened!")}
+            style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,color:"var(--muted)",padding:"9px 14px",fontWeight:700,fontSize:13,cursor:"pointer",marginLeft:"auto",display:"flex",alignItems:"center",gap:5}}>
+            📤 Share
+          </button>
         </div>
 
         {/* Tabs */}
@@ -3114,10 +3256,20 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
                               {item.platform&&<span style={{background:"rgba(124,58,237,.25)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#c4b5fd",fontWeight:700}}>{item.platform}</span>}
                             </div>
                           </div>
-                          <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
-                            style={{background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
-                            Search →
-                          </button>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
+                              style={{background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                              Search →
+                            </button>
+                            <button onClick={()=>{
+                              const shareText = `🎭 AI Mood Search just matched me with "${item.title}" — perfectly fits my vibe! Try The StreamHub:`;
+                              if(navigator.share){navigator.share({title:item.title,text:shareText,url:"https://thestreamhub.app"}).catch(()=>{});}
+                              else{window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText+" https://thestreamhub.app")}`,"_blank");}
+                            }}
+                              style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.15)",borderRadius:10,color:"var(--muted)",padding:"7px 10px",fontSize:13,cursor:"pointer",flexShrink:0}}>
+                              📤
+                            </button>
+                          </div>
                         </div>
                         <div style={{fontSize:12,color:"rgba(196,181,253,.8)",lineHeight:1.5,fontStyle:"italic"}}>"{item.reason}"</div>
                       </div>
@@ -4111,6 +4263,18 @@ export default function StreamHub() {
   };
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
+  const [shareContent, setShareContent] = useState(null); // {title,text,url}
+  const [streak] = useState(()=>getStreak());
+
+  const handleShareMovie = (movie, context="") => {
+    const title = movie.title||movie.name||"";
+    const text = context==="mood"
+      ? `🎭 AI Mood Search just found me the perfect match: "${title}" — try it on The StreamHub!`
+      : context==="rated"
+        ? `⭐ Just rated "${title}" on The StreamHub — check it out!`
+        : `📺 Watching "${title}" — found it on The StreamHub, the AI streaming assistant!`;
+    setShareContent({title, text, url:"https://thestreamhub.app"});
+  };
   const [watchHistory, setWatchHistory] = useState([]);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [showSearchLimit, setShowSearchLimit] = useState(false);
@@ -4562,6 +4726,15 @@ export default function StreamHub() {
           </div>
         )}
 
+        {/* Daily Pick Banner */}
+        {view==="trending"&&!search.trim()&&featuredRows.trending?.length>0&&(
+          <DailyPickBanner
+            movie={featuredRows.trending[new Date().getDay()%Math.min(5,featuredRows.trending.length)]}
+            onSelect={handleSelectMovie}
+            onShare={(m)=>handleShareMovie(m)}
+          />
+        )}
+
         {/* Sports Hub standalone button */}
         <div style={{padding:"0 14px 12px"}}>
           <button onClick={()=>{setView("sports");setSearch("");}}
@@ -4691,7 +4864,7 @@ export default function StreamHub() {
       {/* Modals */}
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -4702,6 +4875,7 @@ export default function StreamHub() {
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -4976,7 +5150,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -4987,6 +5161,7 @@ export default function StreamHub() {
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
@@ -5360,7 +5535,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -5371,6 +5546,7 @@ export default function StreamHub() {
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       <Analytics />
     </>
