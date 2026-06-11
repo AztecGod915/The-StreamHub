@@ -240,15 +240,42 @@ const ALL_TEAMS = {
   "UFC": ["Ilia Topuria","Jon Jones","Islam Makhachev","Alex Pereira","Leon Edwards","Sean O'Malley","Dricus du Plessis","Merab Dvalishvili","Tom Aspinall","Shavkat Rakhmonov","Conor McGregor","Khamzat Chimaev","Charles Oliveira","Justin Gaethje","Max Holloway","Amanda Nunes","Zhang Weili","Valentina Shevchenko","Alexa Grasso","Julianna Peña"],
   "WWE": ["Cody Rhodes","Roman Reigns","Seth Rollins","CM Punk","Drew McIntyre","Gunther","Sami Zayn","Kevin Owens","Rhea Ripley","Becky Lynch","Charlotte Flair","Bianca Belair","John Cena","Randy Orton","The Rock","Dominik Mysterio","Jey Uso","Damian Priest","Liv Morgan","Nia Jax"],
   "MLS": ["Atlanta United","Austin FC","Charlotte FC","Chicago Fire","FC Cincinnati","Colorado Rapids","Columbus Crew","D.C. United","FC Dallas","Houston Dynamo","Inter Miami CF","LA Galaxy","LAFC","Minnesota United","CF Montréal","Nashville SC","New England Revolution","New York City FC","New York Red Bulls","Orlando City","Philadelphia Union","Portland Timbers","Real Salt Lake","San Jose Earthquakes","Seattle Sounders","Sporting Kansas City","Toronto FC","Vancouver Whitecaps"],
+  "LIGA MX": ["Club América","Chivas de Guadalajara","Cruz Azul","Pumas UNAM","Tigres UANL","CF Monterrey","Deportivo Toluca","Necaxa","Santos Laguna","Atlas FC","Mazatlán FC","Querétaro FC","FC Juárez","Club Tijuana","Atlético de San Luis","CF Pachuca","Club León","Club Puebla","Club Necaxa","Atletico San Luis"],
+  "PREMIER LEAGUE": ["Arsenal","Aston Villa","Bournemouth","Brentford","Brighton","Chelsea","Crystal Palace","Everton","Fulham","Ipswich Town","Leicester City","Liverpool","Manchester City","Manchester United","Newcastle United","Nottingham Forest","Southampton","Tottenham Hotspur","West Ham United","Wolverhampton"],
+  "LA LIGA": ["Athletic Bilbao","Atlético Madrid","Barcelona","Betis","Celta Vigo","Espanyol","Getafe","Girona","Las Palmas","Leganés","Mallorca","Osasuna","Rayo Vallecano","Real Madrid","Real Sociedad","Real Valladolid","Sevilla","Valencia","Villarreal","Alavés"],
+  "BUNDESLIGA": ["Augsburg","Bayer Leverkusen","Bayern Munich","Bochum","Borussia Dortmund","Borussia Mönchengladbach","Eintracht Frankfurt","Freiburg","Heidenheim","Hoffenheim","Holstein Kiel","Mainz","RB Leipzig","Stuttgart","Union Berlin","Werder Bremen","Wolfsburg","St. Pauli"],
+  "SERIE A": ["AC Milan","Atalanta","Bologna","Cagliari","Como","Empoli","Fiorentina","Genoa","Inter Milan","Juventus","Lazio","Lecce","Monza","Napoli","Parma","Roma","Torino","Udinese","Venezia","Verona"],
+  "LIGUE 1": ["Angers","Auxerre","Brest","Lens","Lille","Lyon","Marseille","Monaco","Montpellier","Nantes","Nice","Paris Saint-Germain","Reims","Rennes","Saint-Étienne","Strasbourg","Toulouse"],
 };
 
 function getTeamsForSport(sportDisplay, events, espnTeams) {
   if (!sportDisplay) return [];
+  const upper = sportDisplay.toUpperCase();
+
+  // Direct key match first
   for (const [key, teams] of Object.entries(ALL_TEAMS)) {
-    if (sportDisplay.toUpperCase().includes(key)) return teams.map(n=>({name:n,flag:"🏅"}));
+    if (upper.includes(key)) return teams.map(n=>({name:n,flag:"🏅"}));
   }
+
+  // Soccer league name fallbacks
+  const soccerMap = {
+    "PREMIER LEAGUE": "PREMIER LEAGUE", "LA LIGA": "LA LIGA",
+    "BUNDESLIGA": "BUNDESLIGA", "SERIE A": "SERIE A",
+    "LIGUE 1": "LIGUE 1", "LIGA MX": "LIGA MX",
+  };
+  for (const [keyword, key] of Object.entries(soccerMap)) {
+    if (upper.includes(keyword) && ALL_TEAMS[key]) {
+      return ALL_TEAMS[key].map(n=>({name:n,flag:"⚽"}));
+    }
+  }
+
+  // ESPN API teams (for other soccer leagues)
   if (espnTeams.length > 0) return espnTeams;
-  if (sportDisplay.includes("World Cup")||sportDisplay.includes("FIFA")) return WC_TEAMS;
+
+  // World Cup
+  if (upper.includes("WORLD CUP")||upper.includes("FIFA")) return WC_TEAMS;
+
+  // Fallback: extract from current schedule
   return [...new Set([...events.map(e=>e.home?.name),...events.map(e=>e.away?.name)])].filter(Boolean).sort().map(n=>({name:n,flag:"🏅"}));
 }
 
