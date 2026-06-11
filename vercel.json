@@ -7,10 +7,6 @@
     {
       "path": "/api/notify",
       "schedule": "0 14 * * 0"
-    },
-    {
-      "path": "/api/game-alerts",
-      "schedule": "0,30 * * * *"
     }
   ]
 }

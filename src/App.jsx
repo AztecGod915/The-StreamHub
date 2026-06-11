@@ -637,6 +637,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const [isPolling, setIsPolling] = useState(false);
   const [showTeamPicker, setShowTeamPicker] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [showFullSchedule, setShowFullSchedule] = useState(false);
   const intervalRef = useRef(null);
   const sportRef = useRef(null);   // always has the latest sport — no stale closure
 
@@ -746,6 +747,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
             {favTeam?"⭐ Change Team":"⭐ Follow a Team"}
           </button>
           {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
+          <button onClick={()=>setShowFullSchedule(true)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>📅 All Games</button>
           <button onClick={()=>doFetch(false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
         </div>
       </div>
@@ -753,9 +755,11 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       {showTeamPicker && (
         <FavoriteTeamModal sport={sportInfo?.display} events={events} favoriteTeams={favoriteTeams||{}} onToggle={onToggleFavorite} onClose={()=>setShowTeamPicker(false)}/>
       )}
-
       {selectedGame && (
         <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)}/>
+      )}
+      {showFullSchedule && (
+        <WeeklyScheduleModal sportQuery={sportQuery} sportDisplay={sportInfo?.display||""} onClose={()=>setShowFullSchedule(false)}/>
       )}
 
       {loading ? (
@@ -803,83 +807,272 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
 }
 
 function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
+  const [showReminder, setShowReminder] = useState(false);
   const hasTeams = evt.home?.name && evt.away?.name;
   const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
+  const isUpcoming = !isLive && !isOver;
+  const remLinks = isUpcoming ? getReminderLinks(evt) : null;
 
   return (
-    <div onClick={()=>onSelect&&onSelect(evt)}
-      style={{
-        flexShrink:0, width:210,
-        background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
-        border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
-        borderRadius:14, overflow:"hidden",
-        boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
-        position:"relative", cursor:"pointer", transition:"transform .15s, border-color .15s",
-      }}
-      onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.02)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.7)":isLive?"rgba(239,68,68,.8)":"rgba(255,255,255,.25)";}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor=isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)";}}>
+    <div style={{
+      flexShrink:0, width:215,
+      background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
+      border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+      borderRadius:14, overflow:"hidden",
+      boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+      position:"relative",
+    }}>
       {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
 
-      {/* Top bar */}
-      <div style={{
-        padding:"6px 10px",
-        background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",
-        display:"flex",alignItems:"center",justifyContent:"space-between",
-      }}>
-        <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
-          {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
+      {/* Clickable main body */}
+      <div onClick={()=>onSelect&&onSelect(evt)} style={{cursor:"pointer"}}
+        onMouseEnter={e=>e.currentTarget.style.opacity=".88"}
+        onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+        <div style={{padding:"6px 10px",background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
+            {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:4}}>
+            {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.broadcast}</div>}
+            {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
+          </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:4}}>
-          {evt.broadcast && (
-            <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:80,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-              {evt.broadcast}
+        <div style={{padding:"10px 12px 8px"}}>
+          {hasTeams ? (
+            <>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+                <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                  {evt.away.logo ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>}
+                  <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
+                </div>
+                {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
+              </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
+                  {evt.home.logo ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>}
+                  <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
+                </div>
+                {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
+              </div>
+            </>
+          ) : (
+            <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>
+          )}
+          {isUpcoming && evt.localTime && (
+            <div style={{marginTop:6,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
+              <span>🕐 {evt.localTime}</span>
+              {evt.city && <span>📍 {evt.city}</span>}
             </div>
           )}
-          {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
+          {isLive && <div style={{marginTop:6,fontSize:10,color:"#ef4444",fontWeight:700}}>▶ Tap to watch live →</div>}
+          {evt.isTitleFight && <div style={{marginTop:4,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
         </div>
       </div>
 
-      {/* Teams */}
-      <div style={{padding:"10px 12px"}}>
-        {hasTeams ? (
-          <>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                {evt.away.logo
-                  ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
-                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>
-                }
-                <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
-              </div>
-              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
+      {/* 🔔 Inline reminder row for upcoming only */}
+      {isUpcoming && remLinks && (
+        <div style={{borderTop:"1px solid rgba(255,255,255,.06)",padding:"6px 8px",background:"rgba(255,255,255,.02)"}}>
+          {!showReminder ? (
+            <button onClick={e=>{e.stopPropagation();setShowReminder(true);}}
+              style={{width:"100%",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:8,color:"var(--gold)",padding:"5px 0",fontSize:10,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+              🔔 Set Reminder
+            </button>
+          ) : (
+            <div className="fadeUp" style={{display:"flex",gap:5,alignItems:"center"}}>
+              {[
+                {icon:"📅",label:"Google", action:()=>openLink(remLinks.google)},
+                {icon:"🍎",label:"Apple",  action:()=>downloadICS(evt)},
+                {icon:"📧",label:"Outlook",action:()=>openLink(remLinks.outlook)},
+              ].map(cal=>(
+                <button key={cal.label} onClick={e=>{e.stopPropagation();cal.action();setShowReminder(false);}}
+                  style={{flex:1,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:8,padding:"5px 2px",fontSize:9,fontWeight:700,color:"var(--text)",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+                  <span style={{fontSize:14}}>{cal.icon}</span>
+                  <span>{cal.label}</span>
+                </button>
+              ))}
+              <button onClick={e=>{e.stopPropagation();setShowReminder(false);}}
+                style={{background:"none",border:"none",color:"var(--muted)",fontSize:16,cursor:"pointer",padding:"0 2px",lineHeight:1}}>✕</button>
             </div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                {evt.home.logo
-                  ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/>
-                  : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>
-                }
-                <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
-              </div>
-              {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
-            </div>
-          </>
-        ) : (
-          <div style={{fontSize:12,fontWeight:700,lineHeight:1.4}}>{evt.name}</div>
-        )}
-
-        {!isLive && !isOver && (
-          <div style={{marginTop:8,fontSize:10,color:"var(--muted)",display:"flex",gap:6,flexWrap:"wrap"}}>
-            <span>🕐 {evt.localTime}</span>
-            {evt.city && <span>📍 {evt.city}</span>}
-          </div>
-        )}
-
-        {/* Watch CTA */}
-        <div style={{marginTop:8,fontSize:10,color:isLive?"#ef4444":"rgba(16,185,129,.7)",fontWeight:700}}>
-          {isLive ? "▶ Watch Live →" : isOver ? "" : "📺 Find where to watch →"}
+          )}
         </div>
-        {evt.isTitleFight && <div style={{marginTop:4,fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:.5}}>🏆 TITLE FIGHT</div>}
+      )}
+    </div>
+  );
+}
+
+// ─── WEEKLY SCHEDULE MODAL ────────────────────────────────────────────────────
+function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [grouped, setGrouped] = useState({});
+
+  useEffect(() => {
+    const sport = getEspnSport(sportQuery);
+    if (!sport) { setLoading(false); return; }
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`)
+      .then(r=>r.json())
+      .then(data=>{
+        const evts = (data.events||[]).map(evt=>{
+          const comp = evt.competitions?.[0];
+          const home = comp?.competitors?.find(c=>c.homeAway==="home")||comp?.competitors?.[0];
+          const away = comp?.competitors?.find(c=>c.homeAway==="away")||comp?.competitors?.[1];
+          const st = evt.status?.type;
+          return {
+            id:evt.id, name:evt.name||evt.shortName||"",
+            shortName:evt.shortName||evt.name||"",
+            date:evt.date,
+            localDate:new Date(evt.date).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),
+            localTime:new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
+            dayKey:new Date(evt.date).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),
+            isLive:st?.name==="STATUS_IN_PROGRESS",
+            isOver:st?.completed||false,
+            periodText:st?.type?.shortDetail||"",
+            home:{name:home?.team?.shortDisplayName||home?.team?.displayName||"",abbr:home?.team?.abbreviation||"",score:home?.score||"",logo:home?.team?.logo||"",color:home?.team?.color||"333",winner:home?.winner},
+            away:{name:away?.team?.shortDisplayName||away?.team?.displayName||"",abbr:away?.team?.abbreviation||"",score:away?.score||"",logo:away?.team?.logo||"",color:away?.team?.color||"333",winner:away?.winner},
+            broadcast:comp?.broadcasts?.[0]?.names?.join(", ")||"",
+            broadcastLink:getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
+            venue:comp?.venue?.fullName||"",
+            city:comp?.venue?.address?.city||"",
+            state:comp?.venue?.address?.state||"",
+            isTitleFight:(evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
+          };
+        });
+        // Group by day
+        const g = {};
+        evts.forEach(e=>{
+          if (!g[e.dayKey]) g[e.dayKey]=[];
+          g[e.dayKey].push(e);
+        });
+        setEvents(evts);
+        setGrouped(g);
+        setLoading(false);
+      })
+      .catch(()=>setLoading(false));
+  },[sportQuery]);
+
+  const upcoming = events.filter(e=>!e.isOver);
+  const isWC = sportQuery?.toLowerCase().includes("world") || sportQuery?.toLowerCase().includes("fifa");
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"var(--surface)", borderRadius:"22px 22px 0 0",
+        width:"100%", maxWidth:600, maxHeight:"90vh",
+        border:`1px solid ${isWC?"rgba(245,197,24,.4)":"rgba(16,185,129,.3)"}`,
+        borderBottom:"none", display:"flex", flexDirection:"column",
+        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding:"18px 20px 14px",
+          background:isWC?"linear-gradient(135deg,rgba(26,42,10,.9),rgba(13,74,26,.9))":"linear-gradient(135deg,rgba(10,20,10,.9),rgba(13,74,26,.8))",
+          borderBottom:`1px solid ${isWC?"rgba(245,197,24,.2)":"rgba(16,185,129,.2)"}`,
+          flexShrink:0,
+        }}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,color:isWC?"var(--gold)":"var(--sports)"}}>
+                {isWC?"🏆":"📅"} {sportDisplay} — Full Schedule
+              </div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:3}}>
+                {upcoming.length} upcoming games · tap any game to watch or remind
+              </div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+        </div>
+
+        {/* Schedule list */}
+        <div style={{overflowY:"auto",flex:1,padding:"0 0 20px"}}>
+          {loading ? (
+            <div style={{padding:24,display:"flex",flexDirection:"column",gap:8}}>
+              {[1,2,3,4,5].map(i=><div key={i} className="skeleton" style={{height:72,borderRadius:12}}/>)}
+            </div>
+          ) : events.length===0 ? (
+            <div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)",fontSize:14}}>No games scheduled right now</div>
+          ) : Object.entries(grouped).map(([day,dayEvts])=>(
+            <div key={day}>
+              <div style={{padding:"14px 20px 8px",fontSize:10,fontWeight:800,color:"var(--muted)",letterSpacing:1.5,background:"rgba(255,255,255,.02)",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+                {dayEvts.some(e=>e.isLive)&&<span style={{color:"#ef4444",marginRight:6}}>🔴 LIVE</span>}
+                {day.toUpperCase()}
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:0}}>
+                {dayEvts.map((evt,i)=>{
+                  const isUpcoming = !evt.isLive && !evt.isOver;
+                  const remLinks = isUpcoming ? getReminderLinks(evt) : null;
+                  const [showRem, setShowRem] = useState(false);
+                  return (
+                    <div key={evt.id} style={{
+                      padding:"12px 20px",
+                      borderBottom:i<dayEvts.length-1?"1px solid rgba(255,255,255,.04)":"none",
+                      background:evt.isLive?"rgba(239,68,68,.04)":"transparent",
+                      transition:"background .2s",
+                    }}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.03)"}
+                    onMouseLeave={e=>e.currentTarget.style.background=evt.isLive?"rgba(239,68,68,.04)":"transparent"}>
+                      {/* Teams row */}
+                      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:6}}>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                            {evt.away.logo && <img src={evt.away.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
+                            <span style={{fontSize:14,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.away.name||evt.name}</span>
+                            {(evt.isLive||evt.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:evt.away.winner?"var(--gold)":"var(--text)",marginLeft:"auto",flexShrink:0}}>{evt.away.score}</span>}
+                          </div>
+                          {evt.home.name && (
+                            <div style={{display:"flex",alignItems:"center",gap:8}}>
+                              {evt.home.logo && <img src={evt.home.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
+                              <span style={{fontSize:14,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.home.name}</span>
+                              {(evt.isLive||evt.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:evt.home.winner?"var(--gold)":"var(--text)",marginLeft:"auto",flexShrink:0}}>{evt.home.score}</span>}
+                            </div>
+                          )}
+                        </div>
+                        {/* Status badge */}
+                        <div style={{flexShrink:0,textAlign:"right"}}>
+                          {evt.isLive
+                            ? <div style={{background:"#ef4444",borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:800,color:"#fff"}}>🔴 LIVE</div>
+                            : evt.isOver
+                              ? <div style={{fontSize:10,color:"var(--muted)",fontWeight:700}}>FINAL</div>
+                              : <div style={{fontSize:11,color:"var(--muted)",fontWeight:600}}>{evt.localTime}</div>
+                          }
+                        </div>
+                      </div>
+                      {/* Venue + broadcast */}
+                      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                        {evt.venue && <span style={{fontSize:10,color:"var(--muted)",display:"flex",alignItems:"center",gap:3}}>📍 {evt.venue}{evt.city?`, ${evt.city}`:""}</span>}
+                        {evt.broadcast && <span style={{fontSize:9,background:"rgba(245,197,24,.1)",color:"var(--gold)",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{evt.broadcast}</span>}
+                      </div>
+                      {/* Reminder row */}
+                      {isUpcoming && remLinks && (
+                        <div style={{marginTop:8}}>
+                          {!showRem ? (
+                            <button onClick={()=>setShowRem(true)}
+                              style={{background:"rgba(245,197,24,.07)",border:"1px solid rgba(245,197,24,.2)",borderRadius:8,color:"var(--gold)",padding:"4px 12px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                              🔔 Set Reminder
+                            </button>
+                          ) : (
+                            <div className="fadeUp" style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+                              {[
+                                {icon:"📅",label:"Google Calendar", action:()=>openLink(remLinks.google)},
+                                {icon:"🍎",label:"Apple Calendar",  action:()=>downloadICS(evt)},
+                                {icon:"📧",label:"Outlook",         action:()=>openLink(remLinks.outlook)},
+                              ].map(cal=>(
+                                <button key={cal.label} onClick={()=>{cal.action();setShowRem(false);}}
+                                  style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",fontSize:10,fontWeight:700,color:"var(--text)",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+                                  {cal.icon} {cal.label}
+                                </button>
+                              ))}
+                              <button onClick={()=>setShowRem(false)} style={{background:"none",border:"none",color:"var(--muted)",fontSize:14,cursor:"pointer"}}>✕</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
