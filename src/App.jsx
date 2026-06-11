@@ -2056,7 +2056,11 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
               🎬 Trailer
             </button>
           )}
-          <button onClick={()=>showToast&&showToast("Share opened!")}
+          <button onClick={()=>{
+              const txt=`📺 "${movie.title||movie.name}" — found on The StreamHub, the AI streaming assistant! thestreamhub.app`;
+              if(navigator.share){navigator.share({title:movie.title||movie.name,text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
+              else{window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(txt)}`,"_blank");}
+            }}
             style={{background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,color:"var(--muted)",padding:"9px 14px",fontWeight:700,fontSize:13,cursor:"pointer",marginLeft:"auto",display:"flex",alignItems:"center",gap:5}}>
             📤 Share
           </button>
@@ -4600,12 +4604,14 @@ export default function StreamHub() {
               <img
                 src="/logo-clean.png"
                 alt="The StreamHub"
+                onClick={()=>{setView("trending");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{
                   height:64,
                   width:"auto",
                   maxWidth:200,
                   objectFit:"contain",
+                  cursor:"pointer",
                   filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
@@ -4649,16 +4655,7 @@ export default function StreamHub() {
               }}
             />
           </div>
-          {/* Service filter chips */}
-          <div style={{overflowX:"auto",padding:"0 14px 10px",display:"flex",gap:6,scrollbarWidth:"none"}}>
-            <button onClick={()=>setFilterPlat(null)} style={{background:!filterPlat?"var(--gold)":"rgba(255,255,255,.05)",border:`1px solid ${!filterPlat?"var(--gold)":"var(--border)"}`,borderRadius:99,color:!filterPlat?"#000":"var(--muted)",padding:"5px 14px",fontSize:11,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"}}>All</button>
-            {SERVICES.map(s=>{
-              const active=filterPlat===s.id;
-              return <button key={s.id} onClick={()=>setFilterPlat(active?null:s.id)} style={{background:active?`${s.color}30`:"rgba(255,255,255,.04)",border:`1px solid ${active?s.color:"rgba(255,255,255,.07)"}`,borderRadius:99,color:active?"#fff":"var(--muted)",padding:"5px 12px",fontSize:11,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
-                <span style={{background:active?s.color:"rgba(255,255,255,.1)",borderRadius:4,width:14,height:14,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:800,color:"#fff"}}>{s.logo}</span>{s.name}
-              </button>;
-            })}
-          </div>
+
         </div>
 
         {/* WelcomeBanner for new users — above brand banner */}
@@ -4923,15 +4920,7 @@ export default function StreamHub() {
               }
             </div>
           </div>
-          {/* Service chips only - no category tabs since bottom nav handles navigation */}
-          <div style={{overflowX:"auto",padding:"0 20px 10px",display:"flex",gap:6,scrollbarWidth:"none"}}>
-            <button onClick={()=>setFilterPlat(null)} style={{background:!filterPlat?"var(--gold)":"rgba(255,255,255,.05)",border:`1px solid ${!filterPlat?"var(--gold)":"var(--border)"}`,borderRadius:99,color:!filterPlat?"#000":"var(--muted)",padding:"5px 16px",fontSize:12,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer"}}>All</button>
-            {SERVICES.map(s=>{const active=filterPlat===s.id;return(
-              <button key={s.id} onClick={()=>setFilterPlat(active?null:s.id)} style={{background:active?`${s.color}30`:"rgba(255,255,255,.04)",border:`1px solid ${active?s.color:"rgba(255,255,255,.08)"}`,borderRadius:99,color:active?"#fff":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:600,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
-                <span style={{background:active?s.color:"rgba(255,255,255,.1)",borderRadius:4,width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:800,color:"#fff"}}>{s.logo}</span>{s.name}
-              </button>
-            );})}
-          </div>
+
         </header>
 
         {/* Tablet Hero with Trailer */}
@@ -5510,7 +5499,7 @@ export default function StreamHub() {
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img src="/logo-clean.png" alt="The StreamHub" style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
+                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))",cursor:"pointer"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
                     <span style={{color:"#F5C518"}}>The Stream</span>
