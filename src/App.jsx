@@ -1145,12 +1145,18 @@ function OlympicsPlaceholder() {
         <div style={{position:"absolute",top:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(139,92,246,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",bottom:-40,left:-40,width:160,height:160,borderRadius:"50%",background:"rgba(245,158,11,.1)",filter:"blur(50px)",pointerEvents:"none"}}/>
 
-        {/* Olympic rings */}
-        <div style={{display:"flex",gap:4,marginBottom:16,position:"relative"}}>
-          {[["#0085C7","blue"],["#000","black"],["#EF4444","red"],["#F59E0B","yellow"],["#10B981","green"]].map(([c,n])=>(
-            <div key={n} style={{width:28,height:28,borderRadius:"50%",border:`4px solid ${c}`,background:"transparent"}}/>
-          ))}
-        </div>
+        {/* Olympic rings — proper interlocking SVG (back→front z-order) */}
+        <svg viewBox="0 0 240 140" style={{width:"100%",maxWidth:240,marginBottom:16}} xmlns="http://www.w3.org/2000/svg">
+          {/* Drawing order: Red, Green, Black, Yellow, Blue (back to front)
+              This produces: Blue in front of Yellow, Yellow in front of Black,
+              Black in front of Green, Green in front of Red */}
+          <circle cx="182" cy="52" r="42" fill="none" stroke="#DF0024" strokeWidth="13"/>
+          <circle cx="148" cy="92" r="42" fill="none" stroke="#009F6B" strokeWidth="13"/>
+          <circle cx="114" cy="52" r="42" fill="none" stroke="#2d2d2d"  strokeWidth="13"/>
+          <circle cx="80"  cy="92" r="42" fill="none" stroke="#F4C300" strokeWidth="13"/>
+          <circle cx="48"  cy="52" r="42" fill="none" stroke="#0085C7" strokeWidth="13"/>
+        </svg>
+
 
         <div style={{position:"relative"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
@@ -1827,6 +1833,31 @@ function StreakRewardsModal({ streak, onClose }) {
             <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18}}>🔥 Viewing Streak</div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer"}}>✕</button>
           </div>
+          {/* Level previews */}
+          <div style={{display:"flex",gap:10,marginBottom:14,justifyContent:"center"}}>
+            {[
+              {streak:1,  badge:"🌱",label:"New",    days:"Day 1"},
+              {streak:3,  badge:"✨",label:"Loyal",  days:"Day 3"},
+              {streak:7,  badge:"⚡",label:"Warrior",days:"Day 7"},
+              {streak:14, badge:"🔥",label:"Champ",  days:"Day 14"},
+              {streak:30, badge:"👑",label:"Legend", days:"Day 30"},
+            ].map(t=>{
+              const earned=streak>=t.streak;
+              const lvl=t.streak>=30?"legend":t.streak>=14?"champion":t.streak>=7?"warrior":t.streak>=3?"loyal":"newcomer";
+              const colors={newcomer:"#8B5CF6",loyal:"#C4B5FD",warrior:"#F59E0B",champion:"#EF4444",legend:"#F59E0B"}[lvl];
+              return (
+                <div key={t.streak} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,opacity:earned?1:.4}}>
+                  <div style={{width:44,height:44,borderRadius:"50%",border:`2.5px solid ${colors}`,boxShadow:earned?`0 0 12px ${colors}66`:"none",background:"rgba(255,255,255,.05)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,position:"relative"}}>
+                    {t.badge}
+                    {streak===t.streak&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${colors}`,animation:"spinRing 3s linear infinite"}}/>}
+                  </div>
+                  <div style={{fontSize:8,color:earned?colors:"var(--muted)",fontWeight:800,letterSpacing:.5}}>{t.days}</div>
+                  <div style={{fontSize:9,color:"rgba(240,240,250,.5)",fontWeight:600}}>{t.label}</div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Current streak display */}
           <div style={{display:"flex",alignItems:"center",gap:14}}>
             <div style={{textAlign:"center"}}>
@@ -1884,7 +1915,10 @@ function StreakRewardsModal({ streak, onClose }) {
 }
 
 // ─── MANAGE SUBSCRIPTIONS PANEL ───────────────────────────────────────────────
-function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
+function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }) {
+  const [localSubs, setLocalSubs] = useState(initialSubs);
+  const toggleLocal = (id) => setLocalSubs(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
+  const handleDone = () => { onToggle(localSubs); onDone(); };
   const PRICES = {
     1:"$7.99",2:"$13.99",3:"$22.99",4:"$8.99",5:"$9.99",6:"$7.99",
     7:"$7.99",8:"$17.99",9:"$20.99",10:"$13.99",11:"$12.99",12:"$13.99",
@@ -1916,9 +1950,9 @@ function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
       {/* Service grid */}
       <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
         {SERVICES.map(s=>{
-          const active=userSubs.includes(s.id);
+          const active=localSubs.includes(s.id);
           return (
-            <div key={s.id} onClick={()=>onToggle(s.id)}
+            <div key={s.id} onClick={()=>toggleLocal(s.id)}
               style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:14,background:active?`${s.color}12`:"rgba(255,255,255,.03)",border:`1.5px solid ${active?s.color+"55":"rgba(255,255,255,.07)"}`,cursor:"pointer",transition:"all .2s"}}
               onMouseEnter={e=>e.currentTarget.style.borderColor=active?s.color+"99":"rgba(255,255,255,.15)"}
               onMouseLeave={e=>e.currentTarget.style.borderColor=active?s.color+"55":"rgba(255,255,255,.07)"}>
@@ -1939,7 +1973,7 @@ function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
         })}
       </div>
 
-      <button onClick={onDone}
+      <button onClick={handleDone}
         style={{marginTop:16,width:"100%",background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>
         ✓ Done
       </button>
@@ -1947,7 +1981,7 @@ function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
   );
 }
 
-function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
+function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
@@ -2091,7 +2125,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:12}}>📡 Manage Subscriptions</div>
                   <SubscriptionManagerPanel
                     userSubs={userSubs}
-                    onToggle={id=>{const subs=[...userSubs];const idx=subs.indexOf(id);if(idx>-1)subs.splice(idx,1);else subs.push(id);onEditSubs&&onEditSubs(subs);}}
+                    onToggle={(newSubs)=>{/* subs managed locally in panel */}}
                     onDone={()=>setShowSubManager(false)}
                   />
                 </div>
@@ -5162,7 +5196,7 @@ export default function StreamHub() {
       {/* Modals */}
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -5451,7 +5485,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
@@ -5858,7 +5892,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
