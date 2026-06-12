@@ -1772,10 +1772,187 @@ function AuthModal({ onClose, showToast }) {
 }
 
 // ─── PROFILE MODAL ────────────────────────────────────────────────────────────
-function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
+// ─── STREAK AVATAR ────────────────────────────────────────────────────────────
+function StreakAvatar({ streak, profile, user, size=80 }) {
+  const lvl = streak>=30?"legend":streak>=14?"champion":streak>=7?"warrior":streak>=3?"loyal":"newcomer";
+  const cfg = {
+    newcomer: {ring:"rgba(139,92,246,.4)",  glow:"none",                              badge:"🌱", label:"Newcomer",   color:"#8B5CF6", anim:false},
+    loyal:    {ring:"rgba(139,92,246,.85)", glow:"0 0 18px rgba(139,92,246,.5)",      badge:"✨", label:"Loyal Viewer",color:"#C4B5FD", anim:false},
+    warrior:  {ring:"rgba(245,158,11,.9)",  glow:"0 0 24px rgba(245,158,11,.55)",     badge:"⚡", label:"Week Warrior", color:"#F59E0B", anim:true},
+    champion: {ring:"rgba(239,68,68,.9)",   glow:"0 0 28px rgba(239,68,68,.5)",       badge:"🔥", label:"Binge Champ", color:"#EF4444", anim:true},
+    legend:   {ring:"rgba(245,158,11,1)",   glow:"0 0 36px rgba(245,158,11,.7)",      badge:"👑", label:"Legend",      color:"#F59E0B", anim:true},
+  }[lvl];
+  const initials = (profile?.username||user?.email||"?")[0].toUpperCase();
+  const fs = Math.round(size*0.38);
+  return (
+    <div style={{position:"relative",width:size,height:size,flexShrink:0}}>
+      {/* Animated glow ring */}
+      <div style={{position:"absolute",inset:-3,borderRadius:"50%",border:`2.5px solid ${cfg.ring}`,boxShadow:cfg.glow,animation:cfg.anim?"spinRing 4s linear infinite":undefined,zIndex:0}}/>
+      {/* Second ring for legend */}
+      {lvl==="legend"&&<div style={{position:"absolute",inset:-7,borderRadius:"50%",border:"1.5px solid rgba(245,158,11,.35)",animation:"spinRing 8s linear infinite reverse",zIndex:0}}/>}
+      {/* Avatar circle */}
+      <div style={{position:"absolute",inset:0,borderRadius:"50%",overflow:"hidden",zIndex:1,background:"var(--surface)"}}>
+        {profile?.avatar_url
+          ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${cfg.ring},rgba(26,16,48,.9))`,fontFamily:"var(--font-head)",fontWeight:900,fontSize:fs,color:"#fff"}}>{initials}</div>
+        }
+      </div>
+      {/* Level badge */}
+      <div style={{position:"absolute",bottom:-2,right:-2,width:Math.round(size*0.32),height:Math.round(size*0.32),borderRadius:"50%",background:"var(--bg)",border:`2px solid ${cfg.ring}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:Math.round(size*0.16),zIndex:2}}>
+        {cfg.badge}
+      </div>
+    </div>
+  );
+}
+
+// ─── STREAK REWARDS MODAL ─────────────────────────────────────────────────────
+function StreakRewardsModal({ streak, onClose }) {
+  const TIERS = [
+    {days:1,  badge:"🌱", title:"Newcomer",     reward:"Your journey begins. Welcome to StreamHub!", color:"#8B5CF6", earned:streak>=1},
+    {days:3,  badge:"✨", title:"Loyal Viewer",  reward:"You've built a habit. Personalized picks are sharpening.",color:"#A78BFA",earned:streak>=3},
+    {days:7,  badge:"⚡", title:"Week Warrior",  reward:"7 days straight! Your avatar frame unlocks a gold ring.",color:"#F59E0B",earned:streak>=7},
+    {days:14, badge:"🔥", title:"Binge Champion", reward:"Two weeks! Your profile glows red — true dedication.",   color:"#EF4444",earned:streak>=14},
+    {days:30, badge:"👑", title:"StreamHub Legend",reward:"30 days. You've earned the crown. Rotating gold ring activated.", color:"#F59E0B",earned:streak>=30},
+  ];
+  const current = [...TIERS].reverse().find(t=>streak>=t.days) || TIERS[0];
+  const next    = TIERS.find(t=>streak<t.days);
+  const pct     = next ? Math.round((streak/next.days)*100) : 100;
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1400,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:60,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(12px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:420,overflow:"hidden",border:"1px solid rgba(139,92,246,.4)",boxShadow:"0 20px 60px rgba(139,92,246,.3)"}}>
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,#1A1030,#0F082A)",padding:"20px 20px 16px",borderBottom:"1px solid rgba(139,92,246,.2)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18}}>🔥 Viewing Streak</div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer"}}>✕</button>
+          </div>
+          {/* Current streak display */}
+          <div style={{display:"flex",alignItems:"center",gap:14}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:48,lineHeight:1,background:`linear-gradient(135deg,${current.color},#fff)`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{streak}</div>
+              <div style={{fontSize:10,color:"var(--muted)",fontWeight:700,letterSpacing:.8}}>DAY{streak!==1?"S":""}</div>
+            </div>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                <span style={{fontSize:20}}>{current.badge}</span>
+                <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:current.color}}>{current.title}</span>
+              </div>
+              <div style={{fontSize:11,color:"rgba(240,240,250,.6)",lineHeight:1.5,maxWidth:200}}>{current.reward}</div>
+            </div>
+          </div>
+          {/* Progress to next tier */}
+          {next && (
+            <div style={{marginTop:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"var(--muted)",marginBottom:5}}>
+                <span>Next: {next.badge} {next.title}</span>
+                <span>{streak} / {next.days} days</span>
+              </div>
+              <div style={{height:6,borderRadius:99,background:"rgba(255,255,255,.08)",overflow:"hidden"}}>
+                <div style={{height:"100%",width:`${pct}%`,borderRadius:99,background:`linear-gradient(90deg,#8B5CF6,${next.color})`,transition:"width .6s ease"}}/>
+              </div>
+              <div style={{fontSize:10,color:"rgba(240,240,250,.4)",marginTop:4}}>{next.days-streak} more day{next.days-streak!==1?"s":""} to unlock {next.badge} {next.title}</div>
+            </div>
+          )}
+          {!next && <div style={{marginTop:10,fontSize:12,color:"var(--gold)",fontWeight:700}}>👑 Maximum level reached. You are a StreamHub Legend.</div>}
+        </div>
+        {/* All milestones */}
+        <div style={{padding:16,display:"flex",flexDirection:"column",gap:10}}>
+          <div style={{fontSize:10,fontWeight:800,color:"var(--muted)",letterSpacing:1.2,marginBottom:2}}>ALL MILESTONES</div>
+          {TIERS.map((t,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",borderRadius:12,background:t.earned?"rgba(139,92,246,.08)":"rgba(255,255,255,.02)",border:`1px solid ${t.earned?t.color+"44":"rgba(255,255,255,.06)"}`,opacity:t.earned?1:.55}}>
+              <div style={{width:36,height:36,borderRadius:"50%",background:t.earned?`${t.color}22`:"rgba(255,255,255,.05)",border:`2px solid ${t.earned?t.color:"rgba(255,255,255,.1)"}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>
+                {t.earned?t.badge:"🔒"}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:t.earned?t.color:"var(--muted)"}}>{t.title}</span>
+                  <span style={{fontSize:9,background:"rgba(255,255,255,.06)",borderRadius:99,padding:"1px 6px",color:"var(--muted)",fontWeight:700}}>Day {t.days}</span>
+                  {t.earned&&<span style={{fontSize:9,background:`${t.color}22`,borderRadius:99,padding:"1px 6px",color:t.color,fontWeight:800}}>EARNED ✓</span>}
+                </div>
+                <div style={{fontSize:11,color:"rgba(240,240,250,.5)",marginTop:2,lineHeight:1.4}}>{t.reward}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{padding:"0 16px 16px",fontSize:11,color:"var(--muted)",textAlign:"center",lineHeight:1.6}}>
+          Come back every day to keep your streak alive. Missing a day resets your progress.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MANAGE SUBSCRIPTIONS PANEL ───────────────────────────────────────────────
+function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
+  const PRICES = {
+    1:"$7.99",2:"$13.99",3:"$22.99",4:"$8.99",5:"$9.99",6:"$7.99",
+    7:"$7.99",8:"$17.99",9:"$20.99",10:"$13.99",11:"$12.99",12:"$13.99",
+    13:"$9.99",14:"$72.99",15:"$10.99",16:"$6.99",17:"$9.99",
+  };
+  const subList = SERVICES.filter(s=>userSubs.includes(s.id));
+  const totalSubs = subList.length;
+  const est = subList.reduce((sum,s)=>{
+    const p=parseFloat((PRICES[s.id]||"$0").replace("$",""));
+    return sum+p;
+  },0);
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:0,height:"100%"}}>
+      {/* Summary bar */}
+      <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"#C4B5FD",marginBottom:2}}>📊 Your Streaming Bill</div>
+            <div style={{fontSize:11,color:"var(--muted)"}}>{totalSubs} service{totalSubs!==1?"s":""} active</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,color:"var(--gold)"}}>${est.toFixed(2)}</div>
+            <div style={{fontSize:10,color:"var(--muted)"}}>/month est.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Service grid */}
+      <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
+        {SERVICES.map(s=>{
+          const active=userSubs.includes(s.id);
+          return (
+            <div key={s.id} onClick={()=>onToggle(s.id)}
+              style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:14,background:active?`${s.color}12`:"rgba(255,255,255,.03)",border:`1.5px solid ${active?s.color+"55":"rgba(255,255,255,.07)"}`,cursor:"pointer",transition:"all .2s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor=active?s.color+"99":"rgba(255,255,255,.15)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor=active?s.color+"55":"rgba(255,255,255,.07)"}>
+              {/* Logo bubble */}
+              <div style={{width:38,height:38,borderRadius:10,background:active?s.color:"rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color:"#fff",flexShrink:0,transition:"background .2s"}}>
+                {s.logo}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,color:active?"#fff":"var(--muted)"}}>{s.name}</div>
+                <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>{PRICES[s.id]||""}/mo</div>
+              </div>
+              {/* Toggle */}
+              <div style={{width:44,height:24,borderRadius:99,background:active?"var(--gold)":"rgba(255,255,255,.1)",position:"relative",transition:"background .2s",flexShrink:0}}>
+                <div style={{position:"absolute",top:3,left:active?20:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 4px rgba(0,0,0,.3)"}}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button onClick={onDone}
+        style={{marginTop:16,width:"100%",background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>
+        ✓ Done
+      </button>
+    </div>
+  );
+}
+
+
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [showSubManager, setShowSubManager] = useState(false);
   const [myReviews, setMyReviews] = useState([]);
   const [wlMovies, setWlMovies] = useState([]);
   const [loadingWl, setLoadingWl] = useState(false);
@@ -1850,36 +2027,11 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
           <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             {/* Avatar with upload */}
+            {/* Streak avatar — ring glows with level */}
             <div style={{position:"relative",flexShrink:0}}>
-              <div style={{
-                width:70, height:70, borderRadius:"50%",
-                background:"var(--purple)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                fontFamily:"var(--font-head)", fontWeight:800, fontSize:26,
-                border: isPremium
-                  ? "3px solid #F59E0B"
-                  : "3px solid rgba(139,92,246,.4)",
-                boxShadow: isPremium
-                  ? "0 0 20px rgba(245,158,11,.6), 0 0 40px rgba(245,158,11,.3)"
-                  : "none",
-                overflow:"hidden", flexShrink:0,
-                transition:"all .3s",
-              }}>
-                {avatarUrl
-                  ? <img src={avatarUrl} alt="avatar" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                  : avatarLetter
-                }
-              </div>
-              {/* Upload button */}
-              <label style={{
-                position:"absolute", bottom:-2, right:-2,
-                width:24, height:24, borderRadius:"50%",
-                background:"var(--gold)", border:"2px solid var(--surface)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                cursor:"pointer", fontSize:11,
-                boxShadow:"0 2px 8px rgba(0,0,0,.5)",
-              }} title="Change profile picture">
-                {uploadingAvatar ? "⏳" : "📷"}
+              <StreakAvatar streak={streak} profile={{...profile,avatar_url:avatarUrl}} user={user} size={80}/>
+              <label style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"var(--gold)",border:"2px solid var(--surface)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:10,boxShadow:"0 2px 8px rgba(0,0,0,.5)",zIndex:10}} title="Change profile picture">
+                {uploadingAvatar?"⏳":"📷"}
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
               </label>
             </div>
@@ -1899,10 +2051,11 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                 ? <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>✦ PREMIUM</span>
                 : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
               }
-              {streak>1 && (
-                <span style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6,marginLeft:6}}>
-                  {getStreakEmoji(streak)} {streak} day streak
-                </span>
+              {streak>=1 && (
+                <button onClick={()=>setShowStreakModal(true)}
+                  style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"3px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-flex",alignItems:"center",gap:4,marginTop:6,marginLeft:6,cursor:"pointer"}}>
+                  {getStreakEmoji(streak)} {streak} day streak →
+                </button>
               )}
             </div>
           </div>
@@ -1933,7 +2086,28 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
           {/* Overview tab */}
           {tab==="overview" && (
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              <button onClick={onEditSubs} style={{background:"rgba(255,255,255,.05)",border:"1px solid var(--border)",borderRadius:12,color:"var(--text)",padding:"12px 16px",fontWeight:600,fontSize:14,textAlign:"left",cursor:"pointer"}}>⚙️ Manage Subscriptions</button>
+              {showSubManager ? (
+                <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"16px"}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:12}}>📡 Manage Subscriptions</div>
+                  <SubscriptionManagerPanel
+                    userSubs={userSubs}
+                    onToggle={id=>{const subs=[...userSubs];const idx=subs.indexOf(id);if(idx>-1)subs.splice(idx,1);else subs.push(id);onEditSubs&&onEditSubs(subs);}}
+                    onDone={()=>setShowSubManager(false)}
+                  />
+                </div>
+              ) : (
+                <button onClick={()=>setShowSubManager(true)}
+                  style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.3)",borderRadius:12,color:"#C4B5FD",padding:"12px 16px",fontWeight:700,fontSize:14,textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{fontSize:20}}>📡</span>
+                    <div>
+                      <div style={{fontWeight:800,color:"#fff"}}>Manage Subscriptions</div>
+                      <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Add or remove streaming services</div>
+                    </div>
+                  </div>
+                  <span style={{color:"var(--muted)",fontSize:16}}>›</span>
+                </button>
+              )}
               {tier!=="premium" && <button onClick={()=>{onUpgrade();onClose();}} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>}
 
               {/* Notification opt-in */}
@@ -2649,7 +2823,7 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"trending",  icon:"🔥", label:"Trending",  color:"#F59E0B", anim:"flameDance"},
+    {id:"trending",  icon:"🏠", label:"Home",       color:"#F59E0B", anim:null},
     {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
@@ -3128,6 +3302,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
             </div>
           )}
         </div>
+      {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
       </div>
     </div>
   );
@@ -4814,7 +4989,7 @@ export default function StreamHub() {
               {[
                 {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                 {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
+                {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
               ].map((item,i)=>(
                 <div key={item.word} style={{display:"flex",alignItems:"center",gap:5}}>
                   <div style={{
@@ -5088,7 +5263,7 @@ export default function StreamHub() {
                 {[
                   {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                   {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                  {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
+                  {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
                 ].map((item,i)=>(
                   <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
                     <div style={{
@@ -5245,7 +5420,7 @@ export default function StreamHub() {
             {view==="trending"&&!search&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,background:"var(--gold)",borderRadius:99}}/>}
           </button>
           {[
-            {id:"trending",icon:"🔥",label:"Trending",color:"#F59E0B",anim:"flameDance"},
+            {id:"trending",  icon:"🏠", label:"Home",       color:"#F59E0B", anim:null},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
@@ -5400,7 +5575,7 @@ export default function StreamHub() {
                   {[
                     {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                     {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                    {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
+                    {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
                   ].map((item,i)=>(
                     <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
                       <div style={{
@@ -5639,7 +5814,7 @@ export default function StreamHub() {
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
                 {word:"FIND",   color:"#fff",    bg:"#8B5CF6",  shadow:"rgba(139,92,246,.5)"},
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"ENJOY",  color:"#fff",    bg:"#A855F7",  shadow:"rgba(168,85,247,.5)"},
+                {word:"ENJOY",  color:"#000",    bg:"#FFFFFF",  shadow:"rgba(255,255,255,.4)"},
               ].map((p,i)=>(
                 <span key={i} style={{
                   fontFamily:"var(--font-head)", fontWeight:800,
