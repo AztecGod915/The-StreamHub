@@ -4768,19 +4768,22 @@ export default function StreamHub() {
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
-              {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
-              {icon:"🎭",label:"Mood Search",sub:"Describe any vibe",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
-              {icon:"🏆",label:"Sports Hub",sub:"Live scores & schedules",onClick:()=>{setView("sports");setSearch("");},color:"var(--sports)",big:true},
-              {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-              {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
-              {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F5C518",grad:"rgba(245,197,24,.1)"},
+              {icon:"🎭", label:"Mood Search",  sub:"Tell AI your vibe, it finds the match",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(124,58,237,.12)"},
+              {icon:"🏆", label:"Sports Hub",   sub:"Live scores · World Cup 🔴",           onClick:()=>{setView("sports");setSearch("");},color:"#10B981",grad:"rgba(16,185,129,.12)",live:true},
+              {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
+              {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
+              {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
             ].map(item=>(
-              <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:item.big?"rgba(16,185,129,.08)":"rgba(255,255,255,.04)",border:`${item.big?"2":"1"}px solid ${item.color}${item.big?"88":"44"}`,borderRadius:14,padding:item.big?"14px 18px":"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:item.big?120:100,transition:"all .2s",boxShadow:item.big?"0 4px 16px rgba(16,185,129,.15)":"none"}}
-                onTouchStart={e=>e.currentTarget.style.background=`${item.color}15`}
-                onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.04)"}>
-                <span style={{fontSize:item.big?32:24,animation:item.big?"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite":undefined}}>{item.icon}</span>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--text)",textAlign:"center",whiteSpace:"nowrap"}}>{item.label}{tier!=="premium"&&<span style={{marginLeft:4,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99,verticalAlign:"middle"}}>PRO</span>}</div>
-                <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",whiteSpace:"nowrap"}}>{item.sub}</div>
+              <button key={item.label} onClick={item.onClick}
+                style={{flexShrink:0,background:item.grad,border:`1.5px solid ${item.color}55`,borderRadius:16,padding:"14px 14px 12px",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,cursor:"pointer",minWidth:144,transition:"all .2s",position:"relative"}}
+                onTouchStart={e=>e.currentTarget.style.borderColor=`${item.color}cc`}
+                onTouchEnd={e=>e.currentTarget.style.borderColor=`${item.color}55`}>
+                {item.live && <div style={{position:"absolute",top:8,right:8,background:"#ef4444",borderRadius:99,padding:"2px 6px",fontSize:8,fontWeight:900,color:"#fff",animation:"pulse 1.5s infinite"}}>LIVE</div>}
+                {!item.live && tier!=="premium" && <div style={{position:"absolute",top:8,right:8,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:900,padding:"2px 5px",borderRadius:99}}>PRO</div>}
+                <span style={{fontSize:28,lineHeight:1,animation:item.live?"trophyBounce 2s ease-in-out infinite":undefined}}>{item.icon}</span>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:12,color:"#fff"}}>{item.label}</div>
+                <div style={{fontSize:10,color:"rgba(240,240,250,.5)",lineHeight:1.4}}>{item.sub}</div>
               </button>
             ))}
           </div>
@@ -5305,6 +5308,81 @@ export default function StreamHub() {
           </div>
         )}
 
+        {/* ── MOOD SEARCH + SPORTS HUB — featured cards below banner, desktop only ── */}
+        {view==="trending"&&!search.trim()&&(
+          <div style={{padding:"0 24px 20px",maxWidth:1440,margin:"0 auto"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+
+              {/* Mood Search card */}
+              <div onClick={()=>setShowMoodSearch(true)}
+                style={{
+                  background:"linear-gradient(135deg,#0d0520 0%,#1a0540 60%,#0a0320 100%)",
+                  border:"1.5px solid rgba(124,58,237,.5)",
+                  borderRadius:18, padding:"20px 24px",
+                  cursor:"pointer", position:"relative", overflow:"hidden",
+                  boxShadow:"0 8px 32px rgba(124,58,237,.2)",
+                  transition:"all .25s",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(124,58,237,.9)";e.currentTarget.style.boxShadow="0 12px 40px rgba(124,58,237,.4)";e.currentTarget.style.transform="translateY(-2px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(124,58,237,.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(124,58,237,.2)";e.currentTarget.style.transform="translateY(0)";}}>
+                <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(124,58,237,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
+                <div style={{position:"absolute",bottom:-30,left:-30,width:140,height:140,borderRadius:"50%",background:"rgba(255,107,157,.1)",filter:"blur(40px)",pointerEvents:"none"}}/>
+                <div style={{position:"relative",display:"flex",alignItems:"flex-start",gap:16}}>
+                  <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,boxShadow:"0 6px 20px rgba(124,58,237,.5)"}}>🎭</div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,background:"linear-gradient(90deg,#c4b5fd,#f0abfc)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Mood Search</div>
+                      <span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:900,padding:"2px 7px",borderRadius:99,fontFamily:"var(--font-head)"}}>AI</span>
+                    </div>
+                    <div style={{fontSize:13,color:"rgba(196,181,253,.8)",lineHeight:1.6,marginBottom:14}}>
+                      Describe your perfect movie night — AI finds the <em>exact</em> match. No scrolling, no browsing. Just vibes.
+                    </div>
+                    <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.3)",border:"1px solid rgba(124,58,237,.6)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#c4b5fd"}}>
+                      ✦ Try Mood Search →
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sports Hub card */}
+              <div onClick={()=>{setView("sports");setSearch("");}}
+                style={{
+                  background:"linear-gradient(135deg,#030f03 0%,#0a2010 60%,#031208 100%)",
+                  border:"1.5px solid rgba(16,185,129,.5)",
+                  borderRadius:18, padding:"20px 24px",
+                  cursor:"pointer", position:"relative", overflow:"hidden",
+                  boxShadow:"0 8px 32px rgba(16,185,129,.15)",
+                  transition:"all .25s",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.9)";e.currentTarget.style.boxShadow="0 12px 40px rgba(16,185,129,.35)";e.currentTarget.style.transform="translateY(-2px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(16,185,129,.15)";e.currentTarget.style.transform="translateY(0)";}}>
+                <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(16,185,129,.12)",filter:"blur(50px)",pointerEvents:"none"}}/>
+                <div style={{position:"relative",display:"flex",alignItems:"flex-start",gap:16}}>
+                  <div style={{position:"relative",width:52,height:52,flexShrink:0}}>
+                    <div style={{width:52,height:52,borderRadius:14,background:"rgba(16,185,129,.2)",border:"1px solid rgba(16,185,129,.4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26}}>
+                      <span style={{animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
+                    </div>
+                    <div style={{position:"absolute",top:-3,right:-3,width:12,height:12,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",boxShadow:"0 0 8px #ef4444",border:"2px solid #030f03"}}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                      <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,background:"linear-gradient(90deg,#6ee7b7,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Sports Hub</div>
+                      <span style={{background:"#ef4444",color:"#fff",fontSize:9,fontWeight:900,padding:"2px 7px",borderRadius:99,fontFamily:"var(--font-head)",animation:"pulse 1.5s infinite"}}>🔴 LIVE</span>
+                    </div>
+                    <div style={{fontSize:13,color:"rgba(110,231,183,.75)",lineHeight:1.6,marginBottom:14}}>
+                      Live scores, full schedules & reminders for every game — NFL, NBA, MLB, NHL, World Cup 2026 and more.
+                    </div>
+                    <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(16,185,129,.2)",border:"1px solid rgba(16,185,129,.5)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#6ee7b7"}}>
+                      🏟️ Open Sports Hub →
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
         <div style={{display:"flex",padding:`${(view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
           {/* Main */}
           <main style={{flex:1,minWidth:0}}>
@@ -5378,37 +5456,23 @@ export default function StreamHub() {
             {/* Premium Tools */}
             <div style={{marginTop:16}}>
               {/* Sports Hub Button */}
-              {/* Mood Search & Sports Hub — same size, stacked */}
-              <button onClick={()=>setShowMoodSearch(true)}
-                style={{width:"100%",background:"rgba(124,58,237,.12)",border:"1px solid rgba(124,58,237,.35)",borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8,transition:"all .2s"}}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.22)";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.12)";}}>
-                <span style={{fontSize:20,position:"relative"}}>🎭</span>
-                <div><div style={{fontSize:12,fontWeight:800,color:"#c4b5fd",fontFamily:"var(--font-head)"}}>Mood Search</div><div style={{fontSize:10,color:"var(--muted)"}}>Describe any vibe</div></div>
-              </button>
-              <button onClick={()=>{setView("sports");setSearch("");}}
-                style={{width:"100%",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.35)",borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:12,transition:"all .2s"}}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(16,185,129,.2)";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="rgba(16,185,129,.1)";}}>
-                <span style={{fontSize:20,position:"relative",animation:"trophyBounce 2s ease-in-out infinite"}}>🏆<span style={{position:"absolute",top:-3,right:-3,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",display:"inline-block"}}/></span>
-                <div><div style={{fontSize:12,fontWeight:800,color:"#6ee7b7",fontFamily:"var(--font-head)"}}>Sports Hub</div><div style={{fontSize:10,color:"var(--muted)"}}>Live scores · World Cup 🔴</div></div>
-              </button>
+              {/* Mood Search & Sports Hub are featured below the banner — not duplicated here */}
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
-              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
-                  {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
-                  {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-                  {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
-                  {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+                  {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F5C518",grad:"rgba(245,197,24,.08)"},
+                  {icon:"🚨",label:"Leaving Soon", sub:"Titles leaving your services this month",onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.07)"},
+                  {icon:"🆕",label:"New Releases", sub:"Fresh drops across all streaming platforms",onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.07)"},
+                  {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
                 ].map(item=>(
                   <button key={item.label} onClick={item.onClick}
-                    style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:10,padding:"9px 10px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",textAlign:"left",width:"100%"}}
-                    onMouseEnter={e=>{e.currentTarget.style.borderColor=item.color;e.currentTarget.style.background=`${item.color}10`;}}
-                    onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.background="rgba(255,255,255,.03)";}}>
-                    <span style={{fontSize:18}}>{item.icon}</span>
-                    <div>
-                      <div style={{fontSize:12,fontWeight:700,color:"var(--text)",display:"flex",alignItems:"center",gap:5}}>{item.label}{tier!=="premium"&&<span style={{background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99}}>PRO</span>}</div>
-                      <div style={{fontSize:10,color:"var(--muted)"}}>{item.sub}</div>
+                    style={{background:item.grad,border:`1.5px solid ${item.color}44`,borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",transition:"all .2s",textAlign:"left",width:"100%"}}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=`${item.color}99`;e.currentTarget.style.background=`${item.color}14`;}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=`${item.color}44`;e.currentTarget.style.background=item.grad;}}>
+                    <span style={{fontSize:22,flexShrink:0}}>{item.icon}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:800,color:"var(--text)",display:"flex",alignItems:"center",gap:5,marginBottom:2}}>{item.label}{tier!=="premium"&&<span style={{background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99}}>PRO</span>}</div>
+                      <div style={{fontSize:10,color:"var(--muted)",lineHeight:1.4}}>{item.sub}</div>
                     </div>
                   </button>
                 ))}
