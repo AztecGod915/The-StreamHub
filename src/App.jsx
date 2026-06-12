@@ -4773,7 +4773,6 @@ export default function StreamHub() {
             {[
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F5C518",grad:"rgba(245,197,24,.1)"},
               {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(124,58,237,.12)"},
-              {icon:"🏆", label:"Sports Hub",   sub:"Live scores · World Cup 🔴",           onClick:()=>{setView("sports");setSearch("");},color:"#10B981",grad:"rgba(16,185,129,.12)",live:true},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -4982,16 +4981,18 @@ export default function StreamHub() {
                   </div>
                 ))}
               </div>
-              {/* Mood Search CTA with usage info */}
-              <button onClick={()=>setShowMoodSearch(true)}
-                style={{marginTop:10,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,pointerEvents:"all",transition:"all .2s"}}
-                onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.35)"}
-                onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
-                <span>🎭 Try Mood Search — describe any vibe</span>
-                <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
-                  {tier==="premium" ? "✦ Unlimited" : "2 free / day"}
-                </span>
-              </button>
+              {/* Mood Search CTA with usage info — centered */}
+              <div style={{display:"flex",justifyContent:"center",marginTop:10,pointerEvents:"all"}}>
+                <button onClick={()=>setShowMoodSearch(true)}
+                  style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 18px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:12,transition:"all .2s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.35)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
+                  <span>🎭 Try Mood Search — describe any vibe</span>
+                  <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
+                    {tier==="premium" ? "✦ Unlimited" : "2 free / day"}
+                  </span>
+                </button>
+              </div>
 
             </div>
             {/* Right glowing logo — absolutely centered vertically */}
@@ -5041,21 +5042,19 @@ export default function StreamHub() {
             <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
-                {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
-                {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these titles",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
-                {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
-                {icon:"💰",label:"Cost Calculator",sub:"See your streaming spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
+                {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F5C518",grad:"rgba(245,197,24,.1)"},
+                {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",          onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.1)"},
+                {icon:"🆕", label:"New Releases", sub:"Fresh drops across all streaming platforms", onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
+                {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
               ].map(item=>(
                 <button key={item.label} onClick={item.onClick}
-                  style={{background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,cursor:"pointer",transition:"all .2s",width:"100%"}}
-                  onMouseEnter={e=>{e.currentTarget.style.background=`${item.color}12`;e.currentTarget.style.borderColor=item.color;}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.04)";e.currentTarget.style.borderColor=`${item.color}44`;}}>
-                  <span style={{fontSize:28}}>{item.icon}</span>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)",textAlign:"center"}}>
-                    {item.label}
-                    {tier!=="premium"&&<span style={{marginLeft:5,background:"var(--gold)",color:"#000",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:99}}>PRO</span>}
-                  </div>
-                  <div style={{fontSize:11,color:"var(--muted)",textAlign:"center"}}>{item.sub}</div>
+                  style={{background:item.grad,border:`1.5px solid ${item.color}55`,borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,cursor:"pointer",transition:"all .2s",width:"100%",position:"relative",textAlign:"left"}}
+                  onMouseEnter={e=>{e.currentTarget.style.borderColor=`${item.color}aa`;e.currentTarget.style.background=`${item.color}18`;}}
+                  onMouseLeave={e=>{e.currentTarget.style.borderColor=`${item.color}55`;e.currentTarget.style.background=item.grad;}}>
+                  {tier!=="premium"&&<div style={{position:"absolute",top:8,right:8,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:900,padding:"2px 5px",borderRadius:99}}>PRO</div>}
+                  <span style={{fontSize:26,lineHeight:1}}>{item.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:12,color:"#fff",marginTop:2}}>{item.label}</div>
+                  <div style={{fontSize:10,color:"rgba(240,240,250,.5)",lineHeight:1.4}}>{item.sub}</div>
                 </button>
               ))}
             </div>
