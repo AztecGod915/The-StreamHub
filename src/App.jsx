@@ -4706,6 +4706,14 @@ export default function StreamHub() {
                 </div>
               ))}
             </div>
+            {/* Mood Search CTA with usage info */}
+            <button onClick={()=>setShowMoodSearch(true)}
+              style={{marginTop:12,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"10px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <span>🎭 Try Mood Search — describe any vibe</span>
+              <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 8px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
+                {tier==="premium" ? "✦ Unlimited" : "2 free/day"}
+              </span>
+            </button>
 
           </div>
         )}
@@ -4764,7 +4772,7 @@ export default function StreamHub() {
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F5C518",grad:"rgba(245,197,24,.1)"},
-              {icon:"🎭", label:"Mood Search",  sub:"Tell AI your vibe, it finds the match",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(124,58,237,.12)"},
+              {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(124,58,237,.12)"},
               {icon:"🏆", label:"Sports Hub",   sub:"Live scores · World Cup 🔴",           onClick:()=>{setView("sports");setSearch("");},color:"#10B981",grad:"rgba(16,185,129,.12)",live:true},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
@@ -4974,6 +4982,16 @@ export default function StreamHub() {
                   </div>
                 ))}
               </div>
+              {/* Mood Search CTA with usage info */}
+              <button onClick={()=>setShowMoodSearch(true)}
+                style={{marginTop:10,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,pointerEvents:"all",transition:"all .2s"}}
+                onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.35)"}
+                onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
+                <span>🎭 Try Mood Search — describe any vibe</span>
+                <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
+                  {tier==="premium" ? "✦ Unlimited" : "2 free / day"}
+                </span>
+              </button>
 
             </div>
             {/* Right glowing logo — absolutely centered vertically */}
@@ -5317,6 +5335,10 @@ export default function StreamHub() {
                     </div>
                     <div style={{fontSize:13,color:"rgba(196,181,253,.8)",lineHeight:1.6,marginBottom:14}}>
                       Describe your perfect movie night — AI finds the <em>exact</em> match. No scrolling, no browsing. Just vibes.
+                      <div style={{marginTop:8,display:"flex",gap:8}}>
+                        <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:600,color:"rgba(196,181,253,.6)"}}>Free: 2 searches/day</span>
+                        <span style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>✦ Premium: Unlimited</span>
+                      </div>
                     </div>
                     <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.3)",border:"1px solid rgba(124,58,237,.6)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#c4b5fd"}}>
                       ✦ Try Mood Search →
