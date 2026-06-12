@@ -435,13 +435,12 @@ function GameDetailModal({ evt, onClose }) {
   const reminderLinks = isUpcoming ? getReminderLinks(evt) : null;
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1300,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:60,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
         background:"linear-gradient(160deg,var(--surface) 0%,#0d1a0d 100%)",
-        borderRadius:"22px 22px 0 0",width:"100%",maxWidth:500,
+        borderRadius:18,width:"100%",maxWidth:500,
         border:"1px solid rgba(16,185,129,.3)",
-        borderBottom:"none",
-        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+        boxShadow:"0 20px 60px rgba(0,0,0,.7)",
         overflow:"hidden",
       }}>
         {/* Live indicator stripe */}
@@ -4771,14 +4770,15 @@ export default function StreamHub() {
             {[
               {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
               {icon:"🎭",label:"Mood Search",sub:"Describe any vibe",onClick:()=>setShowMoodSearch(true),color:"var(--purple)"},
+              {icon:"🏆",label:"Sports Hub",sub:"Live scores & schedules",onClick:()=>{setView("sports");setSearch("");},color:"var(--sports)",big:true},
               {icon:"🚨",label:"Leaving Soon",sub:"Don't miss these",onClick:()=>setShowLeavingSoon(true),color:"var(--danger)"},
               {icon:"🆕",label:"New Releases",sub:"Fresh drops on your services",onClick:()=>setShowNewReleases(true),color:"#06B6D4"},
               {icon:"💰",label:"Cost Calculator",sub:"See your spend",onClick:()=>setShowCostCalc(true),color:"var(--sports)"},
             ].map(item=>(
-              <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:"rgba(255,255,255,.04)",border:`1px solid ${item.color}44`,borderRadius:14,padding:"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:100,transition:"all .2s"}}
+              <button key={item.label} onClick={item.onClick} style={{flexShrink:0,background:item.big?"rgba(16,185,129,.08)":"rgba(255,255,255,.04)",border:`${item.big?"2":"1"}px solid ${item.color}${item.big?"88":"44"}`,borderRadius:14,padding:item.big?"14px 18px":"12px 14px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",minWidth:item.big?120:100,transition:"all .2s",boxShadow:item.big?"0 4px 16px rgba(16,185,129,.15)":"none"}}
                 onTouchStart={e=>e.currentTarget.style.background=`${item.color}15`}
                 onTouchEnd={e=>e.currentTarget.style.background="rgba(255,255,255,.04)"}>
-                <span style={{fontSize:24}}>{item.icon}</span>
+                <span style={{fontSize:item.big?32:24,animation:item.big?"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite":undefined}}>{item.icon}</span>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:11,color:"var(--text)",textAlign:"center",whiteSpace:"nowrap"}}>{item.label}{tier!=="premium"&&<span style={{marginLeft:4,background:"var(--gold)",color:"#000",fontSize:7,fontWeight:800,padding:"1px 4px",borderRadius:99,verticalAlign:"middle"}}>PRO</span>}</div>
                 <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",whiteSpace:"nowrap"}}>{item.sub}</div>
               </button>
@@ -5107,6 +5107,12 @@ export default function StreamHub() {
 
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
+          {/* Tablet Home button */}
+          <button onClick={()=>{setView("trending");setSearch("");}} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:view==="trending"&&!search?"var(--gold)":"rgba(240,240,250,.35)",cursor:"pointer",position:"relative"}}>
+            <span style={{fontSize:22,filter:view==="trending"&&!search?"drop-shadow(0 0 8px rgba(245,197,24,.8))":"none"}}>🏠</span>
+            <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Home</span>
+            {view==="trending"&&!search&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,background:"var(--gold)",borderRadius:99}}/>}
+          </button>
           {[
             {id:"trending",icon:"🔥",label:"Trending",color:"#F5C518",anim:"flameDance"},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
@@ -5164,6 +5170,10 @@ export default function StreamHub() {
         {/* Header */}
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
+            <button onClick={()=>{setView("trending");setSearch("");}}
+              style={{background:view==="trending"&&!search?"rgba(245,197,24,.12)":"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              🏠 Home
+            </button>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
                 style={{background:view===t.id?`${t.color}15`:"none",border:"none",color:view===t.id?t.color:"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,transition:"all .2s",display:"flex",alignItems:"center",gap:5,whiteSpace:"nowrap",boxShadow:view===t.id?`0 0 14px ${t.color}30`:"none",cursor:"pointer"}}>
@@ -5298,31 +5308,6 @@ export default function StreamHub() {
         )}
 
         <div style={{display:"flex",padding:`${(view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
-          {/* Left Sidebar */}
-          <aside style={{width:168,flexShrink:0}}>
-            <div style={{marginBottom:20}}>
-              <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>MY SERVICES</div>
-              <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {subscribed.map(s=>(
-                  <button key={s.id} onClick={()=>setFilterPlat(filterPlat===s.id?null:s.id)} style={{background:filterPlat===s.id?`${s.color}22`:"rgba(255,255,255,.04)",border:filterPlat===s.id?`1px solid ${s.color}66`:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"8px 12px",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:8,transition:"all .2s"}}>
-                    <span style={{background:s.color,borderRadius:5,width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:"#fff",flexShrink:0}}>{s.logo}</span>{s.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{fontSize:10,fontWeight:700,color:"var(--muted)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>AVAILABLE</div>
-              <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                {unsubscribed.map(s=>(
-                  <button key={s.id} onClick={()=>setFilterPlat(filterPlat===s.id?null:s.id)} style={{background:"rgba(255,255,255,.02)",border:`1px solid ${filterPlat===s.id?`${s.color}44`:"rgba(255,255,255,.05)"}`,borderRadius:10,color:"var(--muted)",padding:"6px 12px",fontSize:11,display:"flex",alignItems:"center",gap:8,opacity:.65}}>
-                    <span style={{background:"rgba(255,255,255,.1)",borderRadius:5,width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,flexShrink:0}}>{s.logo}</span>{s.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {filterPlat&&<button onClick={()=>setFilterPlat(null)} style={{marginTop:12,width:"100%",background:"none",border:"1px solid var(--border)",borderRadius:9,color:"var(--muted)",padding:"6px 0",fontSize:12}}>Clear filter ✕</button>}
-          </aside>
-
           {/* Main */}
           <main style={{flex:1,minWidth:0}}>
             {/* Homepage hero + rows */}
@@ -5421,6 +5406,31 @@ export default function StreamHub() {
                 <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.35)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:800,color:"#ef4444"}}>LIVE</div>
               </button>
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+              {/* Mood Search prominent button */}
+              <button onClick={()=>setShowMoodSearch(true)}
+                style={{width:"100%",background:"rgba(124,58,237,.12)",border:"1px solid rgba(124,58,237,.35)",borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8,transition:"all .2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.22)";e.currentTarget.style.borderColor="rgba(124,58,237,.6)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.12)";e.currentTarget.style.borderColor="rgba(124,58,237,.35)";}}>
+                <span style={{fontSize:22}}>🎭</span>
+                <div style={{textAlign:"left"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#c4b5fd",fontFamily:"var(--font-head)"}}>Mood Search</div>
+                  <div style={{fontSize:10,color:"var(--muted)"}}>Describe any vibe</div>
+                </div>
+              </button>
+              {/* Sports Hub — large, under Mood Search */}
+              <button onClick={()=>{setView("sports");setSearch("");}}
+                style={{width:"100%",background:"rgba(16,185,129,.1)",border:"2px solid rgba(16,185,129,.4)",borderRadius:12,padding:"12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginBottom:10,transition:"all .2s",boxShadow:"0 4px 14px rgba(16,185,129,.1)"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.7)";e.currentTarget.style.boxShadow="0 4px 20px rgba(16,185,129,.25)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.4)";e.currentTarget.style.boxShadow="0 4px 14px rgba(16,185,129,.1)";}}>
+                <div style={{position:"relative",width:42,height:42,borderRadius:10,background:"rgba(16,185,129,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <span style={{fontSize:24,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
+                  <div style={{position:"absolute",top:-2,right:-2,width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite"}}/>
+                </div>
+                <div style={{textAlign:"left"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:"#fff",fontFamily:"var(--font-head)"}}>Sports Hub</div>
+                  <div style={{fontSize:10,color:"rgba(16,185,129,.8)"}}>Live · Scores · World Cup 🔴</div>
+                </div>
+              </button>
               <div style={{display:"flex",flexDirection:"column",gap:7}}>
                 {[
                   {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
