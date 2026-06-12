@@ -2054,6 +2054,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
   const tabs = ["overview","watchlist","reviews"];
 
   return (
+    <>
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:520,maxHeight:"90vh",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
 
@@ -3340,6 +3341,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
       </div>
     </div>
     {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
+    </>
   );
 }
 
