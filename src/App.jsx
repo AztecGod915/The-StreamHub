@@ -1947,7 +1947,7 @@ function SubscriptionManagerPanel({ userSubs, onToggle, onDone }) {
   );
 }
 
-
+function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
