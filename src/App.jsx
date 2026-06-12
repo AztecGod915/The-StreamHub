@@ -1077,6 +1077,92 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
 }
 
 
+// ─── OLYMPICS PLACEHOLDER ────────────────────────────────────────────────────
+function OlympicsPlaceholder() {
+  const LA2028 = new Date("2028-07-14T20:00:00");
+  const now = new Date();
+  const diff = Math.max(0, LA2028 - now);
+  const days  = Math.floor(diff / (1000*60*60*24));
+  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+  const mins  = Math.floor((diff % (1000*60*60)) / (1000*60));
+
+  const SPORTS = [
+    {icon:"🏊",name:"Swimming"},     {icon:"🏃",name:"Track & Field"},
+    {icon:"🤸",name:"Gymnastics"},   {icon:"🏀",name:"Basketball"},
+    {icon:"⚽",name:"Soccer"},       {icon:"🎾",name:"Tennis"},
+    {icon:"🚴",name:"Cycling"},      {icon:"🥊",name:"Boxing"},
+    {icon:"🏐",name:"Volleyball"},   {icon:"🤼",name:"Wrestling"},
+    {icon:"🏋️",name:"Weightlifting"},{icon:"🎿",name:"Skateboarding"},
+  ];
+
+  return (
+    <div style={{maxWidth:600}}>
+      {/* Hero card */}
+      <div style={{
+        background:"linear-gradient(135deg,#0a0518 0%,#18103a 50%,#0a1628 100%)",
+        border:"1.5px solid rgba(139,92,246,.4)",
+        borderRadius:20, padding:"24px 20px", marginBottom:16,
+        position:"relative", overflow:"hidden",
+      }}>
+        {/* Glow */}
+        <div style={{position:"absolute",top:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(139,92,246,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:-40,left:-40,width:160,height:160,borderRadius:"50%",background:"rgba(245,158,11,.1)",filter:"blur(50px)",pointerEvents:"none"}}/>
+
+        {/* Olympic rings */}
+        <div style={{display:"flex",gap:4,marginBottom:16,position:"relative"}}>
+          {[["#0085C7","blue"],["#000","black"],["#EF4444","red"],["#F59E0B","yellow"],["#10B981","green"]].map(([c,n])=>(
+            <div key={n} style={{width:28,height:28,borderRadius:"50%",border:`4px solid ${c}`,background:"transparent"}}/>
+          ))}
+        </div>
+
+        <div style={{position:"relative"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+            <div style={{background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,padding:"3px 12px",fontSize:10,fontWeight:800,color:"#F59E0B",letterSpacing:.8}}>COMING 2028</div>
+            <div style={{background:"rgba(0,133,199,.15)",border:"1px solid rgba(0,133,199,.3)",borderRadius:99,padding:"3px 12px",fontSize:10,fontWeight:800,color:"#60A5FA",letterSpacing:.8}}>PEACOCK EXCLUSIVE</div>
+          </div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:26,lineHeight:1.1,marginBottom:4}}>
+            <span style={{background:"linear-gradient(90deg,#8B5CF6,#C4B5FD)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Los Angeles</span>
+            <span style={{color:"var(--text)"}}> 2028</span>
+          </div>
+          <div style={{fontSize:13,color:"rgba(240,240,250,.6)",marginBottom:20}}>XXXIV Summer Olympic Games · July 14 – July 30, 2028 · Los Angeles, CA</div>
+
+          {/* Countdown */}
+          <div style={{display:"flex",gap:12,marginBottom:20}}>
+            {[[days,"Days"],[hours,"Hours"],[mins,"Minutes"]].map(([val,label])=>(
+              <div key={label} style={{background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.25)",borderRadius:12,padding:"14px 16px",textAlign:"center",flex:1}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:28,color:"#C4B5FD",lineHeight:1}}>{val}</div>
+                <div style={{fontSize:10,color:"var(--muted)",marginTop:4,fontWeight:700,letterSpacing:.8}}>{label.toUpperCase()}</div>
+              </div>
+            ))}
+          </div>
+
+          <a href="https://www.peacocktv.com/stream/sports" target="_blank" rel="noopener noreferrer"
+            style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,background:"#E31837",borderRadius:12,padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"#fff",textDecoration:"none"}}>
+            📺 Watch on Peacock →
+          </a>
+        </div>
+      </div>
+
+      {/* Featured sports */}
+      <div style={{background:"rgba(255,255,255,.02)",border:"1px solid rgba(139,92,246,.15)",borderRadius:16,padding:"16px 16px 12px"}}>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"#C4B5FD",letterSpacing:.8,marginBottom:14}}>🏅 FEATURED SPORTS · LA 2028</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))",gap:8}}>
+          {SPORTS.map(s=>(
+            <div key={s.name} style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.15)",borderRadius:10,padding:"10px 8px",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:18}}>{s.icon}</span>
+              <span style={{fontSize:12,fontWeight:600,color:"rgba(240,240,250,.75)"}}>{s.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{marginTop:12,fontSize:11,color:"var(--muted)",textAlign:"center",lineHeight:1.6}}>
+        Live scores and schedules will appear here when the Games begin on July 14, 2028.
+      </div>
+    </div>
+  );
+}
+
 // ─── SPORT CATEGORY CARDS ────────────────────────────────────────────────────
 // ─── SOCCER LEAGUES ──────────────────────────────────────────────────────────
 const SOCCER_LEAGUES = [
@@ -3143,7 +3229,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <div style={{
                 width:40,height:40,borderRadius:12,
-                background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",
+                background:"linear-gradient(135deg,#8B5CF6,#A855F7)",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 fontSize:20,boxShadow:"0 4px 20px rgba(139,92,246,.5)",
               }}>🎭</div>
@@ -3198,7 +3284,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
             <button onClick={search} disabled={loading||!mood.trim()}
               style={{
                 position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
-                background:mood.trim()?"linear-gradient(135deg,#8B5CF6,#FF6B9D)":"rgba(255,255,255,.1)",
+                background:mood.trim()?"linear-gradient(135deg,#8B5CF6,#A855F7)":"rgba(255,255,255,.1)",
                 border:"none",borderRadius:10,color:"#fff",
                 padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,
                 fontSize:12,cursor:mood.trim()?"pointer":"default",
@@ -3260,7 +3346,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:6}}>
                             <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
-                              style={{background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                              style={{background:"linear-gradient(135deg,#8B5CF6,#A855F7)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
                               Search →
                             </button>
                             <button onClick={()=>{
@@ -3353,7 +3439,7 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
           <div style={{display:"flex",gap:6}}>
             {[{id:"all",label:"All"},{ id:"movie",label:"🎬 Movies"},{id:"tv",label:"📺 Shows"}].map(f=>(
               <button key={f.id} onClick={()=>setFilter(f.id)}
-                style={{background:filter===f.id?"rgba(6,182,212,.2)":"rgba(255,255,255,.05)",border:`1px solid ${filter===f.id?"rgba(6,182,212,.5)":"transparent"}`,borderRadius:99,color:filter===f.id?"#06B6D4":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
+                style={{background:filter===f.id?"rgba(139,92,246,.2)":"rgba(255,255,255,.05)",border:`1px solid ${filter===f.id?"rgba(139,92,246,.5)":"transparent"}`,borderRadius:99,color:filter===f.id?"#C4B5FD":"var(--muted)",padding:"5px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)"}}>
                 {f.label}
               </button>
             ))}
@@ -3596,7 +3682,7 @@ function WelcomeBanner() {
             }}>THE</span>
             <span style={{
               fontSize:"clamp(32px,8vw,72px)",
-              background:"linear-gradient(90deg,#F59E0B 0%,#FBBF24 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
+              background:"linear-gradient(90deg,#F59E0B 0%,#FBBF24 40%,#ffffff 60%,#E9D5FF 80%,#C4B5FD 100%)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite",
@@ -3626,10 +3712,10 @@ function WelcomeBanner() {
             {name:"Disney+",color:"#0063E5"},
             {name:"Max",color:"#002BE7"},
             {name:"Hulu",color:"#1CE783"},
-            {name:"Prime",color:"#00A8E1"},
+            {name:"Prime",color:"#8B5CF6"},
             {name:"Crunchyroll",color:"#F47521"},
             {name:"ESPN+",color:"#E31837"},
-            {name:"Tubi",color:"#FA4343"},
+            {name:"Tubi",color:"#A855F7"},
           ].map(s=>(
             <div key={s.name} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.08)",borderRadius:99,padding:"4px 10px",fontSize:11,fontWeight:600,color:"rgba(240,240,250,.6)"}}>
               <div style={{width:7,height:7,borderRadius:"50%",background:s.color,flexShrink:0}} />
@@ -4680,7 +4766,7 @@ export default function StreamHub() {
             <div style={{
               fontFamily:"var(--font-head)", fontWeight:800,
               fontSize:20, letterSpacing:"-.02em", marginBottom:12,
-              background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+              background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite",
@@ -4690,8 +4776,8 @@ export default function StreamHub() {
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",width:"100%"}}>
               {[
                 {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
-                {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
+                {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
               ].map((item,i)=>(
                 <div key={item.word} style={{display:"flex",alignItems:"center",gap:5}}>
                   <div style={{
@@ -4774,7 +4860,7 @@ export default function StreamHub() {
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
               {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(139,92,246,.12)"},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
-              {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
+              {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
             ].map(item=>(
               <button key={item.label} onClick={item.onClick}
@@ -4833,10 +4919,9 @@ export default function StreamHub() {
             ) : (
               <>
                 <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
-                {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
-                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-                  {loading ? Array.from({length:4}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                </div>
+                {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                  : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
+                  : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
               </>
             )}
           </div>
@@ -4957,7 +5042,7 @@ export default function StreamHub() {
               <div style={{
                 fontFamily:"var(--font-head)", fontWeight:800,
                 fontSize:22, letterSpacing:"-.02em", marginBottom:12, lineHeight:1.2,
-                background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
                 backgroundSize:"200% auto",
                 WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
                 animation:"gradientShift 3s linear infinite",
@@ -4965,8 +5050,8 @@ export default function StreamHub() {
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"nowrap"}}>
                 {[
                   {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                  {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
-                  {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                  {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
+                  {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
                 ].map((item,i)=>(
                   <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
                     <div style={{
@@ -5044,7 +5129,7 @@ export default function StreamHub() {
               {[
                 {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
                 {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",          onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.1)"},
-                {icon:"🆕", label:"New Releases", sub:"Fresh drops across all streaming platforms", onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
+                {icon:"🆕", label:"New Releases", sub:"Fresh drops across all streaming platforms", onClick:()=>setShowNewReleases(true),color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
                 {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
               ].map(item=>(
                 <button key={item.label} onClick={item.onClick}
@@ -5084,10 +5169,9 @@ export default function StreamHub() {
               ) : (
                 <>
                   <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
-                  {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-                    {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                  </div>
+                  {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                    : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
+                    : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
                 </>
               )}
             </div>
@@ -5269,7 +5353,7 @@ export default function StreamHub() {
                 <div style={{
                   fontFamily:"var(--font-head)", fontWeight:800,
                   fontSize:30, letterSpacing:"-.02em", marginBottom:14,
-                  background:"linear-gradient(90deg,#e0f2fe,#a5f3fc,#67e8f9,#e0f2fe)",
+                  background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
                   backgroundSize:"200% auto",
                   WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
                   animation:"gradientShift 3s linear infinite",
@@ -5278,8 +5362,8 @@ export default function StreamHub() {
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12,pointerEvents:"all"}}>
                   {[
                     {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                    {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
-                    {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
+                    {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
+                    {word:"ENJOY",  bg:"#A855F7", glow:"rgba(168,85,247,.7)"},
                   ].map((item,i)=>(
                     <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
                       <div style={{
@@ -5326,7 +5410,7 @@ export default function StreamHub() {
                 <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(139,92,246,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
                 <div style={{position:"absolute",bottom:-30,left:-30,width:140,height:140,borderRadius:"50%",background:"rgba(255,107,157,.1)",filter:"blur(40px)",pointerEvents:"none"}}/>
                 <div style={{position:"relative",display:"flex",alignItems:"flex-start",gap:16}}>
-                  <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,boxShadow:"0 6px 20px rgba(139,92,246,.5)"}}>🎭</div>
+                  <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#8B5CF6,#A855F7)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,boxShadow:"0 6px 20px rgba(139,92,246,.5)"}}>🎭</div>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                       <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,background:"linear-gradient(90deg,#c4b5fd,#f0abfc)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Mood Search</div>
@@ -5413,10 +5497,9 @@ export default function StreamHub() {
                 ) : (
                   <>
                     <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
-                    {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/> : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:14}}>
-                      {loading ? Array.from({length:8}).map((_,i)=><SkeletonCard key={i}/>) : filtered.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                    </div>
+                    {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                      : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
+                      : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
                   </>
                 )}
               </div>
@@ -5464,7 +5547,7 @@ export default function StreamHub() {
                 {[
                   {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.08)"},
                   {icon:"🚨",label:"Leaving Soon", sub:"Titles leaving your services this month",onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.07)"},
-                  {icon:"🆕",label:"New Releases", sub:"Fresh drops across all streaming platforms",onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.07)"},
+                  {icon:"🆕",label:"New Releases", sub:"Fresh drops across all streaming platforms",onClick:()=>setShowNewReleases(true),color:"#8B5CF6",grad:"rgba(139,92,246,.07)"},
                   {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
                 ].map(item=>(
                   <button key={item.label} onClick={item.onClick}
@@ -5499,7 +5582,7 @@ export default function StreamHub() {
               fontFamily:"var(--font-head)", fontWeight:800,
               fontSize:"clamp(24px,3vw,42px)",
               letterSpacing:"-.01em", marginBottom:10,
-              background:"linear-gradient(90deg,#F59E0B,#ffffff,#06B6D4,#FF6B9D,#F59E0B)",
+              background:"linear-gradient(90deg,#F59E0B,#ffffff,#8B5CF6,#C4B5FD,#F59E0B)",
               backgroundSize:"300% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 4s linear infinite",
@@ -5517,9 +5600,9 @@ export default function StreamHub() {
               {[
                 {word:"SEARCH", color:"#000",    bg:"#F59E0B",  shadow:"rgba(245,158,11,.6)"},
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"FIND",   color:"#fff",    bg:"#06B6D4",  shadow:"rgba(6,182,212,.5)"},
+                {word:"FIND",   color:"#fff",    bg:"#8B5CF6",  shadow:"rgba(139,92,246,.5)"},
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"ENJOY",  color:"#fff",    bg:"#FF6B9D",  shadow:"rgba(255,107,157,.5)"},
+                {word:"ENJOY",  color:"#fff",    bg:"#A855F7",  shadow:"rgba(168,85,247,.5)"},
               ].map((p,i)=>(
                 <span key={i} style={{
                   fontFamily:"var(--font-head)", fontWeight:800,
