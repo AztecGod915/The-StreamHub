@@ -64,9 +64,9 @@ const GlobalStyles = () => {
       @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
       *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
       :root {
-        --bg:#07070E; --surface:#0D0D1A; --card:#111122;
-        --border:rgba(255,255,255,0.07); --gold:#F5C518; --gold-dim:rgba(245,197,24,0.15);
-        --purple:#7C3AED; --cyan:#06B6D4; --anime:#FF6B9D; --sports:#10B981;
+        --bg:#09070F; --surface:#1A1030; --card:#130E24;
+        --border:rgba(139,92,246,0.12); --gold:#F59E0B; --gold-dim:rgba(245,158,11,0.15);
+        --purple:#8B5CF6; --cyan:#06B6D4; --anime:#FF6B9D; --sports:#10B981;
         --text:#F0F0FA; --muted:rgba(240,240,250,0.45);
         --danger:#EF4444; --success:#10B981; --radius:14px;
         --font-head:'Syne',sans-serif; --font-body:'Plus Jakarta Sans',sans-serif;
@@ -75,11 +75,11 @@ const GlobalStyles = () => {
       body::before {
         content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
         background:
-          radial-gradient(ellipse 80% 50% at 20% 0%, rgba(124,58,237,0.18) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 80% 10%, rgba(245,197,24,0.08) 0%, transparent 55%),
-          radial-gradient(ellipse 50% 60% at 10% 70%, rgba(6,182,212,0.1) 0%, transparent 55%),
-          radial-gradient(ellipse 70% 50% at 90% 80%, rgba(255,107,157,0.07) 0%, transparent 55%),
-          radial-gradient(ellipse 40% 40% at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 60%);
+          radial-gradient(ellipse 80% 50% at 20% 0%, rgba(139,92,246,0.22) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 80% 10%, rgba(245,158,11,0.08) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 60% at 10% 70%, rgba(139,92,246,0.12) 0%, transparent 55%),
+          radial-gradient(ellipse 70% 50% at 90% 80%, rgba(245,158,11,0.06) 0%, transparent 55%),
+          radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139,92,246,0.06) 0%, transparent 60%);
         animation:bgBreath 12s ease-in-out infinite;
       }
       body::after {
@@ -99,7 +99,7 @@ const GlobalStyles = () => {
       @keyframes slideUp  { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
       @keyframes slideDown{ from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
       @keyframes shimmer  { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
-      @keyframes logoPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(245,197,24,0))} 50%{filter:drop-shadow(0 0 14px rgba(245,197,24,0.7))} }
+      @keyframes logoPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(245,158,11,0))} 50%{filter:drop-shadow(0 0 14px rgba(245,158,11,0.7))} }
       @keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
       @keyframes flameDance { 0%,100%{transform:scale(1) rotate(-8deg)} 25%{transform:scale(1.3) rotate(8deg)} 50%{transform:scale(0.9) rotate(-5deg)} 75%{transform:scale(1.2) rotate(6deg)} }
       @keyframes swordSwing { 0%,100%{transform:rotate(-20deg) scale(1)} 50%{transform:rotate(20deg) scale(1.1)} }
@@ -108,7 +108,7 @@ const GlobalStyles = () => {
       @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
       @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
       @keyframes trophyBounce { 0%,100%{transform:translateY(0) rotate(-5deg)} 40%{transform:translateY(-6px) rotate(5deg)} 70%{transform:translateY(-3px) rotate(-3deg)} }
-      @keyframes sportsGlow { 0%,100%{filter:drop-shadow(0 0 0px rgba(16,185,129,0)) drop-shadow(0 0 0px rgba(245,197,24,0))} 50%{filter:drop-shadow(0 0 8px rgba(16,185,129,.9)) drop-shadow(0 0 16px rgba(245,197,24,.6))} }
+      @keyframes sportsGlow { 0%,100%{filter:drop-shadow(0 0 0px rgba(16,185,129,0)) drop-shadow(0 0 0px rgba(245,158,11,0))} 50%{filter:drop-shadow(0 0 8px rgba(16,185,129,.9)) drop-shadow(0 0 16px rgba(245,158,11,.6))} }
       @keyframes liveDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:.5} }
       @keyframes sportsTabPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 4px rgba(239,68,68,.25)} }
       .fadeUp { animation:fadeUp .35s cubic-bezier(.22,1,.36,1) both; }
@@ -323,7 +323,7 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(8px)"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:600,maxHeight:"80vh",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.2)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:600,maxHeight:"80vh",display:"flex",flexDirection:"column",border:"1px solid rgba(245,158,11,.2)"}}>
         <div style={{padding:"20px 20px 14px",borderBottom:"1px solid var(--border)"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
             <div>
@@ -335,7 +335,7 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search team or player..."
             style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none",boxSizing:"border-box"}}/>
           {currentFav && (
-            <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.25)",borderRadius:10,padding:"8px 12px"}}>
+            <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.25)",borderRadius:10,padding:"8px 12px"}}>
               <span style={{fontSize:13,fontWeight:700}}>⭐ Following: <strong>{currentFav}</strong></span>
               <button onClick={()=>{onToggle(sport,"_clear");onClose();}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Unfollow</button>
             </div>
@@ -350,15 +350,15 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
             return (
               <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
                 style={{
-                  background:isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)",
-                  border:`2px solid ${isFav?"rgba(245,197,24,.6)":"rgba(255,255,255,.1)"}`,
+                  background:isFav?"rgba(245,158,11,.15)":"rgba(255,255,255,.04)",
+                  border:`2px solid ${isFav?"rgba(245,158,11,.6)":"rgba(255,255,255,.1)"}`,
                   borderRadius:14,padding:"12px 10px",
                   display:"flex",alignItems:"center",gap:10,
                   cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)",
-                  boxShadow:isFav?"0 0 12px rgba(245,197,24,.2)":"none",
+                  boxShadow:isFav?"0 0 12px rgba(245,158,11,.2)":"none",
                 }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.5)";e.currentTarget.style.background="rgba(255,255,255,.07)";}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=isFav?"rgba(245,197,24,.6)":"rgba(255,255,255,.1)";e.currentTarget.style.background=isFav?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)";}}>
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,158,11,.5)";e.currentTarget.style.background="rgba(255,255,255,.07)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=isFav?"rgba(245,158,11,.6)":"rgba(255,255,255,.1)";e.currentTarget.style.background=isFav?"rgba(245,158,11,.15)":"rgba(255,255,255,.04)";}}>
                 {/* Logo or emoji */}
                 {logo
                   ? <img src={logo} alt={t.name} style={{width:36,height:36,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>
@@ -532,8 +532,8 @@ function GameDetailModal({ evt, onClose }) {
             <div style={{marginBottom:12}}>
               <button onClick={()=>setShowReminder(!showReminder)}
                 style={{
-                  width:"100%", background:showReminder?"rgba(245,197,24,.15)":"rgba(245,197,24,.08)",
-                  border:"1px solid rgba(245,197,24,.3)", borderRadius:12,
+                  width:"100%", background:showReminder?"rgba(245,158,11,.15)":"rgba(245,158,11,.08)",
+                  border:"1px solid rgba(245,158,11,.3)", borderRadius:12,
                   color:"var(--gold)", padding:"11px 0",
                   fontFamily:"var(--font-head)", fontWeight:800, fontSize:14,
                   cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
@@ -741,8 +741,8 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
           {isPolling && <div style={{fontSize:9,background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"2px 8px",color:"#ef4444",fontWeight:700}}>AUTO-UPDATING</div>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-          {favTeam && <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>⭐ {favTeam}</div>}
-          <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          {favTeam && <div style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,padding:"3px 10px",fontSize:11,color:"var(--gold)",fontWeight:700}}>⭐ {favTeam}</div>}
+          <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
             {favTeam?"⭐ Change Team":"⭐ Follow a Team"}
           </button>
           {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
@@ -815,10 +815,10 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
   return (
     <div style={{
       flexShrink:0, width:215,
-      background: isFavGame ? "rgba(245,197,24,.07)" : "rgba(255,255,255,.04)",
-      border:`1px solid ${isFavGame?"rgba(245,197,24,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
+      background: isFavGame ? "rgba(245,158,11,.07)" : "rgba(255,255,255,.04)",
+      border:`1px solid ${isFavGame?"rgba(245,158,11,.4)":isLive?"rgba(239,68,68,.5)":"rgba(255,255,255,.08)"}`,
       borderRadius:14, overflow:"hidden",
-      boxShadow:isFavGame?"0 0 20px rgba(245,197,24,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
+      boxShadow:isFavGame?"0 0 20px rgba(245,158,11,.15)":isLive?"0 0 20px rgba(239,68,68,.2)":"none",
       position:"relative",
     }}>
       {isFavGame && <div style={{position:"absolute",top:6,right:6,fontSize:10,zIndex:1}}>⭐</div>}
@@ -827,12 +827,12 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
       <div onClick={()=>onSelect&&onSelect(evt)} style={{cursor:"pointer"}}
         onMouseEnter={e=>e.currentTarget.style.opacity=".88"}
         onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
-        <div style={{padding:"6px 10px",background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,197,24,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{padding:"6px 10px",background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,158,11,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
             {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
           </div>
           <div style={{display:"flex",alignItems:"center",gap:4}}>
-            {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,197,24,.1)",borderRadius:4,padding:"1px 5px",maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.broadcast}</div>}
+            {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,158,11,.1)",borderRadius:4,padding:"1px 5px",maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.broadcast}</div>}
             {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
           </div>
         </div>
@@ -873,7 +873,7 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
         <div style={{borderTop:"1px solid rgba(255,255,255,.06)",padding:"6px 8px",background:"rgba(255,255,255,.02)"}}>
           {!showReminder ? (
             <button onClick={e=>{e.stopPropagation();setShowReminder(true);}}
-              style={{width:"100%",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:8,color:"var(--gold)",padding:"5px 0",fontSize:10,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+              style={{width:"100%",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:8,color:"var(--gold)",padding:"5px 0",fontSize:10,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
               🔔 Set Reminder
             </button>
           ) : (
@@ -944,14 +944,14 @@ function ScheduleGameRow({ evt, isLast }) {
       {/* Venue + broadcast */}
       <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:isUpcoming&&remLinks?8:0}}>
         {evt.venue && <span style={{fontSize:10,color:"var(--muted)"}}>📍 {evt.venue}{evt.city?`, ${evt.city}`:""}</span>}
-        {evt.broadcast && <span style={{fontSize:9,background:"rgba(245,197,24,.1)",color:"var(--gold)",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{evt.broadcast}</span>}
+        {evt.broadcast && <span style={{fontSize:9,background:"rgba(245,158,11,.1)",color:"var(--gold)",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{evt.broadcast}</span>}
       </div>
 
       {/* Reminder */}
       {isUpcoming && remLinks && (
         !showRem ? (
           <button onClick={()=>setShowRem(true)}
-            style={{background:"rgba(245,197,24,.07)",border:"1px solid rgba(245,197,24,.2)",borderRadius:8,color:"var(--gold)",padding:"4px 12px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+            style={{background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.2)",borderRadius:8,color:"var(--gold)",padding:"4px 12px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
             🔔 Set Reminder
           </button>
         ) : (
@@ -1025,14 +1025,14 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
         background:"var(--surface)", borderRadius:18,
         width:"100%", maxWidth:600,
-        border:`1px solid ${isWC?"rgba(245,197,24,.4)":"rgba(16,185,129,.3)"}`,
+        border:`1px solid ${isWC?"rgba(245,158,11,.4)":"rgba(16,185,129,.3)"}`,
         display:"flex", flexDirection:"column",
         boxShadow:"0 20px 60px rgba(0,0,0,.7)",
       }}>
         <div style={{
           padding:"18px 20px 14px",
           background:isWC?"linear-gradient(135deg,rgba(26,42,10,.9),rgba(13,74,26,.9))":"linear-gradient(135deg,rgba(10,20,10,.9),rgba(13,74,26,.8))",
-          borderBottom:`1px solid ${isWC?"rgba(245,197,24,.2)":"rgba(16,185,129,.2)"}`,
+          borderBottom:`1px solid ${isWC?"rgba(245,158,11,.2)":"rgba(16,185,129,.2)"}`,
           flexShrink:0,
         }}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -1157,25 +1157,25 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
       <div onClick={()=>onSearch("FIFA World Cup 2026")}
         style={{
           background:"linear-gradient(135deg,#1a2a0a 0%,#0d4a1a 40%,#1a3a0a 100%)",
-          border:"2px solid rgba(245,197,24,.5)",
+          border:"2px solid rgba(245,158,11,.5)",
           borderRadius:16, padding:"16px 18px", marginBottom:12,
           cursor:"pointer", position:"relative", overflow:"hidden",
-          boxShadow:"0 8px 32px rgba(245,197,24,.15)",
+          boxShadow:"0 8px 32px rgba(245,158,11,.15)",
           transition:"all .2s",
         }}
-        onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.8)";e.currentTarget.style.transform="scale(1.01)";}}
-        onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(245,197,24,.5)";e.currentTarget.style.transform="scale(1)";}}>
+        onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,158,11,.8)";e.currentTarget.style.transform="scale(1.01)";}}
+        onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(245,158,11,.5)";e.currentTarget.style.transform="scale(1)";}}>
         <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:.1,pointerEvents:"none"}}>🏆</div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
           <div>
             <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
               <div style={{background:"#ef4444",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:900,color:"#fff",letterSpacing:.8}}>🔴 STARTS JUNE 11</div>
-              <div style={{background:"rgba(245,197,24,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:900,color:"var(--gold)",letterSpacing:.8}}>48 TEAMS</div>
+              <div style={{background:"rgba(245,158,11,.2)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:900,color:"var(--gold)",letterSpacing:.8}}>48 TEAMS</div>
             </div>
             <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,color:"var(--gold)",lineHeight:1.1}}>🏆 FIFA World Cup 2026</div>
             <div style={{fontSize:12,color:"rgba(255,255,255,.6)",marginTop:4}}>🇺🇸 USA · 🇲🇽 Mexico · 🇨🇦 Canada</div>
           </div>
-          <div style={{background:"rgba(245,197,24,.15)",border:"1px solid rgba(245,197,24,.3)",borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
+          <div style={{background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
             <div style={{fontSize:10,color:"var(--gold)",fontWeight:700,marginBottom:2}}>LIVE SCORES</div>
             <div style={{fontSize:11,color:"rgba(255,255,255,.6)"}}>Pick your team →</div>
           </div>
@@ -1202,7 +1202,7 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
               <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
             </div>
             {favoriteTeams?.[s.label] && (
-              <div style={{fontSize:10,color:"var(--gold)",background:"rgba(245,197,24,.1)",borderRadius:6,padding:"2px 7px",fontWeight:700}}>⭐</div>
+              <div style={{fontSize:10,color:"var(--gold)",background:"rgba(245,158,11,.1)",borderRadius:6,padding:"2px 7px",fontWeight:700}}>⭐</div>
             )}
           </button>
         ))}
@@ -1326,7 +1326,7 @@ function SportsStreamingGuide({ onSearch }) {
 }
 
 const CATEGORY_TABS = [
-  { id:"trending", label:"Trending",  icon:"🔥", color:"#F5C518",  anim:"flameDance" },
+  { id:"trending", label:"Trending",  icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
   { id:"movies",   label:"Movies",    icon:"🎬", color:"#06B6D4",  anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
@@ -1334,10 +1334,10 @@ const CATEGORY_TABS = [
 ];
 
 const GR = [
-  ["#1a1a2e","#e94560"],["#0d1b2a","#1f6feb"],["#1a0533","#7928ca"],
-  ["#0a1628","#f59e0b"],["#1c0d2e","#c026d3"],["#0d2137","#06b6d4"],
-  ["#1f1200","#d97706"],["#001f0d","#10b981"],["#1a0a0a","#ef4444"],
-  ["#0d0d1a","#6366f1"],["#1a1000","#eab308"],["#0a1a1a","#14b8a6"],
+  ["#1A1030","#8B5CF6"],["#0D1030","#6366f1"],["#180A36","#8B5CF6"],
+  ["#1a1000","#F59E0B"],["#1C0C38","#A855F7"],["#0D1030","#8B5CF6"],
+  ["#1f1200","#F59E0B"],["#001f0d","#10b981"],["#1a0a0a","#ef4444"],
+  ["#1A1030","#8B5CF6"],["#1a1000","#F59E0B"],["#0D1030","#A855F7"],
 ];
 // Safe gradient accessor — always returns a valid pair
 const safeGR = (id) => GR[((id||0) % GR.length + GR.length) % GR.length] || GR[0];
@@ -1357,14 +1357,14 @@ function Logo({ size=32 }) {
               height: size * 2.8,
               width: "auto",
               objectFit:"contain",
-              filter:"drop-shadow(0 0 12px rgba(245,197,24,.5)) drop-shadow(0 0 24px rgba(124,58,237,.3))",
+              filter:"drop-shadow(0 0 12px rgba(245,158,11,.5)) drop-shadow(0 0 24px rgba(139,92,246,.3))",
               animation:"logoPulse 2.5s ease-in-out infinite",
             }}
           />
         ) : (
           <span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:size*0.65,letterSpacing:"-.02em"}}>
-            <span style={{background:"linear-gradient(90deg,#c8960c,#F5C518,#c8960c)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>The Stream</span>
-            <span style={{background:"linear-gradient(90deg,#7C3AED,#a855f7,#7C3AED)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Hub</span>
+            <span style={{background:"linear-gradient(90deg,#B45309,#F59E0B,#B45309)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>The Stream</span>
+            <span style={{background:"linear-gradient(90deg,#8B5CF6,#a855f7,#8B5CF6)",backgroundSize:"200% auto",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",animation:"gradientShift 2s linear infinite"}}>Hub</span>
           </span>
         )}
       </div>
@@ -1388,7 +1388,7 @@ function StarPicker({ value, onChange, size=18, readOnly=false }) {
       {Array.from({length:10},(_,i)=>i+1).map(s=>(
         <span key={s} onClick={()=>!readOnly&&onChange(s)}
           onMouseEnter={()=>!readOnly&&setHover(s)} onMouseLeave={()=>!readOnly&&setHover(0)}
-          style={{fontSize:size,cursor:readOnly?"default":"pointer",color:s<=display?"#F5C518":"rgba(255,255,255,0.15)",display:"inline-block",transform:(!readOnly&&hover===s)?"scale(1.3)":"scale(1)",transition:"all .12s",lineHeight:1}}>★</span>
+          style={{fontSize:size,cursor:readOnly?"default":"pointer",color:s<=display?"#F59E0B":"rgba(255,255,255,0.15)",display:"inline-block",transform:(!readOnly&&hover===s)?"scale(1.3)":"scale(1)",transition:"all .12s",lineHeight:1}}>★</span>
       ))}
     </div>
   );
@@ -1464,7 +1464,7 @@ function ShareModal({ title, text, url, onClose }) {
           {/* Native share on mobile */}
           {"share" in navigator && (
             <button onClick={tryNativeShare}
-              style={{background:"linear-gradient(135deg,var(--purple),#6d28d9)",border:"none",borderRadius:12,color:"#fff",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              style={{background:"linear-gradient(135deg,var(--purple),#7C3AED)",border:"none",borderRadius:12,color:"#fff",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
               📤 Share via Phone
             </button>
           )}
@@ -1503,7 +1503,7 @@ function DailyPickBanner({ movie, onSelect, onShare }) {
   const svc = SERVICES.find(s=>s.id===provider);
 
   return (
-    <div style={{margin:"0 14px 16px",borderRadius:16,overflow:"hidden",background:"linear-gradient(135deg,rgba(124,58,237,.2),rgba(6,182,212,.12))",border:"1px solid rgba(124,58,237,.35)",position:"relative",cursor:"pointer"}}
+    <div style={{margin:"0 14px 16px",borderRadius:16,overflow:"hidden",background:"linear-gradient(135deg,rgba(139,92,246,.2),rgba(6,182,212,.12))",border:"1px solid rgba(139,92,246,.35)",position:"relative",cursor:"pointer"}}
       onClick={()=>onSelect(movie)}>
       <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)"}}/>
       {poster&&<img src={poster} alt="" style={{position:"absolute",right:0,top:0,height:"100%",width:120,objectFit:"cover",maskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)",WebkitMaskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)"}}/>}
@@ -1723,7 +1723,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:520,maxHeight:"90vh",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
 
         {/* Header */}
-        <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.3),rgba(245,197,24,.1))",padding:"24px 24px 20px",position:"relative",flexShrink:0}}>
+        <div style={{background:"linear-gradient(135deg,rgba(139,92,246,.3),rgba(245,158,11,.1))",padding:"24px 24px 20px",position:"relative",flexShrink:0}}>
           <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
             {/* Avatar with upload */}
@@ -1734,10 +1734,10 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                 display:"flex", alignItems:"center", justifyContent:"center",
                 fontFamily:"var(--font-head)", fontWeight:800, fontSize:26,
                 border: isPremium
-                  ? "3px solid #F5C518"
-                  : "3px solid rgba(124,58,237,.4)",
+                  ? "3px solid #F59E0B"
+                  : "3px solid rgba(139,92,246,.4)",
                 boxShadow: isPremium
-                  ? "0 0 20px rgba(245,197,24,.6), 0 0 40px rgba(245,197,24,.3)"
+                  ? "0 0 20px rgba(245,158,11,.6), 0 0 40px rgba(245,158,11,.3)"
                   : "none",
                 overflow:"hidden", flexShrink:0,
                 transition:"all .3s",
@@ -1777,7 +1777,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
                 : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
               }
               {streak>1 && (
-                <span style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6,marginLeft:6}}>
+                <span style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6,marginLeft:6}}>
                   {getStreakEmoji(streak)} {streak} day streak
                 </span>
               )}
@@ -1788,7 +1788,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, onClose, on
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:16}}>
             {[["♥",watchlist.length,"Watchlist","watchlist"],["✍",myReviews.length||"—","Reviews","reviews"],["★",totalRatings,"Rated",null]].map(([icon,val,label,t])=>(
               <button key={label} onClick={()=>t&&setTab(t)}
-                style={{background:tab===t?"rgba(245,197,24,.12)":"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:`1px solid ${tab===t?"rgba(245,197,24,.3)":"rgba(255,255,255,.08)"}`,cursor:t?"pointer":"default",transition:"all .2s"}}>
+                style={{background:tab===t?"rgba(245,158,11,.12)":"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:`1px solid ${tab===t?"rgba(245,158,11,.3)":"rgba(255,255,255,.08)"}`,cursor:t?"pointer":"default",transition:"all .2s"}}>
                 <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,color:"var(--gold)"}}>{val}</div>
                 <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{label}</div>
@@ -2008,7 +2008,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                     background:"rgba(0,0,0,.7)",border:"2px solid rgba(255,255,255,.8)",borderRadius:"50%",
                     width:56,height:56,display:"flex",alignItems:"center",justifyContent:"center",
                     cursor:"pointer",backdropFilter:"blur(4px)",transition:"all .2s"}}
-                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,197,24,.9)";e.currentTarget.style.borderColor="var(--gold)";}}
+                  onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.9)";e.currentTarget.style.borderColor="var(--gold)";}}
                   onMouseLeave={e=>{e.currentTarget.style.background="rgba(0,0,0,.7)";e.currentTarget.style.borderColor="rgba(255,255,255,.8)";}}>
                   <span style={{fontSize:22,marginLeft:4}}>▶</span>
                 </button>
@@ -2109,7 +2109,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"var(--gold)",fontWeight:700,marginBottom:6}}>🆓 FREE WITH ADS</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.free.map((p,i)=>(
-                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
                             {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
                           </div>
@@ -2124,7 +2124,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>💳 RENT</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.rent.map((p,i)=>(
-                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
                             {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
                           </div>
@@ -2183,7 +2183,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       return (
                         <div key={sm.id} onClick={()=>onSelectSimilar&&onSelectSimilar(sm)}
                           style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
-                          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,197,24,.4)";}}
+                          onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,158,11,.4)";}}
                           onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
                           {sp ? <img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>
                                : <div style={{height:100,background:`linear-gradient(135deg,${sgr[0]},${sgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
@@ -2225,7 +2225,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
 
           {tab==="reviews" && (
             <div>
-              <div style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:"var(--radius)",padding:18,marginBottom:24}}>
+              <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:"var(--radius)",padding:18,marginBottom:24}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,marginBottom:12,fontSize:15}}>{user?"Write a Review":"Sign in to Review"}</div>
                 {user ? (
                   <div>
@@ -2253,7 +2253,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                           <div style={{fontWeight:600,fontSize:13}}>{rv.profiles?.username||"User"}</div>
                           <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString()}</div>
                         </div>
-                        <span style={{marginLeft:"auto",background:"rgba(245,197,24,.15)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
+                        <span style={{marginLeft:"auto",background:"rgba(245,158,11,.15)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
                         {user?.id===rv.user_id && <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"#ef4444",padding:"4px 10px",fontSize:12,cursor:"pointer"}}>Delete</button>}
                       </div>
                       <div style={{fontWeight:700,fontSize:14,marginBottom:5}}>{rv.title||""}</div>
@@ -2318,7 +2318,7 @@ function UpgradeModal({ onClose, onComplete }) {
               </div>
 
               {/* Premium */}
-              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,197,24,.04)",position:"relative"}}>
+              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,158,11,.04)",position:"relative"}}>
                 <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
@@ -2340,7 +2340,7 @@ function UpgradeModal({ onClose, onComplete }) {
               </div>
             </div>
 
-            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,158,11,.3)"}}>
               Upgrade to Premium — $9.99/mo →
             </button>
             <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
@@ -2363,7 +2363,7 @@ function UpgradeModal({ onClose, onComplete }) {
                 <input value={card.cvc} onChange={e=>setCard({...card,cvc:e.target.value.replace(/\D/g,"").slice(0,3)})} placeholder="CVC" style={inp} />
               </div>
             </div>
-            <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,197,24,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,158,11,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
               {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $9.99 / month"}
             </button>
             <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:14}}>🔒 Secured by <span style={{color:"#6772e5",fontWeight:700}}>Stripe</span> · SSL Encrypted</div>
@@ -2444,14 +2444,14 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
         : backdrop && <img src={backdrop} alt="" onLoad={()=>setLoaded(true)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:loaded?0.55:0.2,transition:"opacity 1s"}} />
       }
       {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.6) 50%,rgba(7,7,14,.2) 100%)"}} />
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(9,7,15,.95) 0%,rgba(9,7,15,.6) 50%,rgba(9,7,15,.2) 100%)"}} />
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 40%)"}} />
       </>}
       {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:16,right:16,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close Trailer</button>}
       {!showTrailer && (
         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",padding:"0 60px"}}>
           <div style={{maxWidth:560}}>
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"5px 14px",marginBottom:20,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:.5}}>🔥 FEATURED</div>
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,padding:"5px 14px",marginBottom:20,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:.5}}>🔥 FEATURED</div>
             <h1 style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:"clamp(36px,5vw,64px)",lineHeight:1.05,letterSpacing:"-.02em",marginBottom:16,textShadow:"0 4px 24px rgba(0,0,0,.8)"}}>{title}</h1>
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
               <span style={{color:"var(--gold)",fontWeight:700,fontSize:15}}>★ {rating}</span>
@@ -2462,7 +2462,7 @@ function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
             <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
               <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"13px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>▶ Watch Now</button>
               {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:12,color:"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>
                 {inWL?"♥ Saved":"♡ Save"}
               </button>
             </div>
@@ -2526,14 +2526,14 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"trending",  icon:"🔥", label:"Trending",  color:"#F5C518", anim:"flameDance"},
+    {id:"trending",  icon:"🔥", label:"Trending",  color:"#F59E0B", anim:"flameDance"},
     {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
     {id:"watchlist", icon:"❤️", label:"Watchlist", color:"#ef4444", anim:null},
   ];
   return (
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
         const active = view===t.id;
         const count = t.id==="watchlist"&&watchlist.length>0 ? watchlist.length : 0;
@@ -2558,7 +2558,7 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
       {/* Profile button */}
       <button onClick={onProfile}
         style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:"rgba(240,240,250,.38)",cursor:"pointer",position:"relative"}}>
-        {tier==="premium" && <div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:40,height:32,borderRadius:10,background:"rgba(245,197,24,.08)",pointerEvents:"none"}}/>}
+        {tier==="premium" && <div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:40,height:32,borderRadius:10,background:"rgba(245,158,11,.08)",pointerEvents:"none"}}/>}
         <span style={{fontSize:21,lineHeight:1,position:"relative",zIndex:1}}>👤</span>
         <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",letterSpacing:.3,position:"relative",zIndex:1}}>Profile</span>
         {tier==="premium" && <div style={{position:"absolute",top:3,right:"calc(50% - 18px)",width:7,height:7,borderRadius:"50%",background:"var(--gold)",boxShadow:"0 0 5px var(--gold)"}}/>}
@@ -2596,7 +2596,7 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade }) {
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"85vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(239,68,68,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(239,68,68,.12),rgba(245,197,24,.06))"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(239,68,68,.12),rgba(245,158,11,.06))"}}>
           <div>
             <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🚨 Leaving Soon</div>
             <div style={{fontSize:13,color:"var(--muted)"}}>Titles leaving your services this month</div>
@@ -2662,8 +2662,8 @@ function WatchHistoryModal({ onClose, user, tier, onUpgrade }) {
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:620,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(124,58,237,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(124,58,237,.15),rgba(6,182,212,.06))"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:620,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(139,92,246,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(139,92,246,.15),rgba(6,182,212,.06))"}}>
           <div>
             <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>📺 Watch History & Stats</div>
             <div style={{fontSize:13,color:"var(--muted)"}}>Everything you've watched on StreamHub</div>
@@ -2687,7 +2687,7 @@ function WatchHistoryModal({ onClose, user, tier, onUpgrade }) {
               {/* Stats grid */}
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:24}}>
                 {[["📺",totalWatched,"Total Watched"],["📅",thisMonth,"This Month"],["🗓️",thisYear,"This Year"],["🎬",movies,"Movies"],["📡",shows,"TV Shows"],["⭐",Math.round(totalWatched*1.2),"Hours Est."]].map(([icon,val,label])=>(
-                  <div key={label} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:12,padding:"14px 10px",textAlign:"center"}}>
+                  <div key={label} style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:12,padding:"14px 10px",textAlign:"center"}}>
                     <div style={{fontSize:20,marginBottom:4}}>{icon}</div>
                     <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--purple)"}}>{val}</div>
                     <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{label}</div>
@@ -2821,7 +2821,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"90vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(16,185,129,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
 
         {/* Header */}
-        <div style={{padding:"20px 24px 16px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(245,197,24,.06))",flexShrink:0}}>
+        <div style={{padding:"20px 24px 16px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(16,185,129,.12),rgba(245,158,11,.06))",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>💰 Streaming Intelligence</div>
@@ -2904,7 +2904,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
                 {mostUsed && <div style={{background:"rgba(16,185,129,.08)",border:"1px solid rgba(16,185,129,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>🏆 <strong>{mostUsed.name}</strong> is your most-used — {mostUsed.watches} watches this month</div>}
                 {bestValue && <div style={{background:"rgba(6,182,212,.08)",border:"1px solid rgba(6,182,212,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💎 Best value: <strong>{bestValue.name}</strong> at <strong>${bestValue.cpw.toFixed(2)}/watch</strong></div>}
                 {worstValue && worstValue.cpw > 10 && <div style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>⚠️ <strong>{worstValue.name}</strong> is costing <strong>${worstValue.cpw.toFixed(2)}/watch</strong></div>}
-                {leastUsed.length>0 && <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💸 <strong>{leastUsed.map(s=>s.name).join(", ")}</strong> — paid for, nothing watched. That's <strong>${leastUsed.reduce((s,sv)=>s+sv.price,0).toFixed(2)}/mo</strong> unused.</div>}
+                {leastUsed.length>0 && <div style={{background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"10px 12px",fontSize:12}}>💸 <strong>{leastUsed.map(s=>s.name).join(", ")}</strong> — paid for, nothing watched. That's <strong>${leastUsed.reduce((s,sv)=>s+sv.price,0).toFixed(2)}/mo</strong> unused.</div>}
               </div>
 
               <button onClick={()=>setTab("ai report")} style={{width:"100%",background:"linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2))",border:"1px solid rgba(16,185,129,.4)",borderRadius:12,color:"var(--sports)",padding:"11px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,cursor:"pointer"}}>
@@ -2992,7 +2992,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
 
                   {/* Tip */}
                   {aiReport.tip && (
-                    <div style={{background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:16}}>
+                    <div style={{background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"12px 14px",fontSize:13,marginBottom:16}}>
                       💡 <strong>Power tip:</strong> {aiReport.tip}
                     </div>
                   )}
@@ -3046,14 +3046,14 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   // Soft gate for non-premium users who used their daily free search
   if (freeMoodUsed) return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,197,24,.3)",padding:32,textAlign:"center"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,158,11,.3)",padding:32,textAlign:"center"}}>
         <div style={{fontSize:52,marginBottom:12}}>🎭</div>
         <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used both free Mood Searches today</div>
         <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
           Free accounts get <strong style={{color:"var(--gold)"}}>2 Mood Searches per day</strong>.<br/>
           Upgrade to Premium for unlimited AI mood matching.
         </div>
-        <div style={{background:"rgba(245,197,24,.06)",border:"1px solid rgba(245,197,24,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
+        <div style={{background:"rgba(245,158,11,.06)",border:"1px solid rgba(245,158,11,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
           <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--gold)",marginBottom:8,letterSpacing:.5}}>✦ PREMIUM GETS</div>
           {["Unlimited Mood Searches daily","12 AI picks weekly (vs 3)","Leaving Soon alerts","Full Watch History & Stats","Streaming Cost Calculator"].map((f,i)=>(
             <div key={i} style={{display:"flex",gap:8,fontSize:12,color:"var(--muted)",marginBottom:i<4?6:0}}>
@@ -3061,7 +3061,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
             </div>
           ))}
         </div>
-        <button onClick={()=>{onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.3)"}}>
+        <button onClick={()=>{onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,158,11,.3)"}}>
           Upgrade to Premium ✦
         </button>
         <div style={{fontSize:12,color:"var(--muted)"}}>Or come back tomorrow for your next free search 🕐</div>
@@ -3122,42 +3122,42 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:56,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
-        background:"linear-gradient(180deg,#100828 0%,#0d0520 100%)",
+        background:"linear-gradient(180deg,#140B30 0%,#0F082A 100%)",
         borderRadius:20,
         width:"100%", maxWidth:640,
         overflow:"hidden",
         display:"flex", flexDirection:"column",
-        border:"1px solid rgba(124,58,237,.4)",
-        boxShadow:"0 20px 80px rgba(124,58,237,.4)",
+        border:"1px solid rgba(139,92,246,.4)",
+        boxShadow:"0 20px 80px rgba(139,92,246,.4)",
       }}>
         {/* Header */}
         <div style={{
           padding:"20px 20px 16px",
-          background:"linear-gradient(135deg,rgba(124,58,237,.25),rgba(255,107,157,.1))",
-          borderBottom:"1px solid rgba(124,58,237,.2)",
+          background:"linear-gradient(135deg,rgba(139,92,246,.25),rgba(255,107,157,.1))",
+          borderBottom:"1px solid rgba(139,92,246,.2)",
           position:"relative",
         }}>
-          <div style={{position:"absolute",top:-40,left:-40,width:150,height:150,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(50px)",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",top:-40,left:-40,width:150,height:150,borderRadius:"50%",background:"rgba(139,92,246,.2)",filter:"blur(50px)",pointerEvents:"none"}}/>
           <div style={{position:"absolute",top:-40,right:-40,width:150,height:150,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,position:"relative"}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <div style={{
                 width:40,height:40,borderRadius:12,
-                background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",
+                background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:20,boxShadow:"0 4px 20px rgba(124,58,237,.5)",
+                fontSize:20,boxShadow:"0 4px 20px rgba(139,92,246,.5)",
               }}>🎭</div>
               <div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,display:"flex",alignItems:"center",gap:8}}>
                   Mood Search
-                  <span style={{background:"linear-gradient(90deg,#F5C518,#f59e0b)",color:"#000",fontSize:9,fontWeight:900,padding:"2px 8px",borderRadius:99,letterSpacing:.5}}>✦ PRO</span>
+                  <span style={{background:"linear-gradient(90deg,#F59E0B,#f59e0b)",color:"#000",fontSize:9,fontWeight:900,padding:"2px 8px",borderRadius:99,letterSpacing:.5}}>✦ PRO</span>
                 </div>
                 <div style={{fontSize:12,color:"rgba(196,181,253,.8)"}}>Describe any vibe — AI finds the perfect match</div>
               </div>
             </div>
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
               {tier !== "premium" && (
-                <div style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
+                <div style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
                   2 free / day
                 </div>
               )}
@@ -3168,7 +3168,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8,position:"relative"}}>
             {['"scary but not gory"','"fun date night"','"mind-bending sci-fi"','"feel-good comedy"'].map(ex=>(
               <button key={ex} onClick={()=>setMood(ex.replace(/"/g,""))}
-                style={{background:"rgba(124,58,237,.15)",border:"1px solid rgba(124,58,237,.3)",borderRadius:99,color:"#c4b5fd",padding:"4px 12px",fontSize:11,cursor:"pointer",fontStyle:"italic"}}>
+                style={{background:"rgba(139,92,246,.15)",border:"1px solid rgba(139,92,246,.3)",borderRadius:99,color:"#c4b5fd",padding:"4px 12px",fontSize:11,cursor:"pointer",fontStyle:"italic"}}>
                 {ex}
               </button>
             ))}
@@ -3187,18 +3187,18 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
               placeholder='Type anything... "cozy rainy day movie" or "action like John Wick"'
               autoFocus
               style={{
-                width:"100%", background:"rgba(124,58,237,.1)",
-                border:"1.5px solid rgba(124,58,237,.5)",
+                width:"100%", background:"rgba(139,92,246,.1)",
+                border:"1.5px solid rgba(139,92,246,.5)",
                 borderRadius:16, color:"var(--text)",
                 padding:"14px 16px 14px 46px",
                 fontSize:14, outline:"none",
-                boxShadow:"0 4px 20px rgba(124,58,237,.15)",
+                boxShadow:"0 4px 20px rgba(139,92,246,.15)",
               }}
             />
             <button onClick={search} disabled={loading||!mood.trim()}
               style={{
                 position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
-                background:mood.trim()?"linear-gradient(135deg,#7C3AED,#FF6B9D)":"rgba(255,255,255,.1)",
+                background:mood.trim()?"linear-gradient(135deg,#8B5CF6,#FF6B9D)":"rgba(255,255,255,.1)",
                 border:"none",borderRadius:10,color:"#fff",
                 padding:"7px 16px",fontFamily:"var(--font-head)",fontWeight:800,
                 fontSize:12,cursor:mood.trim()?"pointer":"default",
@@ -3217,8 +3217,8 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
                 {moods.map(m=>(
                   <button key={m} onClick={()=>setMood(m)}
                     style={{
-                      background:mood===m?"rgba(124,58,237,.3)":"rgba(255,255,255,.05)",
-                      border:`1px solid ${mood===m?"rgba(124,58,237,.7)":"rgba(255,255,255,.1)"}`,
+                      background:mood===m?"rgba(139,92,246,.3)":"rgba(255,255,255,.05)",
+                      border:`1px solid ${mood===m?"rgba(139,92,246,.7)":"rgba(255,255,255,.1)"}`,
                       borderRadius:99,color:mood===m?"#c4b5fd":"var(--muted)",
                       padding:"7px 14px",fontSize:12,cursor:"pointer",
                       transition:"all .2s",
@@ -3244,9 +3244,9 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
                     {result.items?.map((item,i)=>(
-                      <div key={i} style={{background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:14,padding:"12px 14px",animation:`fadeUp .3s ${i*0.06}s both`,transition:"border-color .2s"}}
-                        onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.5)"}
-                        onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(124,58,237,.2)"}>
+                      <div key={i} style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"12px 14px",animation:`fadeUp .3s ${i*0.06}s both`,transition:"border-color .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(139,92,246,.5)"}
+                        onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(139,92,246,.2)"}>
                         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10,marginBottom:5}}>
                           <div style={{flex:1}}>
                             <div style={{fontWeight:800,fontSize:14,marginBottom:4}}>
@@ -3255,12 +3255,12 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
                             <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
                               <span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.type==="tv"?"📺 TV":"🎬 Movie"}</span>
                               {item.genre&&<span style={{background:"rgba(255,255,255,.07)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"var(--muted)"}}>{item.genre}</span>}
-                              {item.platform&&<span style={{background:"rgba(124,58,237,.25)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#c4b5fd",fontWeight:700}}>{item.platform}</span>}
+                              {item.platform&&<span style={{background:"rgba(139,92,246,.25)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#c4b5fd",fontWeight:700}}>{item.platform}</span>}
                             </div>
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:6}}>
                             <button onClick={()=>{onResults(item.tmdb_search||item.title);onClose();}}
-                              style={{background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                              style={{background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",border:"none",borderRadius:10,color:"#fff",padding:"7px 12px",fontSize:11,fontWeight:800,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
                               Search →
                             </button>
                             <button onClick={()=>{
@@ -3341,7 +3341,7 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:600,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(6,182,212,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
 
         {/* Header */}
-        <div style={{padding:"20px 24px 14px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(124,58,237,.06))",flexShrink:0}}>
+        <div style={{padding:"20px 24px 14px",borderBottom:"1px solid var(--border)",background:"linear-gradient(135deg,rgba(6,182,212,.12),rgba(139,92,246,.06))",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
             <div>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:2}}>🆕 New Releases</div>
@@ -3391,7 +3391,7 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
                     onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
                     <div style={{height:180,position:"relative",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
                       {poster && <img src={poster} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
-                      <div style={{position:"absolute",top:6,left:6,background:item.mediaType==="tv"?"rgba(124,58,237,.9)":"rgba(245,197,24,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:item.mediaType==="tv"?"#fff":"#000"}}>
+                      <div style={{position:"absolute",top:6,left:6,background:item.mediaType==="tv"?"rgba(139,92,246,.9)":"rgba(245,158,11,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:item.mediaType==="tv"?"#fff":"#000"}}>
                         {item.mediaType==="tv"?"TV":"MOVIE"}
                       </div>
                       {daysAgo !== null && daysAgo <= 7 && (
@@ -3425,8 +3425,8 @@ function InstallPrompt({ onDismiss }) {
     <div style={{
       position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
       zIndex:350, width:"calc(100% - 28px)", maxWidth:400,
-      background:"linear-gradient(135deg,rgba(7,7,14,.98),rgba(12,8,28,.98))",
-      border:"1px solid rgba(124,58,237,.4)",
+      background:"linear-gradient(135deg,rgba(9,7,15,.98),rgba(12,8,28,.98))",
+      border:"1px solid rgba(139,92,246,.4)",
       borderRadius:18, padding:"16px 18px",
       boxShadow:"0 20px 60px rgba(0,0,0,.8)",
       animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
@@ -3440,11 +3440,11 @@ function InstallPrompt({ onDismiss }) {
         </div>
       </div>
       {isIOS ? (
-        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
           Tap <strong style={{color:"#fff"}}>Share</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub on your iPhone
         </div>
       ) : (
-        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(124,58,237,.08)",border:"1px solid rgba(124,58,237,.2)",borderRadius:10,padding:"10px 12px"}}>
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
           Tap <strong style={{color:"#fff"}}>⋮ Menu</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub
         </div>
       )}
@@ -3563,21 +3563,21 @@ function WelcomeBanner() {
   return (
     <div style={{padding:"12px 14px 4px"}}>
       <div style={{
-        background:"linear-gradient(135deg,rgba(124,58,237,.25) 0%,rgba(7,7,14,.9) 40%,rgba(245,197,24,.12) 100%)",
-        border:"1px solid rgba(245,197,24,.25)",
+        background:"linear-gradient(135deg,rgba(139,92,246,.25) 0%,rgba(9,7,15,.9) 40%,rgba(245,158,11,.12) 100%)",
+        border:"1px solid rgba(245,158,11,.25)",
         borderRadius:20,
         padding:"20px 20px",
         textAlign:"center",
         position:"relative",
         overflow:"hidden",
-        boxShadow:"0 8px 32px rgba(124,58,237,.2), 0 0 0 1px rgba(245,197,24,.08)",
+        boxShadow:"0 8px 32px rgba(139,92,246,.2), 0 0 0 1px rgba(245,158,11,.08)",
       }}>
         {/* Decorative background orbs */}
-        <div style={{position:"absolute",top:-40,left:-40,width:180,height:180,borderRadius:"50%",background:"rgba(124,58,237,.15)",filter:"blur(40px)",pointerEvents:"none"}} />
-        <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,197,24,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
+        <div style={{position:"absolute",top:-40,left:-40,width:180,height:180,borderRadius:"50%",background:"rgba(139,92,246,.15)",filter:"blur(40px)",pointerEvents:"none"}} />
+        <div style={{position:"absolute",bottom:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(245,158,11,.1)",filter:"blur(40px)",pointerEvents:"none"}} />
 
         {/* Badge */}
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:.8}}>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,padding:"4px 14px",marginBottom:14,fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:.8}}>
           ✦ FREE TO START — NO CREDIT CARD REQUIRED
         </div>
 
@@ -3596,19 +3596,19 @@ function WelcomeBanner() {
             }}>THE</span>
             <span style={{
               fontSize:"clamp(32px,8vw,72px)",
-              background:"linear-gradient(90deg,#F5C518 0%,#FFD700 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
+              background:"linear-gradient(90deg,#F59E0B 0%,#FBBF24 35%,#ffffff 50%,#a5f3fc 65%,#06B6D4 100%)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite",
-              filter:"drop-shadow(0 0 20px rgba(245,197,24,.6))",
+              filter:"drop-shadow(0 0 20px rgba(245,158,11,.6))",
               display:"inline",
             }}>Stream</span><span style={{
               fontSize:"clamp(32px,8vw,72px)",
-              background:"linear-gradient(90deg,#7C3AED,#a78bfa,#7C3AED)",
+              background:"linear-gradient(90deg,#8B5CF6,#a78bfa,#8B5CF6)",
               backgroundSize:"200% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 3s linear infinite reverse",
-              filter:"drop-shadow(0 0 20px rgba(124,58,237,.8))",
+              filter:"drop-shadow(0 0 20px rgba(139,92,246,.8))",
               display:"inline",
             }}>Hub</span>
           </div>
@@ -3668,15 +3668,15 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .3s"}}>
       <div style={{
-        background:"linear-gradient(135deg,#0d0a1e,#140d28)",
-        border:"1px solid rgba(245,197,24,.4)",
+        background:"linear-gradient(135deg,#120930,#1A1038)",
+        border:"1px solid rgba(245,158,11,.4)",
         borderRadius:24, padding:"36px 32px", maxWidth:420, width:"100%",
-        boxShadow:"0 32px 80px rgba(0,0,0,.8), 0 0 60px rgba(245,197,24,.1)",
+        boxShadow:"0 32px 80px rgba(0,0,0,.8), 0 0 60px rgba(245,158,11,.1)",
         textAlign:"center", animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
       }}>
         {/* Logo */}
         <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
-          style={{height:80,width:"auto",objectFit:"contain",marginBottom:20,filter:"drop-shadow(0 0 20px rgba(245,197,24,.5))"}} />
+          style={{height:80,width:"auto",objectFit:"contain",marginBottom:20,filter:"drop-shadow(0 0 20px rgba(245,158,11,.5))"}} />
 
         {/* Limit reached badge */}
         <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(239,68,68,.12)",border:"1px solid rgba(239,68,68,.3)",borderRadius:99,padding:"5px 14px",marginBottom:16,fontSize:12,fontWeight:700,color:"#f87171"}}>
@@ -3700,7 +3700,7 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
             {icon:"⭐", title:"Ratings & Reviews",  desc:"Rate and review any title"},
           ].map((b,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<4?14:0}}>
-              <div style={{width:36,height:36,borderRadius:10,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{b.icon}</div>
+              <div style={{width:36,height:36,borderRadius:10,background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{b.icon}</div>
               <div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--text)"}}>{b.title}</div>
                 <div style={{fontSize:11,color:"var(--muted)"}}>{b.desc}</div>
@@ -3711,7 +3711,7 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
         </div>
 
         {/* CTA */}
-        <button onClick={onSignup} style={{width:"100%",background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:14,color:"#000",padding:"15px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,197,24,.35)"}}>
+        <button onClick={onSignup} style={{width:"100%",background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:14,color:"#000",padding:"15px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,158,11,.35)"}}>
           🚀 Create Free Account
         </button>
         <button onClick={onDismiss} style={{background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:13,cursor:"pointer",padding:"8px 0"}}>
@@ -3734,9 +3734,9 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
       position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
       zIndex:290, width:"calc(100% - 28px)", maxWidth:460,
       background:"linear-gradient(135deg,rgba(10,8,26,.98),rgba(18,10,36,.98))",
-      border:"1px solid rgba(245,197,24,.4)",
+      border:"1px solid rgba(245,158,11,.4)",
       borderRadius:20, padding:"20px",
-      boxShadow:"0 20px 60px rgba(0,0,0,.8), 0 0 40px rgba(245,197,24,.1)",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8), 0 0 40px rgba(245,158,11,.1)",
       animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
     }}>
       <button onClick={onDismiss} style={{position:"absolute",top:12,right:14,background:"none",border:"none",color:"rgba(240,240,250,.25)",fontSize:16,cursor:"pointer"}}>✕</button>
@@ -3744,7 +3744,7 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
       {/* Header */}
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
         <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
-          style={{height:44,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))"}} />
+          style={{height:44,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))"}} />
         <div>
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Join free — it's worth it</div>
           <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>
@@ -3770,7 +3770,7 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
 
       {/* CTA */}
       <div style={{display:"flex",gap:8}}>
-        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",boxShadow:"0 6px 20px rgba(245,197,24,.3)"}}>
+        <button onClick={onSignup} style={{flex:1,background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer",boxShadow:"0 6px 20px rgba(245,158,11,.3)"}}>
           🚀 Sign Up Free
         </button>
         <button onClick={onDismiss} style={{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:12,color:"rgba(240,240,250,.35)",padding:"12px 16px",fontSize:13,cursor:"pointer"}}>Later</button>
@@ -3820,8 +3820,8 @@ Suggest ${recCount} highly personalized movie or TV show recommendations. Focus 
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(245,197,24,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(245,197,24,.12),rgba(124,58,237,.08))"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:580,maxHeight:"88vh",overflow:"hidden",display:"flex",flexDirection:"column",border:"1px solid rgba(245,158,11,.3)",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
+        <div style={{padding:"24px 24px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(245,158,11,.12),rgba(139,92,246,.08))"}}>
           <div>
             <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>✦ Personalized For You <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,marginLeft:6}}>PRO</span></div>
             <div style={{fontSize:13,color:"var(--muted)"}}>AI picks based on your actual taste and watchlist</div>
@@ -3861,7 +3861,7 @@ Suggest ${recCount} highly personalized movie or TV show recommendations. Focus 
                   </div>
                 ))}
               </div>
-              <button onClick={getRecs} style={{marginTop:16,width:"100%",background:"rgba(245,197,24,.08)",border:"1px solid rgba(245,197,24,.2)",borderRadius:10,color:"var(--gold)",padding:"11px 0",fontSize:13,fontWeight:700,cursor:"pointer"}}>✦ Refresh Recommendations</button>
+              <button onClick={getRecs} style={{marginTop:16,width:"100%",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,color:"var(--gold)",padding:"11px 0",fontSize:13,fontWeight:700,cursor:"pointer"}}>✦ Refresh Recommendations</button>
             </div>
           ) : (
             <div style={{textAlign:"center",padding:"40px 20px"}}>
@@ -3965,7 +3965,7 @@ function AdvancedStats({ user, watchlist, userRatings, watchHistory, onOpenHisto
       {/* Fun facts */}
       {watchHistory.length > 0 && (
         <div style={{padding:"0 24px"}}>
-          <div style={{background:"linear-gradient(135deg,rgba(124,58,237,.1),rgba(245,197,24,.06))",border:"1px solid rgba(245,197,24,.15)",borderRadius:16,padding:20}}>
+          <div style={{background:"linear-gradient(135deg,rgba(139,92,246,.1),rgba(245,158,11,.06))",border:"1px solid rgba(245,158,11,.15)",borderRadius:16,padding:20}}>
             <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,color:"var(--gold)",marginBottom:12,letterSpacing:.5}}>🎉 FUN FACTS</div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               <div style={{fontSize:13,color:"rgba(240,240,250,.75)"}}>📺 You've watched approximately <strong style={{color:"var(--gold)"}}>{estHours}</strong> of content</div>
@@ -4012,8 +4012,8 @@ function MobileHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
         : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
       }
       {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(7,7,14,.95) 0%,transparent 60%)"}} />
-        <img src="/logo-clean.png" alt="" style={{position:"absolute",top:10,right:10,height:36,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,197,24,.6))",opacity:.85}} />
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(9,7,15,.95) 0%,transparent 60%)"}} />
+        <img src="/logo-clean.png" alt="" style={{position:"absolute",top:10,right:10,height:36,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,158,11,.6))",opacity:.85}} />
       </>}
       {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕</button>}
       {!showTrailer && (
@@ -4026,7 +4026,7 @@ function MobileHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
             <div style={{display:"flex",gap:6,marginLeft:"auto"}}>
               <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,cursor:"pointer"}}>▶ Watch</button>
               {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.25)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:8,color:inWL?"var(--gold)":"#fff",padding:"6px 10px",fontSize:11,cursor:"pointer"}}>{inWL?"♥":"♡"}</button>
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:8,color:inWL?"var(--gold)":"#fff",padding:"6px 10px",fontSize:11,cursor:"pointer"}}>{inWL?"♥":"♡"}</button>
             </div>
           </div>
         </div>
@@ -4057,7 +4057,7 @@ function TabletHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
         : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
       }
       {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(7,7,14,.95) 0%,rgba(7,7,14,.5) 60%,rgba(7,7,14,.1) 100%)"}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(9,7,15,.95) 0%,rgba(9,7,15,.5) 60%,rgba(9,7,15,.1) 100%)"}}/>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 50%)"}}/>
       </>}
       {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:12,right:12,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"7px 14px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close</button>}
@@ -4074,7 +4074,7 @@ function TabletHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
               <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 22px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch Now</button>
               {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:10,color:"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,197,24,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
+              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
             </div>
           </div>
         </div>
@@ -4594,7 +4594,7 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:80}}>
         {/* Mobile Header */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.1)",paddingTop:"env(safe-area-inset-top)"}}>
+        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.1)",paddingTop:"env(safe-area-inset-top)"}}>
           {/* Top row - logo + buttons */}
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             {/* Logo - wider to fill space */}
@@ -4610,7 +4610,7 @@ export default function StreamHub() {
                   maxWidth:200,
                   objectFit:"contain",
                   cursor:"pointer",
-                  filter:"drop-shadow(0 0 10px rgba(245,197,24,.5)) drop-shadow(0 0 20px rgba(124,58,237,.3))",
+                  filter:"drop-shadow(0 0 10px rgba(245,158,11,.5)) drop-shadow(0 0 20px rgba(139,92,246,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
               />
@@ -4625,8 +4625,8 @@ export default function StreamHub() {
                 background:"var(--purple)",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
-                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
-                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
                 color:"#fff",flexShrink:0,cursor:"pointer",
                 overflow:"hidden",padding:0,
                 transition:"all .3s",
@@ -4645,11 +4645,11 @@ export default function StreamHub() {
               placeholder="Search by title, genre or mood…"
               style={{
                 width:"100%", background:"rgba(255,255,255,.1)",
-                border:"1.5px solid rgba(245,197,24,.4)",
+                border:"1.5px solid rgba(245,158,11,.4)",
                 borderRadius:14, color:"var(--text)",
                 padding:"12px 16px 12px 38px",
                 fontSize:15, outline:"none",
-                boxShadow:"0 2px 16px rgba(245,197,24,.1)",
+                boxShadow:"0 2px 16px rgba(245,158,11,.1)",
               }}
             />
           </div>
@@ -4667,13 +4667,13 @@ export default function StreamHub() {
             overflow:"hidden",
             position:"relative",
             background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
-            border:"1px solid rgba(124,58,237,.35)",
-            boxShadow:"0 8px 40px rgba(124,58,237,.25), inset 0 1px 0 rgba(255,255,255,.06)",
+            border:"1px solid rgba(139,92,246,.35)",
+            boxShadow:"0 8px 40px rgba(139,92,246,.25), inset 0 1px 0 rgba(255,255,255,.06)",
             padding:"18px 16px 16px",
             textAlign:"center",
           }}>
             {/* glow blobs */}
-            <div style={{position:"absolute",top:-30,left:-30,width:120,height:120,borderRadius:"50%",background:"rgba(124,58,237,.25)",filter:"blur(40px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",top:-30,left:-30,width:120,height:120,borderRadius:"50%",background:"rgba(139,92,246,.25)",filter:"blur(40px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",bottom:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,107,157,.2)",filter:"blur(40px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:160,height:80,borderRadius:"50%",background:"rgba(6,182,212,.12)",filter:"blur(30px)",pointerEvents:"none"}}/>
             {/* tagline */}
@@ -4689,7 +4689,7 @@ export default function StreamHub() {
             {/* pills */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",width:"100%"}}>
               {[
-                {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                 {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                 {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
               ].map((item,i)=>(
@@ -4708,7 +4708,7 @@ export default function StreamHub() {
             </div>
             {/* Mood Search CTA with usage info */}
             <button onClick={()=>setShowMoodSearch(true)}
-              style={{marginTop:12,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"10px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              style={{marginTop:12,background:"rgba(139,92,246,.2)",border:"1px solid rgba(139,92,246,.5)",borderRadius:12,color:"#c4b5fd",padding:"10px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
               <span>🎭 Try Mood Search — describe any vibe</span>
               <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 8px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
                 {tier==="premium" ? "✦ Unlimited" : "2 free/day"}
@@ -4771,8 +4771,8 @@ export default function StreamHub() {
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
-              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F5C518",grad:"rgba(245,197,24,.1)"},
-              {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(124,58,237,.12)"},
+              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
+              {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(139,92,246,.12)"},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -4888,30 +4888,30 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)",paddingBottom:72}}>
         {/* Tablet Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,197,24,.15)",paddingTop:"env(safe-area-inset-top)"}}>
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.15)",paddingTop:"env(safe-area-inset-top)"}}>
           <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
             <div style={{flex:1,position:"relative",maxWidth:400}}>
               <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
-                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.12)"}}
-                onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.3)";}}
-                onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.45)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.12)";}}
+                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,158,11,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,158,11,.12)"}}
+                onFocus={e=>{e.target.style.border="2px solid #F59E0B";e.target.style.boxShadow="0 0 24px rgba(245,158,11,.3)";}}
+                onBlur={e=>{e.target.style.border="2px solid rgba(245,158,11,.45)";e.target.style.boxShadow="0 0 16px rgba(245,158,11,.12)";}}
               />
             </div>
             <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
               {tier==="premium"
                 ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
-                :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.35)",cursor:"pointer"}}>Upgrade ✦</button>
+                :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.35)",cursor:"pointer"}}>Upgrade ✦</button>
               }
               {!user
-                ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.35)",cursor:"pointer"}}>👤 Sign In</button>
+                ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#8B5CF6,#7C3AED)",border:"1px solid rgba(139,92,246,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(139,92,246,.35)",cursor:"pointer"}}>👤 Sign In</button>
                 :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
                 width:36,height:36,borderRadius:"50%",
                 background:"var(--purple)",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
-                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
-                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
                 color:"#fff",flexShrink:0,cursor:"pointer",
                 overflow:"hidden",padding:0,
                 transition:"all .3s",
@@ -4938,18 +4938,18 @@ export default function StreamHub() {
             overflow:"hidden",
             position:"relative",
             background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
-            border:"1px solid rgba(124,58,237,.35)",
-            boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.07)",
+            border:"1px solid rgba(139,92,246,.35)",
+            boxShadow:"0 12px 60px rgba(139,92,246,.3), inset 0 1px 0 rgba(255,255,255,.07)",
             padding:"22px 106px",
           }}>
             {/* glow blobs */}
-            <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(124,58,237,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(139,92,246,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
             {/* Left glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
               position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
               height:72, width:"auto", objectFit:"contain",
-              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
             }}/>
             {/* Center content */}
@@ -4964,7 +4964,7 @@ export default function StreamHub() {
               }}>Your AI Streaming Assistant</div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"nowrap"}}>
                 {[
-                  {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                  {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                   {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                   {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
                 ].map((item,i)=>(
@@ -4984,9 +4984,9 @@ export default function StreamHub() {
               {/* Mood Search CTA with usage info — centered */}
               <div style={{display:"flex",justifyContent:"center",marginTop:10,pointerEvents:"all"}}>
                 <button onClick={()=>setShowMoodSearch(true)}
-                  style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 18px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:12,transition:"all .2s"}}
-                  onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.35)"}
-                  onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
+                  style={{background:"rgba(139,92,246,.2)",border:"1px solid rgba(139,92,246,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 18px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:12,transition:"all .2s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(139,92,246,.35)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(139,92,246,.2)"}>
                   <span>🎭 Try Mood Search — describe any vibe</span>
                   <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
                     {tier==="premium" ? "✦ Unlimited" : "2 free / day"}
@@ -4999,7 +4999,7 @@ export default function StreamHub() {
             <img src="/logo-clean.png" alt="" style={{
               position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
               height:72, width:"auto", objectFit:"contain",
-              filter:"drop-shadow(0 0 18px rgba(245,197,24,.8)) drop-shadow(0 0 36px rgba(124,58,237,.6))",
+              filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
               animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
             }}/>
           </div>
@@ -5042,7 +5042,7 @@ export default function StreamHub() {
             <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
-                {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F5C518",grad:"rgba(245,197,24,.1)"},
+                {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
                 {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",          onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.1)"},
                 {icon:"🆕", label:"New Releases", sub:"Fresh drops across all streaming platforms", onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.1)"},
                 {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -5116,19 +5116,19 @@ export default function StreamHub() {
         <div style={{height:100}} />
 
         {/* Tablet Bottom Nav */}
-        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(7,7,14,.98)",borderTop:"1px solid rgba(245,197,24,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
+        <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {/* Tablet Home button */}
           <button onClick={()=>{setView("trending");setSearch("");}} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:view==="trending"&&!search?"var(--gold)":"rgba(240,240,250,.35)",cursor:"pointer",position:"relative"}}>
-            <span style={{fontSize:22,filter:view==="trending"&&!search?"drop-shadow(0 0 8px rgba(245,197,24,.8))":"none"}}>🏠</span>
+            <span style={{fontSize:22,filter:view==="trending"&&!search?"drop-shadow(0 0 8px rgba(245,158,11,.8))":"none"}}>🏠</span>
             <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Home</span>
             {view==="trending"&&!search&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,background:"var(--gold)",borderRadius:99}}/>}
           </button>
           {[
-            {id:"trending",icon:"🔥",label:"Trending",color:"#F5C518",anim:"flameDance"},
+            {id:"trending",icon:"🔥",label:"Trending",color:"#F59E0B",anim:"flameDance"},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
-            {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F5C518",anim:null},
+            {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F59E0B",anim:null},
           ].map(t=>{
             const active=view===t.id;
             return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
@@ -5136,7 +5136,7 @@ export default function StreamHub() {
               {t.special ? (
                 <div style={{position:"relative",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>
                   {!active && <div style={{position:"absolute",inset:-4,borderRadius:"50%",animation:"sportsTabPulse 2s ease-in-out infinite",pointerEvents:"none"}}/>}
-                  <span style={{fontSize:22,lineHeight:1,display:"inline-block",animation:`trophyBounce 2s ease-in-out infinite, sportsGlow ${active?"1s":"2s"} ease-in-out infinite`,filter:active?`drop-shadow(0 0 12px #10B981) drop-shadow(0 0 24px rgba(245,197,24,.5))`:`drop-shadow(0 0 6px rgba(16,185,129,.6))`}}>🏆</span>
+                  <span style={{fontSize:22,lineHeight:1,display:"inline-block",animation:`trophyBounce 2s ease-in-out infinite, sportsGlow ${active?"1s":"2s"} ease-in-out infinite`,filter:active?`drop-shadow(0 0 12px #10B981) drop-shadow(0 0 24px rgba(245,158,11,.5))`:`drop-shadow(0 0 6px rgba(16,185,129,.6))`}}>🏆</span>
                   <div style={{position:"absolute",top:-2,right:-4,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s ease-in-out infinite",boxShadow:"0 0 6px #ef4444"}}/>
                 </div>
               ) : (
@@ -5178,10 +5178,10 @@ export default function StreamHub() {
       <GlobalStyles />
       <div style={{minHeight:"100vh",background:"var(--bg)"}}>
         {/* Header */}
-        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(7,7,14,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,197,24,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
+        <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,158,11,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
             <button onClick={()=>{setView("trending");setSearch("");}}
-              style={{background:view==="trending"&&!search?"rgba(245,197,24,.12)":"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              style={{background:view==="trending"&&!search?"rgba(245,158,11,.12)":"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
               🏠 Home
             </button>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
@@ -5200,26 +5200,26 @@ export default function StreamHub() {
           <div style={{flex:1,minWidth:160,maxWidth:320,position:"relative",marginLeft:8}}>
             <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15,zIndex:1}}>🔍</span>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
-              style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,197,24,.5)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:13,outline:"none",boxShadow:"0 0 16px rgba(245,197,24,.15)"}}
-              onFocus={e=>{e.target.style.border="2px solid #F5C518";e.target.style.boxShadow="0 0 24px rgba(245,197,24,.35)";}}
-              onBlur={e=>{e.target.style.border="2px solid rgba(245,197,24,.5)";e.target.style.boxShadow="0 0 16px rgba(245,197,24,.15)";}}
+              style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,158,11,.5)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 36px",fontSize:13,outline:"none",boxShadow:"0 0 16px rgba(245,158,11,.15)"}}
+              onFocus={e=>{e.target.style.border="2px solid #F59E0B";e.target.style.boxShadow="0 0 24px rgba(245,158,11,.35)";}}
+              onBlur={e=>{e.target.style.border="2px solid rgba(245,158,11,.5)";e.target.style.boxShadow="0 0 16px rgba(245,158,11,.15)";}}
             />
           </div>
           {/* Right buttons */}
           <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0}}>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ PREMIUM</span>
-              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F5C518,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,197,24,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
+              :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
             }
             {!user
-              ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#7C3AED,#6d28d9)",border:"1px solid rgba(124,58,237,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(124,58,237,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
+              ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#8B5CF6,#7C3AED)",border:"1px solid rgba(139,92,246,.5)",borderRadius:10,color:"#fff",padding:"9px 18px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(139,92,246,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>👤 Sign In</button>
               :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
                 width:36,height:36,borderRadius:"50%",
                 background:"var(--purple)",
                 display:"flex",alignItems:"center",justifyContent:"center",
                 fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
-                border:tier==="premium"?"2.5px solid #F5C518":"2px solid rgba(124,58,237,.4)",
-                boxShadow:tier==="premium"?"0 0 12px rgba(245,197,24,.5)":"none",
+                border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
+                boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
                 color:"#fff",flexShrink:0,cursor:"pointer",
                 overflow:"hidden",padding:0,
                 transition:"all .3s",
@@ -5248,20 +5248,20 @@ export default function StreamHub() {
               overflow:"hidden",
               position:"relative",
               background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
-              border:"1px solid rgba(124,58,237,.4)",
-              boxShadow:"0 12px 60px rgba(124,58,237,.3), inset 0 1px 0 rgba(255,255,255,.08)",
+              border:"1px solid rgba(139,92,246,.4)",
+              boxShadow:"0 12px 60px rgba(139,92,246,.3), inset 0 1px 0 rgba(255,255,255,.08)",
               padding:"24px 32px",
               display:"flex", alignItems:"center", justifyContent:"space-between",
               marginBottom:20,
             }}>
               {/* glow blobs */}
-              <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"rgba(124,58,237,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
+              <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"rgba(139,92,246,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
               <div style={{position:"absolute",bottom:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
               <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:100,background:"rgba(6,182,212,.07)",filter:"blur(60px)",pointerEvents:"none"}}/>
               {/* Left glowing logo */}
               <img src="/logo-clean.png" alt="" style={{
                 height:90, width:"auto", objectFit:"contain", flexShrink:0,
-                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
                 animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
               }}/>
               {/* Center content — absolutely centered in the banner */}
@@ -5277,7 +5277,7 @@ export default function StreamHub() {
                 }}>Your AI Streaming Assistant</div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12,pointerEvents:"all"}}>
                   {[
-                    {word:"SEARCH", bg:"#F5C518", glow:"rgba(245,197,24,.7)"},
+                    {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
                     {word:"FIND",   bg:"#06B6D4", glow:"rgba(6,182,212,.7)"},
                     {word:"ENJOY",  bg:"#FF6B9D", glow:"rgba(255,107,157,.7)"},
                   ].map((item,i)=>(
@@ -5299,7 +5299,7 @@ export default function StreamHub() {
               {/* Right glowing logo */}
               <img src="/logo-clean.png" alt="" style={{
                 height:90, width:"auto", objectFit:"contain", flexShrink:0,
-                filter:"drop-shadow(0 0 20px rgba(245,197,24,.9)) drop-shadow(0 0 40px rgba(124,58,237,.7))",
+                filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
                 animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
               }}/>
             </div>
@@ -5315,18 +5315,18 @@ export default function StreamHub() {
               <div onClick={()=>setShowMoodSearch(true)}
                 style={{
                   background:"linear-gradient(135deg,#0d0520 0%,#1a0540 60%,#0a0320 100%)",
-                  border:"1.5px solid rgba(124,58,237,.5)",
+                  border:"1.5px solid rgba(139,92,246,.5)",
                   borderRadius:18, padding:"20px 24px",
                   cursor:"pointer", position:"relative", overflow:"hidden",
-                  boxShadow:"0 8px 32px rgba(124,58,237,.2)",
+                  boxShadow:"0 8px 32px rgba(139,92,246,.2)",
                   transition:"all .25s",
                 }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(124,58,237,.9)";e.currentTarget.style.boxShadow="0 12px 40px rgba(124,58,237,.4)";e.currentTarget.style.transform="translateY(-2px)";}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(124,58,237,.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(124,58,237,.2)";e.currentTarget.style.transform="translateY(0)";}}>
-                <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(124,58,237,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(139,92,246,.9)";e.currentTarget.style.boxShadow="0 12px 40px rgba(139,92,246,.4)";e.currentTarget.style.transform="translateY(-2px)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(139,92,246,.5)";e.currentTarget.style.boxShadow="0 8px 32px rgba(139,92,246,.2)";e.currentTarget.style.transform="translateY(0)";}}>
+                <div style={{position:"absolute",top:-40,right:-40,width:180,height:180,borderRadius:"50%",background:"rgba(139,92,246,.15)",filter:"blur(50px)",pointerEvents:"none"}}/>
                 <div style={{position:"absolute",bottom:-30,left:-30,width:140,height:140,borderRadius:"50%",background:"rgba(255,107,157,.1)",filter:"blur(40px)",pointerEvents:"none"}}/>
                 <div style={{position:"relative",display:"flex",alignItems:"flex-start",gap:16}}>
-                  <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#7C3AED,#FF6B9D)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,boxShadow:"0 6px 20px rgba(124,58,237,.5)"}}>🎭</div>
+                  <div style={{width:52,height:52,borderRadius:14,background:"linear-gradient(135deg,#8B5CF6,#FF6B9D)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0,boxShadow:"0 6px 20px rgba(139,92,246,.5)"}}>🎭</div>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                       <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,background:"linear-gradient(90deg,#c4b5fd,#f0abfc)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Mood Search</div>
@@ -5336,10 +5336,10 @@ export default function StreamHub() {
                       Describe your perfect movie night — AI finds the <em>exact</em> match. No scrolling, no browsing. Just vibes.
                       <div style={{marginTop:8,display:"flex",gap:8}}>
                         <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:600,color:"rgba(196,181,253,.6)"}}>Free: 2 searches/day</span>
-                        <span style={{background:"rgba(245,197,24,.12)",border:"1px solid rgba(245,197,24,.3)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>✦ Premium: Unlimited</span>
+                        <span style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>✦ Premium: Unlimited</span>
                       </div>
                     </div>
-                    <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(124,58,237,.3)",border:"1px solid rgba(124,58,237,.6)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#c4b5fd"}}>
+                    <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(139,92,246,.3)",border:"1px solid rgba(139,92,246,.6)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#c4b5fd"}}>
                       ✦ Try Mood Search →
                     </div>
                   </div>
@@ -5447,7 +5447,7 @@ export default function StreamHub() {
           {/* Right Sidebar */}
           <aside style={{width:220,flexShrink:0}}>
             {!user&&(
-              <div style={{background:"rgba(124,58,237,.1)",border:"1px solid rgba(124,58,237,.25)",borderRadius:"var(--radius)",padding:16,marginBottom:16,textAlign:"center"}}>
+              <div style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.25)",borderRadius:"var(--radius)",padding:16,marginBottom:16,textAlign:"center"}}>
                 <div style={{fontSize:24,marginBottom:8}}>👤</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:6}}>Create an Account</div>
                 <div style={{fontSize:12,color:"var(--muted)",marginBottom:12,lineHeight:1.5}}>Save your watchlist, write reviews and sync across devices.</div>
@@ -5462,7 +5462,7 @@ export default function StreamHub() {
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
-                  {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F5C518",grad:"rgba(245,197,24,.08)"},
+                  {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.08)"},
                   {icon:"🚨",label:"Leaving Soon", sub:"Titles leaving your services this month",onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.07)"},
                   {icon:"🆕",label:"New Releases", sub:"Fresh drops across all streaming platforms",onClick:()=>setShowNewReleases(true),color:"#06B6D4",grad:"rgba(6,182,212,.07)"},
                   {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
@@ -5485,7 +5485,7 @@ export default function StreamHub() {
         </div>
 
         {/* Footer */}
-        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,197,24,.2)"}}>
+        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)"}}>
         {/* Advanced Stats Section */}
         <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
 
@@ -5499,7 +5499,7 @@ export default function StreamHub() {
               fontFamily:"var(--font-head)", fontWeight:800,
               fontSize:"clamp(24px,3vw,42px)",
               letterSpacing:"-.01em", marginBottom:10,
-              background:"linear-gradient(90deg,#F5C518,#ffffff,#06B6D4,#FF6B9D,#F5C518)",
+              background:"linear-gradient(90deg,#F59E0B,#ffffff,#06B6D4,#FF6B9D,#F59E0B)",
               backgroundSize:"300% auto",
               WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
               animation:"gradientShift 4s linear infinite",
@@ -5515,7 +5515,7 @@ export default function StreamHub() {
             {/* Word pills */}
             <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
               {[
-                {word:"SEARCH", color:"#000",    bg:"#F5C518",  shadow:"rgba(245,197,24,.6)"},
+                {word:"SEARCH", color:"#000",    bg:"#F59E0B",  shadow:"rgba(245,158,11,.6)"},
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
                 {word:"FIND",   color:"#fff",    bg:"#06B6D4",  shadow:"rgba(6,182,212,.5)"},
                 {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
@@ -5538,11 +5538,11 @@ export default function StreamHub() {
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,197,24,.5))",cursor:"pointer"}} />
+                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
-                    <span style={{color:"#F5C518"}}>The Stream</span>
-                    <span style={{color:"#7C3AED"}}>Hub</span>
+                    <span style={{color:"#F59E0B"}}>The Stream</span>
+                    <span style={{color:"#8B5CF6"}}>Hub</span>
                   </div>
                   <div style={{fontSize:10,color:"var(--gold)",letterSpacing:1,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
                 </div>
