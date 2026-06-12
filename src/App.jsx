@@ -1021,13 +1021,13 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
   const isWC = sportQuery?.toLowerCase().includes("world")||sportQuery?.toLowerCase().includes("fifa");
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1300,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1300,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:56,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
-        background:"var(--surface)", borderRadius:"22px 22px 0 0",
-        width:"100%", maxWidth:600, maxHeight:"90vh",
+        background:"var(--surface)", borderRadius:18,
+        width:"100%", maxWidth:600,
         border:`1px solid ${isWC?"rgba(245,197,24,.4)":"rgba(16,185,129,.3)"}`,
-        borderBottom:"none", display:"flex", flexDirection:"column",
-        boxShadow:"0 -20px 60px rgba(0,0,0,.6)",
+        display:"flex", flexDirection:"column",
+        boxShadow:"0 20px 60px rgba(0,0,0,.7)",
       }}>
         <div style={{
           padding:"18px 20px 14px",
@@ -4725,7 +4725,7 @@ export default function StreamHub() {
         {/* Daily Pick Banner */}
         {view==="trending"&&!search.trim()&&featuredRows.trending?.length>0&&(
           <DailyPickBanner
-            movie={featuredRows.trending[new Date().getDay()%Math.min(5,featuredRows.trending.length)]}
+            movie={(featuredRows.trending||[]).filter(m=>(m.providers||[]).length>0)[new Date().getDay()%Math.max(1,(featuredRows.trending||[]).filter(m=>(m.providers||[]).length>0).slice(0,8).length)]||featuredRows.topRated?.[0]}
             onSelect={handleSelectMovie}
             onShare={(m)=>handleShareMovie(m)}
           />
@@ -4822,7 +4822,6 @@ export default function StreamHub() {
           <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
             {!search.trim() ? (
               <>
-                <SportsTabHeader onSearch={handleSportSearch}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
               </>
@@ -5067,7 +5066,6 @@ export default function StreamHub() {
             <div>
               {!search.trim() ? (
                 <>
-                  <SportsTabHeader onSearch={handleSportSearch}/>
                   <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
                 </>
@@ -5329,7 +5327,6 @@ export default function StreamHub() {
               <div>
                 {!search.trim() ? (
                   <>
-                    <SportsTabHeader onSearch={handleSportSearch}/>
                     <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
                   </>
@@ -5381,56 +5378,22 @@ export default function StreamHub() {
             {/* Premium Tools */}
             <div style={{marginTop:16}}>
               {/* Sports Hub Button */}
-              <button onClick={()=>{setView("sports");setSearch("");}}
-                style={{
-                  width:"100%", marginBottom:12,
-                  background:"linear-gradient(135deg,rgba(7,15,7,.95),rgba(10,30,15,.95))",
-                  border:"1.5px solid rgba(16,185,129,.4)", borderRadius:14,
-                  padding:"12px 14px", display:"flex", alignItems:"center",
-                  justifyContent:"space-between", cursor:"pointer",
-                  boxShadow:"0 4px 16px rgba(16,185,129,.1)",
-                  transition:"all .2s",
-                }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.7)";e.currentTarget.style.boxShadow="0 4px 20px rgba(16,185,129,.25)";}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.4)";e.currentTarget.style.boxShadow="0 4px 16px rgba(16,185,129,.1)";}}>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{position:"relative",width:36,height:36,borderRadius:10,background:"rgba(16,185,129,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <span style={{fontSize:18,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
-                    <div style={{position:"absolute",top:-2,right:-2,width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",border:"1.5px solid var(--bg)"}}/>
-                  </div>
-                  <div>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,color:"#fff"}}>Sports Hub</div>
-                    <div style={{fontSize:10,color:"rgba(16,185,129,.7)"}}>Live · Scores · Schedules</div>
-                  </div>
-                </div>
-                <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.35)",borderRadius:99,padding:"2px 8px",fontSize:9,fontWeight:800,color:"#ef4444"}}>LIVE</div>
-              </button>
-              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
-              {/* Mood Search prominent button */}
+              {/* Mood Search & Sports Hub — same size, stacked */}
               <button onClick={()=>setShowMoodSearch(true)}
                 style={{width:"100%",background:"rgba(124,58,237,.12)",border:"1px solid rgba(124,58,237,.35)",borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:8,transition:"all .2s"}}
-                onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.22)";e.currentTarget.style.borderColor="rgba(124,58,237,.6)";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.12)";e.currentTarget.style.borderColor="rgba(124,58,237,.35)";}}>
-                <span style={{fontSize:22}}>🎭</span>
-                <div style={{textAlign:"left"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#c4b5fd",fontFamily:"var(--font-head)"}}>Mood Search</div>
-                  <div style={{fontSize:10,color:"var(--muted)"}}>Describe any vibe</div>
-                </div>
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(124,58,237,.22)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(124,58,237,.12)";}}>
+                <span style={{fontSize:20,position:"relative"}}>🎭</span>
+                <div><div style={{fontSize:12,fontWeight:800,color:"#c4b5fd",fontFamily:"var(--font-head)"}}>Mood Search</div><div style={{fontSize:10,color:"var(--muted)"}}>Describe any vibe</div></div>
               </button>
-              {/* Sports Hub — large, under Mood Search */}
               <button onClick={()=>{setView("sports");setSearch("");}}
-                style={{width:"100%",background:"rgba(16,185,129,.1)",border:"2px solid rgba(16,185,129,.4)",borderRadius:12,padding:"12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginBottom:10,transition:"all .2s",boxShadow:"0 4px 14px rgba(16,185,129,.1)"}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.7)";e.currentTarget.style.boxShadow="0 4px 20px rgba(16,185,129,.25)";}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(16,185,129,.4)";e.currentTarget.style.boxShadow="0 4px 14px rgba(16,185,129,.1)";}}>
-                <div style={{position:"relative",width:42,height:42,borderRadius:10,background:"rgba(16,185,129,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <span style={{fontSize:24,animation:"trophyBounce 2s ease-in-out infinite, sportsGlow 2s ease-in-out infinite"}}>🏆</span>
-                  <div style={{position:"absolute",top:-2,right:-2,width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite"}}/>
-                </div>
-                <div style={{textAlign:"left"}}>
-                  <div style={{fontSize:13,fontWeight:800,color:"#fff",fontFamily:"var(--font-head)"}}>Sports Hub</div>
-                  <div style={{fontSize:10,color:"rgba(16,185,129,.8)"}}>Live · Scores · World Cup 🔴</div>
-                </div>
+                style={{width:"100%",background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.35)",borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:8,cursor:"pointer",marginBottom:12,transition:"all .2s"}}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(16,185,129,.2)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(16,185,129,.1)";}}>
+                <span style={{fontSize:20,position:"relative",animation:"trophyBounce 2s ease-in-out infinite"}}>🏆<span style={{position:"absolute",top:-3,right:-3,width:7,height:7,borderRadius:"50%",background:"#ef4444",animation:"liveDot 1.2s infinite",display:"inline-block"}}/></span>
+                <div><div style={{fontSize:12,fontWeight:800,color:"#6ee7b7",fontFamily:"var(--font-head)"}}>Sports Hub</div><div style={{fontSize:10,color:"var(--muted)"}}>Live scores · World Cup 🔴</div></div>
               </button>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:7}}>
                 {[
                   {icon:"✦",label:"For You",sub:"AI picks just for you",onClick:()=>setShowPersonalizedRecs(true),color:"var(--gold)"},
