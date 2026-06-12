@@ -3120,16 +3120,15 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   };
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.92)",zIndex:1100,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:56,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
         background:"linear-gradient(180deg,#100828 0%,#0d0520 100%)",
-        borderRadius:"28px 28px 0 0",
+        borderRadius:20,
         width:"100%", maxWidth:640,
-        maxHeight:"92vh", overflow:"hidden",
+        overflow:"hidden",
         display:"flex", flexDirection:"column",
         border:"1px solid rgba(124,58,237,.4)",
-        borderBottom:"none",
-        boxShadow:"0 -20px 80px rgba(124,58,237,.4)",
+        boxShadow:"0 20px 80px rgba(124,58,237,.4)",
       }}>
         {/* Header */}
         <div style={{
@@ -4707,11 +4706,7 @@ export default function StreamHub() {
                 </div>
               ))}
             </div>
-            {/* mood search CTA */}
-            <button onClick={()=>setShowMoodSearch(true)}
-              style={{marginTop:12,background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5,position:"relative"}}>
-              🎭 Try Mood Search — describe any vibe
-            </button>
+
           </div>
         )}
 
@@ -4979,10 +4974,7 @@ export default function StreamHub() {
                   </div>
                 ))}
               </div>
-              <button onClick={()=>setShowMoodSearch(true)}
-                style={{background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",borderRadius:99,color:"#c4b5fd",padding:"6px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",letterSpacing:.5}}>
-                🎭 Try Mood Search — describe any vibe
-              </button>
+
             </div>
             {/* Right glowing logo — absolutely centered vertically */}
             <img src="/logo-clean.png" alt="" style={{
@@ -5285,18 +5277,7 @@ export default function StreamHub() {
                     </div>
                   ))}
                 </div>
-                <button onClick={()=>setShowMoodSearch(true)}
-                  style={{
-                    background:"rgba(124,58,237,.2)",border:"1px solid rgba(124,58,237,.5)",
-                    borderRadius:99,color:"#c4b5fd",padding:"7px 20px",
-                    fontSize:12,fontWeight:700,fontFamily:"var(--font-head)",
-                    cursor:"pointer",letterSpacing:.5,pointerEvents:"all",
-                    transition:"all .2s",whiteSpace:"nowrap",
-                  }}
-                  onMouseEnter={e=>e.currentTarget.style.background="rgba(124,58,237,.4)"}
-                  onMouseLeave={e=>e.currentTarget.style.background="rgba(124,58,237,.2)"}>
-                  🎭 Try Mood Search — describe any vibe, AI finds the match
-                </button>
+
               </div>
               {/* Right glowing logo */}
               <img src="/logo-clean.png" alt="" style={{
