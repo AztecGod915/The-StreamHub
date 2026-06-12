@@ -94,6 +94,7 @@ const GlobalStyles = () => {
       ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:99px; }
       @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
       @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+      @keyframes spinRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       @keyframes spin     { to{transform:rotate(360deg)} }
       @keyframes slideRight { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
       @keyframes slideUp  { from{opacity:0;transform:translateY(100%)} to{opacity:1;transform:translateY(0)} }
@@ -1924,7 +1925,7 @@ function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }
     7:"$7.99",8:"$17.99",9:"$20.99",10:"$13.99",11:"$12.99",12:"$13.99",
     13:"$9.99",14:"$72.99",15:"$10.99",16:"$6.99",17:"$9.99",
   };
-  const subList = SERVICES.filter(s=>userSubs.includes(s.id));
+  const subList = SERVICES.filter(s=>localSubs.includes(s.id));
   const totalSubs = subList.length;
   const est = subList.reduce((sum,s)=>{
     const p=parseFloat((PRICES[s.id]||"$0").replace("$",""));
@@ -3336,9 +3337,9 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
             </div>
           )}
         </div>
-      {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
       </div>
     </div>
+    {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
   );
 }
 
