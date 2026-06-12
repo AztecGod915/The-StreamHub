@@ -640,12 +640,37 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const intervalRef = useRef(null);
   const sportRef = useRef(null);   // always has the latest sport — no stale closure
 
+  // All ESPN status names that mean "this match is currently happening"
+  const LIVE_STATUSES = new Set([
+    "STATUS_IN_PROGRESS",
+    "STATUS_HALFTIME",
+    "STATUS_EXTRA_TIME_IN_PROGRESS",
+    "STATUS_EXTRA_TIME_HALF",
+    "STATUS_SHOOTOUT_IN_PROGRESS",
+    "STATUS_OVERTIME",
+    "STATUS_FIRST_HALF",
+    "STATUS_SECOND_HALF",
+    "STATUS_END_PERIOD",
+  ]);
+
   // Parse ESPN events from API response
   const parseEvents = (data) => (data.events||[]).map(evt => {
     const comp = evt.competitions?.[0];
     const home = comp?.competitors?.find(c=>c.homeAway==="home") || comp?.competitors?.[0];
     const away = comp?.competitors?.find(c=>c.homeAway==="away") || comp?.competitors?.[1];
     const st = evt.status?.type;
+    const statusName = st?.name || "";
+    const isHalftime = statusName === "STATUS_HALFTIME" || statusName === "STATUS_EXTRA_TIME_HALF";
+    const isShootout = statusName === "STATUS_SHOOTOUT_IN_PROGRESS";
+    const isExtraTime = statusName === "STATUS_EXTRA_TIME_IN_PROGRESS";
+    const isLive = LIVE_STATUSES.has(statusName) && !st?.completed;
+
+    // Build a clear period label for soccer
+    let periodText = st?.shortDetail || "";
+    if (isHalftime)  periodText = "Half Time";
+    if (isExtraTime) periodText = "Extra Time · " + (st?.displayClock || "");
+    if (isShootout)  periodText = "⚽ Penalty Shootout";
+
     return {
       id: evt.id,
       name: evt.name||evt.shortName||"",
@@ -653,13 +678,16 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       date: evt.date,
       localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}),
       localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
-      isLive: st?.name==="STATUS_IN_PROGRESS",
+      isLive,
+      isHalftime,
+      isShootout,
+      isExtraTime,
       isOver: st?.completed||false,
       period: evt.status?.period||0,
       displayClock: evt.status?.displayClock||"",
-      periodText: evt.status?.type?.shortDetail||"",
-      home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score||"", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
-      away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score||"", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
+      periodText,
+      home: { name:home?.team?.shortDisplayName||home?.team?.displayName||"", abbr:home?.team?.abbreviation||"", score:home?.score??"-", logo:home?.team?.logo||"", color:home?.team?.color||"333", winner:home?.winner },
+      away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score??"-", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
       broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
       broadcastLink: getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
       venue: comp?.venue?.fullName||"",
@@ -681,7 +709,10 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       setEvents(evts);
       setLastUpdated(new Date());
       setError(null);
-      setIsPolling(evts.some(e=>e.isLive));
+      // Keep polling if any game is live OR if any game starts within the next 90 minutes
+      const now = Date.now();
+      const hasSoonGame = evts.some(e => !e.isOver && !e.isLive && new Date(e.date).getTime() - now < 90*60*1000);
+      setIsPolling(evts.some(e=>e.isLive) || hasSoonGame);
     } catch(e) {
       if (!silent) setError("Could not load schedule");
     }
@@ -703,15 +734,15 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [sportQuery]);
 
-  // Polling: start/stop based on isPolling flag
-  // Uses sportRef so the interval always calls with fresh sport data
+  // Polling: 20s when games are live, 60s when games start soon
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (isPolling) {
-      intervalRef.current = setInterval(() => doFetch(true), 30000);
+      const hasLive = events.some(e=>e.isLive);
+      intervalRef.current = setInterval(() => doFetch(true), hasLive ? 20000 : 60000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isPolling]);
+  }, [isPolling, events]);
 
   const sport = getEspnSport(sportQuery);
   if (!sport && !loading) return null;
@@ -827,13 +858,19 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
       <div onClick={()=>onSelect&&onSelect(evt)} style={{cursor:"pointer"}}
         onMouseEnter={e=>e.currentTarget.style.opacity=".88"}
         onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
-        <div style={{padding:"6px 10px",background:isLive?"rgba(239,68,68,.15)":isFavGame?"rgba(245,158,11,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:10,fontWeight:700,color:isLive?"#ef4444":isFavGame?"var(--gold)":"var(--muted)"}}>
-            {isLive ? `🔴 LIVE · ${evt.periodText}` : isOver ? "✓ FINAL" : evt.localDate}
+        <div style={{padding:"6px 10px",background:isLive?(evt.isHalftime?"rgba(245,158,11,.12)":evt.isShootout?"rgba(139,92,246,.15)":"rgba(239,68,68,.15)"):isFavGame?"rgba(245,158,11,.06)":"rgba(255,255,255,.03)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontSize:10,fontWeight:700,color:isLive?(evt.isHalftime?"var(--gold)":evt.isShootout?"#C4B5FD":"#ef4444"):isFavGame?"var(--gold)":"var(--muted)"}}>
+            {isLive
+              ? evt.isHalftime  ? "⏸ HALF TIME"
+              : evt.isShootout  ? "🥅 PENALTIES"
+              : evt.isExtraTime ? `⚽ ET · ${evt.displayClock||evt.periodText}`
+              : `🔴 ${evt.periodText||"LIVE"}`
+              : isOver ? "✓ FINAL" : evt.localDate}
           </div>
           <div style={{display:"flex",alignItems:"center",gap:4}}>
             {evt.broadcast && <div style={{fontSize:9,color:"var(--gold)",fontWeight:700,background:"rgba(245,158,11,.1)",borderRadius:4,padding:"1px 5px",maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.broadcast}</div>}
-            {isLive && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:"#ef4444",borderRadius:4,padding:"1px 5px"}}>WATCH</div>}
+            {isLive && !evt.isHalftime && <div style={{fontSize:9,color:"#fff",fontWeight:800,background:evt.isShootout?"#8B5CF6":"#ef4444",borderRadius:4,padding:"1px 5px"}}>{evt.isShootout?"PKS":"WATCH"}</div>}
+            {evt.isHalftime && <div style={{fontSize:9,color:"#000",fontWeight:800,background:"var(--gold)",borderRadius:4,padding:"1px 5px"}}>HT</div>}
           </div>
         </div>
         <div style={{padding:"10px 12px 8px"}}>
@@ -997,11 +1034,11 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
             localDate:new Date(evt.date).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),
             localTime:new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
             dayKey:new Date(evt.date).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),
-            isLive:st?.name==="STATUS_IN_PROGRESS",
+            isLive:["STATUS_IN_PROGRESS","STATUS_HALFTIME","STATUS_EXTRA_TIME_IN_PROGRESS","STATUS_EXTRA_TIME_HALF","STATUS_SHOOTOUT_IN_PROGRESS","STATUS_OVERTIME"].includes(st?.name)&&!st?.completed,
             isOver:st?.completed||false,
             periodText:st?.type?.shortDetail||"",
-            home:{name:home?.team?.shortDisplayName||home?.team?.displayName||"",score:home?.score||"",logo:home?.team?.logo||"",color:home?.team?.color||"333",winner:home?.winner},
-            away:{name:away?.team?.shortDisplayName||away?.team?.displayName||"",score:away?.score||"",logo:away?.team?.logo||"",color:away?.team?.color||"333",winner:away?.winner},
+            home:{name:home?.team?.shortDisplayName||home?.team?.displayName||"",score:home?.score??"-",logo:home?.team?.logo||"",color:home?.team?.color||"333",winner:home?.winner},
+            away:{name:away?.team?.shortDisplayName||away?.team?.displayName||"",score:away?.score??"-",logo:away?.team?.logo||"",color:away?.team?.color||"333",winner:away?.winner},
             broadcast:comp?.broadcasts?.[0]?.names?.join(", ")||"",
             venue:comp?.venue?.fullName||"",
             city:comp?.venue?.address?.city||"",
