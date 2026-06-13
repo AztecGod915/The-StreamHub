@@ -1920,17 +1920,14 @@ function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }
   const [localSubs, setLocalSubs] = useState(initialSubs);
   const toggleLocal = (id) => setLocalSubs(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
   const handleDone = () => { onToggle(localSubs); onDone(); };
-  const PRICES = {
-    1:"$7.99",2:"$13.99",3:"$22.99",4:"$8.99",5:"$9.99",6:"$7.99",
-    7:"$7.99",8:"$17.99",9:"$20.99",10:"$13.99",11:"$12.99",12:"$13.99",
-    13:"$9.99",14:"$72.99",15:"$10.99",16:"$6.99",17:"$9.99",
-  };
+
+  // Use price directly from SERVICES (already defined on each service object)
   const subList = SERVICES.filter(s=>localSubs.includes(s.id));
   const totalSubs = subList.length;
-  const est = subList.reduce((sum,s)=>{
-    const p=parseFloat((PRICES[s.id]||"$0").replace("$",""));
-    return sum+p;
-  },0);
+  const est = subList.reduce((sum,s) => sum + (s.price||0), 0);
+
+  // Helper: format price nicely
+  const fmtPrice = (s) => s.price > 0 ? `$${s.price.toFixed(2)}/mo` : "Free";
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:0,height:"100%"}}>
@@ -1948,7 +1945,7 @@ function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }
         </div>
       </div>
 
-      {/* Service grid */}
+      {/* Service list */}
       <div style={{display:"flex",flexDirection:"column",gap:8,flex:1,overflowY:"auto"}}>
         {SERVICES.map(s=>{
           const active=localSubs.includes(s.id);
@@ -1963,9 +1960,9 @@ function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }
               </div>
               <div style={{flex:1}}>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,color:active?"#fff":"var(--muted)"}}>{s.name}</div>
-                <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>{PRICES[s.id]||""}/mo</div>
+                <div style={{fontSize:11,color:active?"rgba(240,240,250,.6)":"rgba(240,240,250,.3)",marginTop:1}}>{fmtPrice(s)}</div>
               </div>
-              {/* Toggle */}
+              {/* Toggle switch */}
               <div style={{width:44,height:24,borderRadius:99,background:active?"var(--gold)":"rgba(255,255,255,.1)",position:"relative",transition:"background .2s",flexShrink:0}}>
                 <div style={{position:"absolute",top:3,left:active?20:3,width:18,height:18,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 2px 4px rgba(0,0,0,.3)"}}/>
               </div>
