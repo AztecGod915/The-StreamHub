@@ -312,7 +312,11 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
     fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${leagueId}/teams?limit=100`)
       .then(r=>r.json())
       .then(data=>{
-        setEspnTeams((data.sports?.[0]?.leagues?.[0]?.teams||[]).map(t=>({name:t.team.displayName||t.team.name,flag:"⚽"})));
+        setEspnTeams((data.sports?.[0]?.leagues?.[0]?.teams||[]).map(t=>({
+          name:t.team.displayName||t.team.name,
+          flag:"⚽",
+          logo:t.team.logos?.[0]?.href||"",
+        })));
         setLoadingTeams(false);
       })
       .catch(()=>setLoadingTeams(false));
@@ -320,36 +324,43 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
 
   const allTeams = getTeamsForSport(sport, events, espnTeams);
   const teams = allTeams.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase()));
-  const currentFav = favoriteTeams[sport||""];
+  const favArr = (() => { const v=favoriteTeams[sport||""]; return Array.isArray(v)?v:(v?[v]:[]); })();
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(8px)"}}>
       <div onClick={e=>e.stopPropagation()} style={{background:"var(--surface)",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:600,maxHeight:"80vh",display:"flex",flexDirection:"column",border:"1px solid rgba(245,158,11,.2)"}}>
-        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid var(--border)"}}>
+        <div style={{padding:"20px 20px 14px",borderBottom:"1px solid var(--border)",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
             <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>⭐ Pick Your Team</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} — {allTeams.length} teams</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>⭐ Follow Teams</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{sport} · tap to follow/unfollow · {allTeams.length} teams</div>
             </div>
             <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
           </div>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search team or player..."
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search teams…"
             style={{width:"100%",background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,padding:"8px 12px",fontSize:13,color:"var(--text)",outline:"none",boxSizing:"border-box"}}/>
-          {currentFav && (
-            <div style={{marginTop:10,display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.25)",borderRadius:10,padding:"8px 12px"}}>
-              <span style={{fontSize:13,fontWeight:700}}>⭐ Following: <strong>{currentFav}</strong></span>
-              <button onClick={()=>{onToggle(sport,"_clear");onClose();}} style={{background:"none",border:"none",color:"var(--muted)",fontSize:11,cursor:"pointer",textDecoration:"underline"}}>Unfollow</button>
+          {/* Currently following */}
+          {favArr.length>0 && (
+            <div style={{marginTop:10,display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+              <span style={{fontSize:11,color:"var(--muted)",fontWeight:700}}>Following:</span>
+              {favArr.map(name=>(
+                <div key={name} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.35)",borderRadius:99,padding:"3px 10px 3px 6px"}}>
+                  <span style={{fontSize:12,fontWeight:700,color:"var(--gold)"}}>{name}</span>
+                  <button onClick={()=>onToggle(sport,name)} style={{background:"none",border:"none",color:"rgba(245,158,11,.6)",fontSize:12,cursor:"pointer",padding:0,lineHeight:1}}>✕</button>
+                </div>
+              ))}
+              <button onClick={()=>{onToggle(sport,"_clear");}} style={{fontSize:10,color:"var(--muted)",background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}>Clear all</button>
             </div>
           )}
         </div>
-        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:10}}>
+        <div style={{overflowY:"auto",padding:16,display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
           {loadingTeams ? Array.from({length:12}).map((_,i)=><div key={i} className="skeleton" style={{height:72,borderRadius:12}}/>) :
            teams.length===0 ? <div style={{gridColumn:"1/-1",textAlign:"center",color:"var(--muted)",padding:"24px 0",fontSize:13}}>No teams found</div> :
            teams.map(t=>{
-            const isFav = currentFav===t.name;
-            const logo = getTeamLogo(t.name);
+            const isFav = favArr.includes(t.name);
+            const logo = t.logo || getTeamLogo(t.name);
             return (
-              <button key={t.name} onClick={()=>{onToggle(sport,t.name);onClose();}}
+              <button key={t.name} onClick={()=>onToggle(sport,t.name)}
                 style={{
                   background:isFav?"rgba(245,158,11,.15)":"rgba(255,255,255,.04)",
                   border:`2px solid ${isFav?"rgba(245,158,11,.6)":"rgba(255,255,255,.1)"}`,
@@ -357,10 +368,9 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
                   display:"flex",alignItems:"center",gap:10,
                   cursor:"pointer",textAlign:"left",transition:"all .15s",color:"var(--text)",
                   boxShadow:isFav?"0 0 12px rgba(245,158,11,.2)":"none",
-                }}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(245,158,11,.5)";e.currentTarget.style.background="rgba(255,255,255,.07)";}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor=isFav?"rgba(245,158,11,.6)":"rgba(255,255,255,.1)";e.currentTarget.style.background=isFav?"rgba(245,158,11,.15)":"rgba(255,255,255,.04)";}}>
-                {/* Logo or emoji */}
+                  position:"relative",
+                }}>
+                {isFav && <div style={{position:"absolute",top:6,right:6,fontSize:12}}>✓</div>}
                 {logo
                   ? <img src={logo} alt={t.name} style={{width:36,height:36,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>
                   : <span style={{fontSize:24,flexShrink:0,lineHeight:1}}>{t.flag||"🏅"}</span>
@@ -371,12 +381,20 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
                 </div>
               </button>
             );
-          })}
+           })
+          }
+        </div>
+        <div style={{padding:"12px 16px",borderTop:"1px solid var(--border)",flexShrink:0}}>
+          <button onClick={onClose} style={{width:"100%",background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>
+            ✓ Done ({favArr.length} team{favArr.length!==1?"s":""} followed)
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+
 
 
 
@@ -748,7 +766,10 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   const sport = getEspnSport(sportQuery);
   if (!sport && !loading) return null;
 
-  const favTeam = favoriteTeams?.[sportInfo?.display||""];
+  const favTeam = (() => {
+    const v = favoriteTeams?.[sportInfo?.display||""];
+    return Array.isArray(v) ? v : (v ? [v] : []);
+  })();
   const liveEvents = events.filter(e=>e.isLive);
   const upcomingEvents = events.filter(e=>!e.isLive&&!e.isOver);
   const recentEvents = events.filter(e=>e.isOver).slice(-4).reverse();
@@ -840,7 +861,8 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
 function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
   const [showReminder, setShowReminder] = useState(false);
   const hasTeams = evt.home?.name && evt.away?.name;
-  const isFavGame = favTeam && (evt.home?.name===favTeam || evt.away?.name===favTeam);
+  const favArr = Array.isArray(favTeam) ? favTeam : (favTeam ? [favTeam] : []);
+  const isFavGame = favArr.length>0 && (favArr.some(n=>n===evt.home?.name||n===evt.away?.name));
   const isUpcoming = !isLive && !isOver;
   const remLinks = isUpcoming ? getReminderLinks(evt) : null;
 
@@ -1282,7 +1304,7 @@ const SPORT_CARDS = [
 
 // ─── TEAM NEXT GAME SEARCH ────────────────────────────────────────────────────
 const TEAM_SPORT_MAP = [
-  {label:"⚽ Soccer / World Cup", path:"soccer/fifa.world"},
+  {label:"⚽ Soccer / World Cup", path:"soccer/fifa.world", fullTournament:true},
   {label:"⚽ Premier League",     path:"soccer/eng.1"},
   {label:"⚽ La Liga",            path:"soccer/esp.1"},
   {label:"⚽ MLS",                path:"soccer/usa.1"},
@@ -1318,10 +1340,25 @@ function TeamNextGameSearch({ favoriteTeams }) {
       const results = await Promise.all(
         TEAM_SPORT_MAP.map(async sp => {
           try {
-            const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sp.path}/scoreboard`);
-            if (!r.ok) return null;
-            const d = await r.json();
-            for (const evt of (d.events||[])) {
+            let events = [];
+            if (sp.fullTournament) {
+              const today = new Date();
+              const dateStrs = Array.from({length:14},(_,i)=>{
+                const d=new Date(today); d.setDate(today.getDate()+i);
+                return d.toISOString().slice(0,10).replace(/-/g,"");
+              });
+              const allRes = await Promise.all(
+                dateStrs.map(dt=>fetch(`https://site.api.espn.com/apis/site/v2/sports/${sp.path}/scoreboard?dates=${dt}`)
+                  .then(r=>r.ok?r.json():null).catch(()=>null))
+              );
+              events = allRes.flatMap(d=>(d?.events||[]));
+            } else {
+              const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sp.path}/scoreboard`);
+              if (!r.ok) return null;
+              const d = await r.json();
+              events = d.events||[];
+            }
+            for (const evt of events) {
               const comp = evt.competitions?.[0];
               const home = comp?.competitors?.find(c=>c.homeAway==="home");
               const away = comp?.competitors?.find(c=>c.homeAway==="away");
@@ -1363,7 +1400,11 @@ function TeamNextGameSearch({ favoriteTeams }) {
     if (!silent) setLoading(false);
   };
 
-  const favEntries = Object.entries(favoriteTeams||{}).filter(([,v])=>v);
+  // Flatten all followed teams across sports into quick-buttons
+  const allFavTeams = Object.entries(favoriteTeams||{}).flatMap(([sport,v])=>{
+    const arr = Array.isArray(v)?v:(v?[v]:[]);
+    return arr.map(name=>({sport,name}));
+  });
 
   return (
     <div style={{marginBottom:16,borderRadius:16,background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",overflow:"hidden"}}>
@@ -1385,13 +1426,13 @@ function TeamNextGameSearch({ favoriteTeams }) {
             {loading?"…":"Go"}
           </button>
         </div>
-        {/* Favorite team quick buttons */}
-        {favEntries.length>0&&(
+        {/* Favorite team quick buttons — all teams across all sports */}
+        {allFavTeams.length>0&&(
           <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
-            {favEntries.map(([sport,team])=>(
-              <button key={sport} onClick={()=>{setQuery(team);searchTeam(team);}}
+            {allFavTeams.map(({sport,name})=>(
+              <button key={sport+name} onClick={()=>{setQuery(name);searchTeam(name);}}
                 style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,color:"var(--gold)",padding:"3px 10px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
-                ⭐ {team}
+                ⭐ {name}
               </button>
             ))}
           </div>
@@ -1480,26 +1521,48 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
         🏆 SELECT A SPORT
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-        {SPORT_CARDS.map(s=>(
+        {SPORT_CARDS.map(s=>{
+          const favV = favoriteTeams?.[s.label];
+          const favTeams = Array.isArray(favV)?favV:(favV?[favV]:[]);
+          return (
           <button key={s.label} onClick={()=>onSearch(s.query)}
             style={{
-              background:s.bg, border:`1px solid ${s.color}40`,
+              background:s.bg, border:`1px solid ${favTeams.length>0?s.color+"88":s.color+"40"}`,
               borderRadius:14, padding:"12px 14px",
-              display:"flex",alignItems:"center",justifyContent:"space-between",
+              display:"flex",flexDirection:"column",gap:6,
               cursor:"pointer", textAlign:"left",
               transition:"all .2s",
+              boxShadow:favTeams.length>0?`0 0 12px ${s.color}22`:"none",
             }}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=s.color;e.currentTarget.style.transform="scale(1.02)";}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor=`${s.color}40`;e.currentTarget.style.transform="scale(1)";}}>
-            <div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>{s.label}</div>
-              <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=favTeams.length>0?`${s.color}88`:`${s.color}40`;e.currentTarget.style.transform="scale(1)";}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:3}}>{s.label}</div>
+                <div style={{fontSize:10,color:"var(--muted)"}}>{s.service}</div>
+              </div>
+              <span style={{fontSize:22}}>{s.icon}</span>
             </div>
-            {favoriteTeams?.[s.label] && (
-              <div style={{fontSize:10,color:"var(--gold)",background:"rgba(245,158,11,.1)",borderRadius:6,padding:"2px 7px",fontWeight:700}}>⭐</div>
+            {/* Followed teams mini-strip */}
+            {favTeams.length>0&&(
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                {favTeams.map(name=>{
+                  const logo = getTeamLogo(name);
+                  return (
+                    <div key={name} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,padding:"2px 6px 2px 4px"}}>
+                      {logo
+                        ? <img src={logo} alt={name} style={{width:14,height:14,objectFit:"contain",borderRadius:"50%"}} onError={e=>e.target.style.display="none"}/>
+                        : <span style={{fontSize:10}}>⭐</span>
+                      }
+                      <span style={{fontSize:9,fontWeight:700,color:"var(--gold)",whiteSpace:"nowrap",maxWidth:60,overflow:"hidden",textOverflow:"ellipsis"}}>{name}</span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -4748,11 +4811,22 @@ export default function StreamHub() {
     try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); }
     catch { return {}; }
   });
+  // favoriteTeams[sport] is now an array of team names (or legacy string)
+  const getFavArr = (teams, sport) => {
+    const v = teams?.[sport]; if (!v) return [];
+    return Array.isArray(v) ? v : [v]; // backward compat
+  };
   const toggleFavoriteTeam = (sport, teamName) => {
     setFavoriteTeams(prev => {
       const updated = { ...prev };
-      if (teamName === "_clear" || updated[sport] === teamName) delete updated[sport];
-      else updated[sport] = teamName;
+      if (teamName === "_clear") { delete updated[sport]; }
+      else {
+        const arr = getFavArr(prev, sport);
+        updated[sport] = arr.includes(teamName)
+          ? arr.filter(n=>n!==teamName)   // remove
+          : [...arr, teamName];            // add
+        if (updated[sport].length===0) delete updated[sport];
+      }
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
       return updated;
     });
