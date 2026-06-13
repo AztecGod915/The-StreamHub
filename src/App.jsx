@@ -1280,6 +1280,170 @@ const SPORT_CARDS = [
   { label:"🏊 Olympics",   query:"Olympics sports",        color:"#0085C7", bg:"rgba(0,133,199,.15)",   service:"Peacock" },
 ];
 
+// ─── TEAM NEXT GAME SEARCH ────────────────────────────────────────────────────
+const TEAM_SPORT_MAP = [
+  {label:"⚽ Soccer / World Cup", path:"soccer/fifa.world"},
+  {label:"⚽ Premier League",     path:"soccer/eng.1"},
+  {label:"⚽ La Liga",            path:"soccer/esp.1"},
+  {label:"⚽ MLS",                path:"soccer/usa.1"},
+  {label:"🏈 NFL",               path:"football/nfl"},
+  {label:"🏀 NBA",               path:"basketball/nba"},
+  {label:"⚾ MLB",               path:"baseball/mlb"},
+  {label:"🏒 NHL",               path:"hockey/nhl"},
+  {label:"⚽ Champions League",  path:"soccer/uefa.champions"},
+  {label:"🏀 WNBA",             path:"basketball/wnba"},
+];
+
+function TeamNextGameSearch({ favoriteTeams }) {
+  const [query, setQuery]       = useState("");
+  const [result, setResult]     = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [searched, setSearched] = useState(false);
+
+  // Auto-show favorite team's next game on mount
+  useEffect(() => {
+    const favName = Object.values(favoriteTeams||{})[0];
+    if (favName && !searched) searchTeam(favName, true);
+  }, [favoriteTeams]);
+
+  const searchTeam = async (name, silent=false) => {
+    const term = (name||query).trim().toLowerCase();
+    if (!term) return;
+    if (!silent) setLoading(true);
+    setSearched(true);
+    setResult(null);
+
+    try {
+      // Search across all major sports simultaneously
+      const results = await Promise.all(
+        TEAM_SPORT_MAP.map(async sp => {
+          try {
+            const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sp.path}/scoreboard`);
+            if (!r.ok) return null;
+            const d = await r.json();
+            for (const evt of (d.events||[])) {
+              const comp = evt.competitions?.[0];
+              const home = comp?.competitors?.find(c=>c.homeAway==="home");
+              const away = comp?.competitors?.find(c=>c.homeAway==="away");
+              const hn = (home?.team?.displayName||home?.team?.shortDisplayName||"").toLowerCase();
+              const an = (away?.team?.displayName||away?.team?.shortDisplayName||"").toLowerCase();
+              if (hn.includes(term) || an.includes(term)) {
+                const st = evt.status?.type;
+                const isOver = st?.completed;
+                const isLive = !isOver && ["STATUS_IN_PROGRESS","STATUS_HALFTIME","STATUS_EXTRA_TIME_IN_PROGRESS","STATUS_SHOOTOUT_IN_PROGRESS"].includes(st?.name);
+                return {
+                  sport: sp.label,
+                  name: evt.shortName||evt.name||"",
+                  date: new Date(evt.date),
+                  localDate: new Date(evt.date).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),
+                  localTime: new Date(evt.date).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZoneName:"short"}),
+                  home: { name:home?.team?.shortDisplayName||"", score:home?.score??"", logo:home?.team?.logo||"", winner:home?.winner },
+                  away: { name:away?.team?.shortDisplayName||"", score:away?.score??"", logo:away?.team?.logo||"", winner:away?.winner },
+                  venue: comp?.venue?.fullName||"",
+                  city: comp?.venue?.address?.city||"",
+                  broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
+                  isLive, isOver,
+                  period: st?.shortDetail||"",
+                };
+              }
+            }
+          } catch { return null; }
+          return null;
+        })
+      );
+
+      // Prefer live → upcoming → most recent
+      const found = results.filter(Boolean);
+      const live    = found.find(e=>e.isLive);
+      const upcoming= found.filter(e=>!e.isOver&&!e.isLive).sort((a,b)=>a.date-b.date)[0];
+      const finished= found.filter(e=>e.isOver).sort((a,b)=>b.date-a.date)[0];
+      setResult(live||upcoming||finished||null);
+    } catch {}
+
+    if (!silent) setLoading(false);
+  };
+
+  const favEntries = Object.entries(favoriteTeams||{}).filter(([,v])=>v);
+
+  return (
+    <div style={{marginBottom:16,borderRadius:16,background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",overflow:"hidden"}}>
+      {/* Header + search */}
+      <div style={{padding:"14px 16px 12px",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"#C4B5FD",marginBottom:10}}>
+          🔍 Find Any Team's Next Game
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <input
+            value={query}
+            onChange={e=>setQuery(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&searchTeam(query)}
+            placeholder="Search any team — Lakers, Arsenal, Cowboys…"
+            style={{flex:1,background:"rgba(255,255,255,.07)",border:"1px solid rgba(139,92,246,.3)",borderRadius:10,color:"var(--text)",padding:"9px 12px",fontSize:13,outline:"none",fontFamily:"var(--font-head)"}}
+          />
+          <button onClick={()=>searchTeam(query)}
+            style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,cursor:"pointer",flexShrink:0}}>
+            {loading?"…":"Go"}
+          </button>
+        </div>
+        {/* Favorite team quick buttons */}
+        {favEntries.length>0&&(
+          <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
+            {favEntries.map(([sport,team])=>(
+              <button key={sport} onClick={()=>{setQuery(team);searchTeam(team);}}
+                style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,color:"var(--gold)",padding:"3px 10px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                ⭐ {team}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Result */}
+      {loading && (
+        <div style={{padding:"16px",display:"flex",gap:8}}>
+          {[1,2,3].map(i=><div key={i} className="skeleton" style={{flex:1,height:60,borderRadius:10}}/>)}
+        </div>
+      )}
+      {!loading && searched && !result && (
+        <div style={{padding:"20px 16px",textAlign:"center",color:"var(--muted)",fontSize:13}}>
+          No upcoming games found for "<strong>{query}</strong>" — try a different spelling or check back later.
+        </div>
+      )}
+      {!loading && result && (
+        <div style={{padding:"14px 16px"}}>
+          <div style={{fontSize:10,color:"var(--muted)",fontWeight:700,letterSpacing:1,marginBottom:8}}>{result.sport.toUpperCase()}</div>
+          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+            {/* Teams */}
+            <div style={{flex:1,minWidth:160}}>
+              {[result.away,result.home].map((t,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:i===0?6:0}}>
+                  {t.logo&&<img src={t.logo} alt="" style={{width:24,height:24,objectFit:"contain"}}/>}
+                  <span style={{fontWeight:700,fontSize:14,flex:1}}>{t.name}</span>
+                  {(result.isLive||result.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,color:t.winner?"var(--gold)":"var(--text)"}}>{t.score}</span>}
+                </div>
+              ))}
+            </div>
+            {/* Status */}
+            <div style={{flexShrink:0,textAlign:"center",minWidth:100}}>
+              {result.isLive
+                ? <div style={{background:"rgba(239,68,68,.15)",border:"1px solid rgba(239,68,68,.4)",borderRadius:8,padding:"6px 10px",color:"#ef4444",fontWeight:800,fontSize:11}}>🔴 LIVE NOW<br/><span style={{fontSize:10,fontWeight:600}}>{result.period}</span></div>
+                : result.isOver
+                  ? <div style={{fontSize:11,color:"var(--muted)",fontWeight:700}}>FINAL</div>
+                  : <div style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.3)",borderRadius:8,padding:"6px 10px",textAlign:"center"}}>
+                      <div style={{fontSize:11,fontWeight:700,color:"#C4B5FD"}}>{result.localDate}</div>
+                      <div style={{fontSize:10,color:"var(--muted)",marginTop:2}}>{result.localTime}</div>
+                      {result.broadcast&&<div style={{fontSize:9,color:"var(--gold)",marginTop:3,fontWeight:700}}>{result.broadcast}</div>}
+                    </div>
+              }
+            </div>
+          </div>
+          {result.venue&&<div style={{marginTop:8,fontSize:10,color:"var(--muted)"}}>📍 {result.venue}{result.city?`, ${result.city}`:""}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SportCategoryGrid({ onSearch, favoriteTeams }) {
   return (
     <div style={{marginBottom:20}}>
@@ -5157,6 +5321,7 @@ export default function StreamHub() {
           <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
             {!search.trim() ? (
               <>
+                <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
               </>
@@ -5407,7 +5572,8 @@ export default function StreamHub() {
             <div>
               {!search.trim() ? (
                 <>
-                  <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                  <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
+                <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
                 </>
               ) : (
@@ -5445,12 +5611,6 @@ export default function StreamHub() {
 
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
-          {/* Tablet Home button */}
-          <button onClick={()=>{setView("trending");setSearch("");}} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:view==="trending"&&!search?"var(--gold)":"rgba(240,240,250,.35)",cursor:"pointer",position:"relative"}}>
-            <span style={{fontSize:22,filter:view==="trending"&&!search?"drop-shadow(0 0 8px rgba(245,158,11,.8))":"none"}}>🏠</span>
-            <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Home</span>
-            {view==="trending"&&!search&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:28,height:2.5,background:"var(--gold)",borderRadius:99}}/>}
-          </button>
           {[
             {id:"trending",  icon:"🏠", label:"Home",       color:"#F59E0B", anim:null},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
@@ -5735,7 +5895,8 @@ export default function StreamHub() {
               <div>
                 {!search.trim() ? (
                   <>
-                    <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
+                    <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
+                <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
                   </>
                 ) : (
