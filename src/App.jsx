@@ -5281,7 +5281,6 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [heroMovie, setHeroMovie] = useState(null);
   const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -5545,7 +5544,6 @@ export default function StreamHub() {
           addProviders(sportsData.results,"sports"),
         ]);
         setFeaturedRows({ trending, newReleases, topRated, anime, sports });
-        if (trending.length > 0) setHeroMovie(trending[Math.floor(Math.random()*Math.min(5,trending.length))]);
       } catch(e) { console.error(e); }
     };
     loadFeatured();
@@ -5921,12 +5919,6 @@ export default function StreamHub() {
         {/* Mobile Hero + Featured Rows for trending */}
         {view==="trending"&&!search.trim() ? (
           <div>
-            {/* Mobile Hero */}
-            {heroMovie && (
-              <MobileHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
-            )}
-
-            {/* Mobile Featured Rows */}
             {/* 🔥 Top 10 Trending — ranked list */}
             <div style={{padding:"0 14px 8px"}}>
               <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🔥 Top 10 Trending</div>
@@ -6142,9 +6134,7 @@ export default function StreamHub() {
         )}
 
         {/* Tablet Hero with Trailer */}
-        {view==="trending"&&!search.trim()&&heroMovie&&(
-          <TabletHero movie={heroMovie} watchlist={watchlist} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
-        )}
+
 
         {/* Tablet Grid */}
         <div style={{padding:"20px 20px 120px"}}>
@@ -6523,7 +6513,7 @@ export default function StreamHub() {
             {view==="trending"&&!search.trim() ? (
               <div>
                 <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
-                  <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
+
                 </div>
                 <div style={{paddingTop:24}}>
                   <div style={{marginBottom:28}}>
