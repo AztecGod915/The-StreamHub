@@ -2787,7 +2787,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(139,92,246,.08)";}}>
                             {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
-                          </div>
+                          </a>
                         ))}
                       </div>
                     </div>
@@ -2799,10 +2799,14 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>🛒 BUY</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.buy.map((p,i)=>(
-                          <div key={i} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700}}>
+                          <a key={i} href={getPlatformLink(p.provider_name, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
+                            style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
+                            onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.18)";}}
+                            onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,.08)";}}>
                             {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
-                          </div>
+                            <span style={{fontSize:10,opacity:.6}}>▶</span>
+                          </a>
                         ))}
                       </div>
                     </div>
