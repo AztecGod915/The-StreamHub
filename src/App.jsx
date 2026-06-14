@@ -2627,6 +2627,15 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
           {/* Reviews tab */}
           {tab==="reviews" && (
             <div>
+              {/* Community reviews header */}
+              {reviews.length > 0 && (
+                <div style={{marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
+                    Community Reviews
+                    {communityRating && <span style={{color:"#C4B5FD",marginLeft:8,fontSize:13}}>✦ {communityRating.avg} avg · {communityRating.count} rating{communityRating.count!==1?"s":""}</span>}
+                  </div>
+                </div>
+              )}
               {loadingRev ? (
                 <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}>
                   <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your reviews…
@@ -2700,6 +2709,15 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
         });
       }).catch(()=>{});
     supabase.from("reviews").select("*,profiles(username)").eq("movie_id", movie.id).order("created_at", {ascending:false}).then(({data}) => setReviews(data||[])).catch(()=>{});
+    // Fetch community rating aggregate
+    supabase.from("ratings").select("rating").eq("movie_id", movie.id).then(({data}) => {
+      if (data && data.length > 0) {
+        const avg = data.reduce((s,r)=>s+r.rating,0) / data.length;
+        setCommunityRating({avg:Math.round(avg*10)/10, count:data.length});
+      } else {
+        setCommunityRating(null);
+      }
+    }).catch(()=>{});
   }, [movie?.id]);
 
   if (!movie) return null;
@@ -2721,7 +2739,15 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
     if (!user) return showToast && showToast("Sign in to rate! 👤");
     setRating(val);
     if (onRate) onRate(movie.id, val);
-    try { await supabase.from("ratings").upsert({user_id:user.id, movie_id:movie.id, rating:val}, {onConflict:"user_id,movie_id"}); } catch(e){}
+    try {
+      await supabase.from("ratings").upsert({user_id:user.id, movie_id:movie.id, rating:val}, {onConflict:"user_id,movie_id"});
+      // Refresh community rating after user rates
+      const {data} = await supabase.from("ratings").select("rating").eq("movie_id", movie.id);
+      if (data?.length > 0) {
+        const avg = data.reduce((s,r)=>s+r.rating,0)/data.length;
+        setCommunityRating({avg:Math.round(avg*10)/10, count:data.length});
+      }
+    } catch(e){}
     showToast && showToast(`Rated ${val}/10 ★`);
   };
 
@@ -2800,6 +2826,18 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
             </div>
           </div>
           <div style={{width:1,height:36,background:"var(--border)"}}/>
+          {communityRating && communityRating.count >= 1 && (
+            <>
+              <div>
+                <div style={{fontSize:11,color:"var(--muted)",marginBottom:3}}>✦ StreamHub</div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{color:"#C4B5FD",fontSize:22,fontFamily:"var(--font-head)",fontWeight:800}}>{communityRating.avg}</span>
+                  <span style={{color:"var(--muted)",fontSize:11}}>{communityRating.count} rating{communityRating.count!==1?"s":""}</span>
+                </div>
+              </div>
+              <div style={{width:1,height:36,background:"var(--border)"}}/>
+            </>
+          )}
           <div>
             <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>Your Rating</div>
             <StarPicker value={rating} onChange={handleRate} size={16}/>
@@ -3341,11 +3379,20 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
 }
 
 // ─── LEAVING SOON MODAL ───────────────────────────────────────────────────────
-function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[] }) {
+function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[], profile }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // 7-day free trial calculation
+  const accountAgeDays = profile?.created_at
+    ? Math.floor((Date.now() - new Date(profile.created_at)) / 86400000)
+    : 999;
+  const inFreeTrial = accountAgeDays < 7;
+  const daysLeft = Math.max(0, 7 - accountAgeDays);
+  const hasAccess = tier === "premium" || inFreeTrial;
+
   useEffect(() => {
-    if (tier !== "premium") { setLoading(false); return; }
+    if (!hasAccess) { setLoading(false); return; }
     const fetchLeaving = async () => {
       try {
         const today = new Date();
@@ -3364,7 +3411,7 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[] }) 
       setLoading(false);
     };
     fetchLeaving();
-  }, [tier, userSubs]);
+  }, [hasAccess, userSubs]);
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
@@ -3373,15 +3420,20 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[] }) 
           <div>
             <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:4}}>🚨 Leaving Soon</div>
             <div style={{fontSize:13,color:"var(--muted)"}}>Titles leaving your services this month</div>
+            {tier!=="premium"&&inFreeTrial&&(
+              <div style={{marginTop:8,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,padding:"6px 12px",fontSize:11,color:"var(--sports)",fontWeight:700,display:"inline-flex",alignItems:"center",gap:5}}>
+                🎁 Free trial · {daysLeft} day{daysLeft!==1?"s":""} remaining
+              </div>
+            )}
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
         <div style={{overflowY:"auto",padding:20,flex:1}}>
-          {!tier||tier!=="premium" ? (
+          {!hasAccess ? (
             <div style={{textAlign:"center",padding:"40px 20px"}}>
               <div style={{fontSize:48,marginBottom:16}}>🚨</div>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Premium Feature</div>
-              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Get notified about titles leaving your services so you never miss a show before it's gone.</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>Upgrade to Keep Access</div>
+              <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Your 7-day free trial has ended. Upgrade to never miss a title leaving your services.</div>
               <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
             </div>
           ) : loading ? (
@@ -3568,14 +3620,26 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
     setLoading(false);
   };
 
-  if (tier !== "premium") return (
+  // Free users get 1 AI report — tracked in localStorage
+  const freeReportKey = "streamhub_free_report_used";
+  const hasUsedFreeReport = !!localStorage.getItem(freeReportKey);
+  const canAccessFree = !hasUsedFreeReport;
+
+  const generateAIReportWithTracking = async () => {
+    if (tier !== "premium" && canAccessFree) {
+      localStorage.setItem(freeReportKey, "1");
+    }
+    await generateAIReport();
+  };
+
+  if (tier !== "premium" && hasUsedFreeReport) return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
       <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(16,185,129,.3)",padding:32,textAlign:"center"}}>
         <div style={{fontSize:48,marginBottom:12}}>💰</div>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>Streaming Intelligence Report</div>
-        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>AI analyzes your watch history, ratings, and watchlist to tell you exactly which services are worth keeping — and which ones to cut.</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>Liked your free report?</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>Upgrade to Premium for unlimited AI reports, updated every time your watch history changes.</div>
         <div style={{background:"rgba(16,185,129,.06)",border:"1px solid rgba(16,185,129,.2)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
-          {["Cost-per-watch breakdown per service","AI verdict: Keep, Cut, or Rotate","Personalized save recommendations","Monthly & annual waste calculator","Best value score for your taste"].map((f,i)=>(
+          {["Unlimited AI reports — run anytime","Cost-per-watch breakdown per service","AI verdict: Keep, Cut, or Rotate","Personalized save recommendations","Monthly & annual waste calculator"].map((f,i)=>(
             <div key={i} style={{display:"flex",gap:8,fontSize:13,color:"var(--muted)",marginBottom:i<4?8:0}}>
               <span style={{color:"var(--sports)"}}>✓</span>{f}
             </div>
@@ -3707,7 +3771,7 @@ function CostCalculatorModal({ onClose, userSubs, watchHistory, watchlist, userR
                       </div>
                     ))}
                   </div>
-                  <button onClick={generateAIReport} style={{background:"linear-gradient(135deg,#10b981,#06b6d4)",border:"none",borderRadius:14,color:"#fff",padding:"14px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 32px rgba(16,185,129,.4)"}}>
+                  <button onClick={tier==="premium"?generateAIReport:generateAIReportWithTracking} style={{background:"linear-gradient(135deg,#10b981,#06b6d4)",border:"none",borderRadius:14,color:"#fff",padding:"14px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 32px rgba(16,185,129,.4)"}}>
                     ✦ Generate My Report
                   </button>
                 </div>
@@ -3814,7 +3878,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const freeMoodUsed = tier !== "premium" && getMoodSearchCount() >= 5;
+  const freeMoodUsed = false; // Mood Search is free for all users
 
   // Soft gate for non-premium users who used their daily free search
   if (freeMoodUsed) return (
@@ -5508,7 +5572,7 @@ export default function StreamHub() {
               style={{marginTop:12,background:"rgba(139,92,246,.2)",border:"1px solid rgba(139,92,246,.5)",borderRadius:12,color:"#c4b5fd",padding:"10px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
               <span>🎭 Try Mood Search — describe any vibe</span>
               <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 8px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
-                {tier==="premium" ? "✦ Unlimited" : "5 free/day"}
+                "🎭 Free for everyone"
               </span>
             </button>
 
@@ -5569,7 +5633,7 @@ export default function StreamHub() {
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
-              {icon:"🎭", label:"Mood Search",  sub:tier==="premium"?"Tell AI your vibe · ✦ Unlimited":"Tell AI your vibe · 2/day free · Unlimited Pro",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(139,92,246,.12)"},
+              {icon:"🎭", label:"Mood Search",  sub:"Tell AI your vibe — AI finds the perfect match",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(139,92,246,.12)"},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -5665,7 +5729,7 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
-      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
@@ -5787,7 +5851,7 @@ export default function StreamHub() {
                   onMouseLeave={e=>e.currentTarget.style.background="rgba(139,92,246,.2)"}>
                   <span>🎭 Try Mood Search — describe any vibe</span>
                   <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
-                    {tier==="premium" ? "✦ Unlimited" : "5 free / day"}
+                    "🎭 Free"
                   </span>
                 </button>
               </div>
@@ -5950,7 +6014,7 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
-      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
@@ -6359,7 +6423,7 @@ export default function StreamHub() {
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
-      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist}/>}
+      {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
