@@ -6302,9 +6302,9 @@ export default function StreamHub() {
         {/* Header */}
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,158,11,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
-            <button onClick={()=>{setView("trending");setSearch("");}}
-              style={{background:view==="trending"&&!search?"rgba(245,158,11,.12)":"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-              🔥 Top 10
+            <button onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}}
+              style={{background:"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              🏠 Home
             </button>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
