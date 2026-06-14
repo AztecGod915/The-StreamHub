@@ -3880,33 +3880,6 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
   const [result, setResult] = useState(null);
   const freeMoodUsed = false; // Mood Search is free for all users
 
-  // Soft gate for non-premium users who used their daily free search
-  if (freeMoodUsed) return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(245,158,11,.3)",padding:32,textAlign:"center"}}>
-        <div style={{fontSize:52,marginBottom:12}}>🎭</div>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,marginBottom:8}}>You've used all 5 free Mood Searches today</div>
-        <div style={{color:"var(--muted)",fontSize:14,marginBottom:20,lineHeight:1.7}}>
-          Free accounts get <strong style={{color:"var(--gold)"}}>2 Mood Searches per day</strong>.<br/>
-          Upgrade to Premium for unlimited AI mood matching.
-        </div>
-        <div style={{background:"rgba(245,158,11,.06)",border:"1px solid rgba(245,158,11,.15)",borderRadius:12,padding:"12px 16px",marginBottom:20,textAlign:"left"}}>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,color:"var(--gold)",marginBottom:8,letterSpacing:.5}}>✦ PREMIUM GETS</div>
-          {["Unlimited Mood Searches daily","12 AI picks weekly (vs 3)","Leaving Soon alerts","Full Watch History & Stats","Streaming Cost Calculator"].map((f,i)=>(
-            <div key={i} style={{display:"flex",gap:8,fontSize:12,color:"var(--muted)",marginBottom:i<4?6:0}}>
-              <span style={{color:"var(--gold)"}}>✓</span>{f}
-            </div>
-          ))}
-        </div>
-        <button onClick={()=>{onUpgrade();onClose();}} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"13px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",marginBottom:10,boxShadow:"0 8px 24px rgba(245,158,11,.3)"}}>
-          Upgrade to Premium ✦
-        </button>
-        <div style={{fontSize:12,color:"var(--muted)"}}>Or come back tomorrow for your next free search 🕐</div>
-        <button onClick={onClose} style={{marginTop:10,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:12,cursor:"pointer"}}>Close</button>
-      </div>
-    </div>
-  );
-
   const moods = [
     "Something scary but not too gory 😱",
     "Funny and lighthearted 😂",
@@ -3993,11 +3966,9 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
               </div>
             </div>
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}>
-              {tier !== "premium" && (
-                <div style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"var(--gold)"}}>
-                  5 free / day
-                </div>
-              )}
+              <div style={{background:"rgba(139,92,246,.15)",border:"1px solid rgba(139,92,246,.3)",borderRadius:99,padding:"3px 10px",fontSize:10,fontWeight:700,color:"#C4B5FD"}}>
+                🎭 Free
+              </div>
               <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:8,color:"var(--muted)",width:28,height:28,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
             </div>
           </div>
@@ -5633,7 +5604,7 @@ export default function StreamHub() {
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
-              {icon:"🎭", label:"Mood Search",  sub:"Tell AI your vibe — AI finds the perfect match",onClick:()=>setShowMoodSearch(true),       color:"#A78BFA",grad:"rgba(139,92,246,.12)"},
+
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -6191,9 +6162,8 @@ export default function StreamHub() {
                     </div>
                     <div style={{fontSize:13,color:"rgba(196,181,253,.8)",lineHeight:1.6,marginBottom:14}}>
                       Describe your perfect movie night — AI finds the <em>exact</em> match. No scrolling, no browsing. Just vibes.
-                      <div style={{marginTop:8,display:"flex",gap:8}}>
-                        <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:600,color:"rgba(196,181,253,.6)"}}>Free: 2 searches/day</span>
-                        <span style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:700,color:"var(--gold)"}}>✦ Premium: Unlimited</span>
+                      <div style={{marginTop:8}}>
+                        <span style={{background:"rgba(139,92,246,.15)",border:"1px solid rgba(139,92,246,.3)",borderRadius:8,padding:"3px 10px",fontSize:11,fontWeight:700,color:"#C4B5FD"}}>🎭 Free for all users</span>
                       </div>
                     </div>
                     <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(139,92,246,.3)",border:"1px solid rgba(139,92,246,.6)",borderRadius:99,padding:"7px 16px",fontSize:12,fontWeight:700,color:"#c4b5fd"}}>
