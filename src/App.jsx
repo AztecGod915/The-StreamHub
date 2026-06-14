@@ -1,28 +1,36 @@
 // ─── PLATFORM DEEP LINK BUILDER ──────────────────────────────────────────────
-function getPlatformLink(providerName, title, tmdbLink) {
-  const t = encodeURIComponent(title||"");
-  const map = {
-    "Netflix":       `https://www.netflix.com/search?q=${t}`,
-    "Hulu":          `https://www.hulu.com/search?q=${t}`,
-    "Disney Plus":   `https://www.disneyplus.com/search/${t}`,
-    "Disney+":       `https://www.disneyplus.com/search/${t}`,
-    "Max":           `https://www.max.com/search?q=${t}`,
-    "HBO Max":       `https://www.max.com/search?q=${t}`,
-    "Apple TV Plus": `https://tv.apple.com/search?term=${t}`,
-    "Apple TV+":     `https://tv.apple.com/search?term=${t}`,
-    "Amazon Prime Video": `https://www.amazon.com/s?k=${t}&i=instant-video`,
-    "Prime Video":   `https://www.amazon.com/s?k=${t}&i=instant-video`,
-    "Peacock":       `https://www.peacocktv.com/watch/search?q=${t}`,
-    "Peacock Premium": `https://www.peacocktv.com/watch/search?q=${t}`,
-    "Paramount Plus": `https://www.paramountplus.com/search/?q=${t}`,
-    "Paramount+":    `https://www.paramountplus.com/search/?q=${t}`,
-    "Tubi":          `https://tubitv.com/search/${t}`,
-    "Crunchyroll":   `https://www.crunchyroll.com/search?q=${t}`,
-    "ESPN Plus":     `https://www.espnplus.com/search?q=${t}`,
-    "Fubo":          `https://www.fubo.tv/welcome`,
-    "YouTube":       `https://www.youtube.com/results?search_query=${t}`,
+// TMDB's watch page (powered by JustWatch) is the most reliable link.
+// It shows the movie on each platform and hands off correctly.
+// We use it as primary and fall back to platform homepages — never search URLs
+// which most platforms block from external referrers.
+function getPlatformLink(providerName, movieId, movieTitle, tmdbLink) {
+  // Primary: TMDB/JustWatch link for this specific movie
+  if (tmdbLink) return tmdbLink;
+  // Secondary: direct TMDB watch page if no link stored yet
+  if (movieId) return `https://www.themoviedb.org/movie/${movieId}/watch?locale=US`;
+  // Last resort: platform homepage (user can search from there)
+  const homes = {
+    "Netflix":              "https://www.netflix.com",
+    "Hulu":                 "https://www.hulu.com",
+    "Disney Plus":          "https://www.disneyplus.com",
+    "Disney+":              "https://www.disneyplus.com",
+    "Max":                  "https://www.max.com",
+    "HBO Max":              "https://www.max.com",
+    "Apple TV Plus":        "https://tv.apple.com",
+    "Apple TV+":            "https://tv.apple.com",
+    "Amazon Prime Video":   "https://www.amazon.com/video",
+    "Prime Video":          "https://www.amazon.com/video",
+    "Peacock":              "https://www.peacocktv.com",
+    "Peacock Premium":      "https://www.peacocktv.com",
+    "Paramount Plus":       "https://www.paramountplus.com",
+    "Paramount+":           "https://www.paramountplus.com",
+    "Tubi":                 "https://tubitv.com",
+    "Crunchyroll":          "https://www.crunchyroll.com",
+    "ESPN Plus":            "https://www.espnplus.com",
+    "YouTube":              "https://www.youtube.com",
+    "Fubo":                 "https://www.fubo.tv",
   };
-  return map[providerName] || tmdbLink || `https://www.themoviedb.org/search?query=${t}`;
+  return homes[providerName] || "https://www.themoviedb.org";
 }
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -2741,7 +2749,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"var(--sports)",fontWeight:700,marginBottom:6}}>✅ INCLUDED IN SUBSCRIPTION</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.flatrate.map((p,i)=>(
-                          <a key={i} href={getPlatformLink(p.provider_name, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
+                          <a key={i} href={getPlatformLink(p.provider_name, movie.id, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.25)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(16,185,129,.2)";e.currentTarget.style.borderColor="rgba(16,185,129,.5)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(16,185,129,.1)";e.currentTarget.style.borderColor="rgba(16,185,129,.25)";}}>
@@ -2762,7 +2770,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"var(--gold)",fontWeight:700,marginBottom:6}}>🆓 FREE WITH ADS</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.free.map((p,i)=>(
-                          <a key={i} href={getPlatformLink(p.provider_name, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
+                          <a key={i} href={getPlatformLink(p.provider_name, movie.id, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,.08)";}}>
@@ -2781,7 +2789,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"#a78bfa",fontWeight:700,marginBottom:6}}>💳 RENT</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.rent.map((p,i)=>(
-                          <a key={i} href={getPlatformLink(p.provider_name, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
+                          <a key={i} href={getPlatformLink(p.provider_name, movie.id, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(139,92,246,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(139,92,246,.08)";}}>
@@ -2799,7 +2807,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       <div style={{fontSize:11,color:"#f59e0b",fontWeight:700,marginBottom:6}}>🛒 BUY</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                         {allProviders.buy.map((p,i)=>(
-                          <a key={i} href={getPlatformLink(p.provider_name, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
+                          <a key={i} href={getPlatformLink(p.provider_name, movie.id, movie.title||movie.name, allProviders.link)} target="_blank" rel="noopener noreferrer"
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,.08)";}}>
