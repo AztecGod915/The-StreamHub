@@ -1787,7 +1787,7 @@ function SportsStreamingGuide({ onSearch }) {
 }
 
 const CATEGORY_TABS = [
-  { id:"trending", label:"Top 10",    icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
+  { id:"top10",    label:"Top 10",    icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
   { id:"movies",   label:"Movies",    icon:"🎬", color:"#06B6D4",  anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
@@ -3629,7 +3629,7 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"trending",  icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
+    {id:"top10",     icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
     {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
@@ -5276,7 +5276,7 @@ export default function StreamHub() {
   const [showProfile, setShowProfile] = useState(false);
 
   // ── App state ──
-  const [view, setView] = useState("trending");
+  const [view, setView] = useState("home");
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -5724,10 +5724,15 @@ export default function StreamHub() {
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             {/* Logo - wider to fill space */}
             <div style={{flex:1,display:"flex",flexDirection:"column",gap:2}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <button onClick={()=>{setView("home");setSearch("");}}
+                style={{background:view==="home"?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                🏠
+              </button>
               <img
                 src="/logo-clean.png"
                 alt="The StreamHub"
-                onClick={()=>{setView("trending");setSearch("");}}
+                onClick={()=>{setView("home");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{
                   height:64,
@@ -5741,6 +5746,11 @@ export default function StreamHub() {
               />
 
             </div>
+            {/* 🏠 Home button next to logo */}
+            <button onClick={()=>{setView("home");setSearch("");}}
+              style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.5)":"rgba(255,255,255,.12)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              🏠
+            </button>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
@@ -5782,7 +5792,7 @@ export default function StreamHub() {
         </div>
 
         {/* WelcomeBanner for new users — above brand banner */}
-        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
+        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
 
         {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
         {!search.trim() && view==="trending" && (
@@ -5851,7 +5861,7 @@ export default function StreamHub() {
         )}
 
         {/* Daily Pick Banner */}
-        {view==="trending"&&!search.trim()&&featuredRows.trending?.length>0&&(
+        {view==="home"&&!search.trim()&&featuredRows.trending?.length>0&&(
           <DailyPickBanner
             movie={(featuredRows.trending||[]).filter(m=>(m.providers||[]).length>0)[new Date().getDay()%Math.max(1,(featuredRows.trending||[]).filter(m=>(m.providers||[]).length>0).slice(0,8).length)]||featuredRows.topRated?.[0]}
             onSelect={handleSelectMovie}
@@ -5917,16 +5927,9 @@ export default function StreamHub() {
         </div>
 
         {/* Mobile Hero + Featured Rows for trending */}
-        {view==="trending"&&!search.trim() ? (
+        {view==="home"&&!search.trim() ? (
           <div>
-            {/* 🔥 Top 10 Trending — ranked list */}
-            <div style={{padding:"0 14px 8px"}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🔥 Top 10 Trending</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>Across all streaming services · Updated daily</div>
-              <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
-            </div>
-
-            {/* Other featured rows below */}
+            {/* Other featured rows */}
             {[
               {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
@@ -5947,6 +5950,14 @@ export default function StreamHub() {
                 </div>
               </div>
             ))}
+          </div>
+                ) : view==="trending" ? (
+          <div style={{padding:"0 14px 20px"}}>
+            <div style={{paddingTop:16,paddingBottom:8}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
+            </div>
+            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
           </div>
         ) : view==="sports" ? (
           /* ── DEDICATED SPORTS HUB ── */
@@ -6056,10 +6067,10 @@ export default function StreamHub() {
         </header>
 
         {/* Tablet Hero with Trailer */}
-        {!user && view==="trending" && !search.trim() && <WelcomeBanner />}
+        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
 
         {/* 🎭 AI BRAND BANNER — tablet, above hero */}
-        {view==="trending"&&!search.trim()&&(
+        {view==="home"&&!search.trim()&&(
           <div style={{
             margin:"12px 20px 0",
             borderRadius:24,
@@ -6185,7 +6196,7 @@ export default function StreamHub() {
               ))}
             </div>
           </div>
-          {view==="trending"&&!search.trim() ? (
+          {view==="home"&&!search.trim() ? (
             <div>
               {[{title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.key} style={{marginBottom:32}}>
@@ -6199,7 +6210,15 @@ export default function StreamHub() {
                 </div>
               ))}
             </div>
-          ) : view==="sports" ? (
+                  ) : view==="trending" ? (
+          <div style={{padding:"0 14px 20px"}}>
+            <div style={{paddingTop:16,paddingBottom:8}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
+            </div>
+            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+          </div>
+        ) : view==="sports" ? (
             /* ── DEDICATED SPORTS HUB — tablet ── */
             <div>
               {!search.trim() ? (
@@ -6244,7 +6263,7 @@ export default function StreamHub() {
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {[
-            {id:"trending",  icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
+            {id:"top10",     icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
@@ -6302,8 +6321,8 @@ export default function StreamHub() {
         {/* Header */}
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.95)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(245,158,11,.15)",padding:"0 20px",height:64,display:"flex",alignItems:"center",gap:12}}>
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
-            <button onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}}
-              style={{background:"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+            <button onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}}
+              style={{background:"none",border:"none",color:view==="home"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
               🏠 Home
             </button>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
@@ -6356,7 +6375,7 @@ export default function StreamHub() {
         </header>
 
         {/* 🎭 AI BRAND BANNER — full width, above all three columns */}
-        {view==="trending"&&!search.trim()&&(
+        {view==="home"&&!search.trim()&&(
           <div style={{
             margin:"0",
             padding:"0 24px 0",
@@ -6429,7 +6448,7 @@ export default function StreamHub() {
         )}
 
         {/* ── MOOD SEARCH + SPORTS HUB — featured cards below banner, desktop only ── */}
-        {view==="trending"&&!search.trim()&&(
+        {view==="home"&&!search.trim()&&(
           <div style={{padding:"0 24px 20px",maxWidth:1440,margin:"0 auto"}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
 
@@ -6506,28 +6525,32 @@ export default function StreamHub() {
           </div>
         )}
 
-        <div style={{display:"flex",padding:`${(view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
+        <div style={{display:"flex",padding:`${(view==="home"&&!search.trim()||view==="trending"&&!search.trim())?"0":"20px"} 24px 20px`,gap:20,maxWidth:1440,margin:"0 auto"}}>
           {/* Main */}
           <main style={{flex:1,minWidth:0}}>
             {/* Homepage hero + rows */}
-            {view==="trending"&&!search.trim() ? (
+            {view==="home"&&!search.trim() ? (
               <div>
                 <div style={{borderRadius:20,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.6)",border:"1px solid rgba(255,255,255,.06)"}}>
 
                 </div>
                 <div style={{paddingTop:24}}>
-                  <div style={{marginBottom:28}}>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🔥 Top 10 Trending</div>
-                    <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>Across all streaming services · Updated daily</div>
-                    <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
-                  </div>
+
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
                   <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
-            ) : view==="sports" ? (
+                    ) : view==="trending" ? (
+          <div style={{padding:"0 14px 20px"}}>
+            <div style={{paddingTop:16,paddingBottom:8}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
+            </div>
+            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+          </div>
+        ) : view==="sports" ? (
               /* ── DEDICATED SPORTS HUB — desktop ── */
               <div>
                 {!search.trim() ? (
@@ -6663,7 +6686,7 @@ export default function StreamHub() {
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("trending");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
+                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
                     <span style={{color:"#F59E0B"}}>The Stream</span>
