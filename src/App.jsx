@@ -20,7 +20,14 @@ const track = (eventName, params = {}) => {
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────────────────
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_KEY
+  import.meta.env.VITE_SUPABASE_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: "streamhub_auth",
+    }
+  }
 );
 
 // ─── TMDB HELPERS ─────────────────────────────────────────────────────────────
@@ -4827,7 +4834,17 @@ export default function StreamHub() {
           : [...arr, teamName];            // add
         if (updated[sport].length===0) delete updated[sport];
       }
+      // Save to localStorage immediately
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
+      // Sync to Supabase in background if logged in
+      supabase.auth.getSession().then(({data:{session}})=>{
+        if (session?.user) {
+          supabase.from("profiles")
+            .update({ favorite_teams: updated })
+            .eq("id", session.user.id)
+            .catch(()=>{});
+        }
+      });
       return updated;
     });
   };
@@ -4878,10 +4895,17 @@ export default function StreamHub() {
       setUser(session?.user||null);
       if (session?.user) loadUserData(session.user);
     });
-    const { data:{ subscription } } = supabase.auth.onAuthStateChange((_ev, session) => {
+    const { data:{ subscription } } = supabase.auth.onAuthStateChange((ev, session) => {
       setUser(session?.user||null);
-      if (session?.user) loadUserData(session.user);
-      else { setWatchlist([]); setUserRatings({}); }
+      if (session?.user) {
+        loadUserData(session.user);
+      } else if (ev === "SIGNED_OUT") {
+        // Only clear data when user explicitly signs out
+        setWatchlist([]);
+        setUserRatings({});
+        setFavoriteTeams(JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"));
+      }
+      // TOKEN_REFRESHED, INITIAL_SESSION etc. — do nothing extra
     });
 
     // ── Handle Stripe payment success ──────────────────────────────
@@ -4938,6 +4962,17 @@ export default function StreamHub() {
         const subs = typeof prof.subscriptions === "string" ? JSON.parse(prof.subscriptions) : prof.subscriptions;
         setUserSubs(subs);
         localStorage.setItem("streamhub_subs", JSON.stringify(subs));
+      } catch(e) {}
+    }
+
+    // Load favorite teams from Supabase (overrides localStorage — cloud wins)
+    if (prof.favorite_teams) {
+      try {
+        const ft = typeof prof.favorite_teams === "string" ? JSON.parse(prof.favorite_teams) : prof.favorite_teams;
+        if (ft && typeof ft === "object") {
+          setFavoriteTeams(ft);
+          localStorage.setItem("streamhub_fav_teams", JSON.stringify(ft));
+        }
       } catch(e) {}
     }
 
