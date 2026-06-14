@@ -632,7 +632,7 @@ function GameDetailModal({ evt, onClose }) {
           )}
 
           {/* Watch button */}
-          <a href={broadcastLink} target="_blank" rel="noopener noreferrer"
+          <a href={broadcastLink||"#"} onClick={e=>{if(!broadcastLink){e.preventDefault();}}} target="_blank" rel="noopener noreferrer"
             style={{
               display:"block", textAlign:"center",
               background: evt.isLive
@@ -667,25 +667,30 @@ function GameDetailModal({ evt, onClose }) {
 
 // ─── BROADCAST LINK MAPPER ───────────────────────────────────────────────────
 function getBroadcastLink(broadcast) {
-  if (!broadcast) return null;
+  if (!broadcast) return "";
   const b = broadcast.toUpperCase();
-  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD")) return "https://www.espnplus.com/";
+  // Use root domain URLs — platform deep paths often block external navigation
+  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD")) return "https://plus.espn.com/";
   if (b.includes("ESPN2") || b.includes("ESPN")) return "https://www.espn.com/watch/";
   if (b.includes("MLB.TV")) return "https://www.mlb.tv/";
-  if (b.includes("NFL+") || b.includes("NFL NETWORK")) return "https://www.nfl.com/network/watch/";
-  if (b.includes("NBA TV") || b.includes("NBA LEAGUE")) return "https://www.nba.com/watch/";
-  if (b.includes("ABC") || b.includes("HULU")) return "https://www.hulu.com/live-tv";
-  if (b.includes("PEACOCK") || b.includes("NBC")) return "https://www.peacocktv.com/stream/sports";
-  if (b.includes("CBS") || b.includes("PARAMOUNT")) return "https://www.paramountplus.com/sports/";
-  if (b.includes("FOX") || b.includes("FS1") || b.includes("FS2") || b.includes("FS★")) return "https://www.foxsports.com/live";
-  if (b.includes("TNT") || b.includes("TBS") || b.includes("MAX") || b.includes("TRUETV")) return "https://www.max.com/sports";
-  if (b.includes("PRIME") || b.includes("AMAZON")) return "https://www.amazon.com/primevideo/sports";
-  if (b.includes("APPLE")) return "https://tv.apple.com/us/sports";
+  if (b.includes("NFL+") || b.includes("NFL NETWORK")) return "https://www.nfl.com/";
+  if (b.includes("NBA TV") || b.includes("NBA LEAGUE")) return "https://www.nba.com/";
+  if (b.includes("HULU")) return "https://www.hulu.com/";
+  if (b.includes("ABC")) return "https://abc.com/";
+  if (b.includes("PEACOCK")) return "https://www.peacocktv.com/";
+  if (b.includes("NBC")) return "https://www.nbc.com/";
+  if (b.includes("PARAMOUNT")) return "https://www.paramountplus.com/";
+  if (b.includes("CBS")) return "https://www.cbssports.com/";
+  if (b.includes("FOX") || b.includes("FS1") || b.includes("FS2")) return "https://www.foxsports.com/";
+  if (b.includes("TNT") || b.includes("TBS") || b.includes("TRUETV") || b.includes("MAX")) return "https://www.max.com/";
+  if (b.includes("PRIME") || b.includes("AMAZON")) return "https://www.amazon.com/video/";
+  if (b.includes("APPLE")) return "https://tv.apple.com/";
   if (b.includes("NETFLIX")) return "https://www.netflix.com/";
   if (b.includes("DAZN")) return "https://www.dazn.com/";
   if (b.includes("YOUTUBE TV")) return "https://tv.youtube.com/";
-  if (b.includes("FUBO")) return "https://www.fubo.tv/welcome";
-  return null;
+  if (b.includes("FUBO")) return "https://www.fubo.tv/";
+  if (b.includes("DISNEY")) return "https://www.disneyplus.com/";
+  return "";
 }
 
 function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
@@ -2704,7 +2709,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
             <StarPicker value={rating} onChange={handleRate} size={16}/>
           </div>
           {svc && (
-            <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} webUrl={svc.url} style={{marginLeft:"auto"}}/>
+            <WatchButton serviceId={mainProvider} title={movie.title||movie.name||""} movieId={movie.id} webUrl={allProviders.link||""} style={{marginLeft:"auto"}}/>
           )}
           {trailerKey && !showTrailer && (
             <button onClick={()=>setShowTrailer(true)}
@@ -4157,61 +4162,45 @@ const APP_SCHEMES = {
 };
 
 function getWatchUrl(serviceId, title, webUrl) {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  // webUrl should be a TMDB watch page or platform homepage — never a search URL
+  const scheme = APP_SCHEMES[serviceId];
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
-  const scheme = APP_SCHEMES[serviceId];
-
-  if (!isMobile || !scheme) return webUrl + encodeURIComponent(title);
-
-  if (isIOS && scheme.ios) {
-    // Try app scheme — iOS will open app if installed, error if not
-    return scheme.ios;
-  }
-  if (isAndroid && scheme.android) {
-    return scheme.android;
-  }
-  // Fallback to web
-  return webUrl + encodeURIComponent(title);
+  if (isIOS && scheme?.ios) return scheme.ios;
+  if (isAndroid && scheme?.android) return scheme.android;
+  return webUrl || "https://www.themoviedb.org";
 }
 
-function WatchButton({ serviceId, title, webUrl, style }) {
+function WatchButton({ serviceId, title, webUrl, movieId, style }) {
   const svc = SERVICES.find(s => s.id === serviceId);
   if (!svc) return null;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  // Reliable watch URL: TMDB JustWatch page > passed webUrl > platform homepage
+  const reliableUrl = webUrl && webUrl.includes("themoviedb.org")
+    ? webUrl
+    : movieId
+      ? `https://www.themoviedb.org/movie/${movieId}/watch?locale=US`
+      : svc.homeUrl || `https://www.${svc.name.toLowerCase().replace(/[^a-z]/g,"")}.com/`;
 
   const handleWatch = (e) => {
     e.stopPropagation();
-    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const isAndroid = /Android/i.test(navigator.userAgent);
     const scheme = APP_SCHEMES[serviceId];
 
-    if (isMobileDevice && scheme) {
-      if (isIOS && scheme.ios) {
-        // Try to open app — if it fails after 1.5s, open website
-        const appUrl = scheme.ios;
-        const webFallback = svc.url + encodeURIComponent(title);
-        const start = Date.now();
-        window.location.href = appUrl;
-        setTimeout(() => {
-          // If we're still here after 1.5s, app didn't open — go to web
-          if (Date.now() - start < 2000) {
-            window.open(webFallback, "_blank");
-          }
-        }, 1500);
-        return;
-      }
-      if (isAndroid && scheme.android) {
-        window.location.href = scheme.android;
-        setTimeout(() => {
-          window.open(svc.url + encodeURIComponent(title), "_blank");
-        }, 1500);
-        return;
-      }
+    // On mobile: try native app first, fall back to TMDB watch page
+    if (isIOS && scheme?.ios) {
+      window.location.href = scheme.ios;
+      setTimeout(() => window.open(reliableUrl, "_blank"), 1500);
+      return;
     }
-    // Desktop — open website in new tab
-    window.open(svc.url + encodeURIComponent(title), "_blank");
+    if (isAndroid && scheme?.android) {
+      window.location.href = scheme.android;
+      setTimeout(() => window.open(reliableUrl, "_blank"), 1500);
+      return;
+    }
+    // Desktop or no app scheme — open TMDB watch page
+    window.open(reliableUrl, "_blank");
   };
 
   return (
