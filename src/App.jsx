@@ -1990,12 +1990,43 @@ function DailyPickBanner({ movie, onSelect, onShare }) {
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 // ─── TOP 10 TRENDING SECTION ──────────────────────────────────────────────────
-function Top10TrendingSection({ movies, onSelect, userSubs }) {
-  if (!movies || movies.length === 0) return (
-    <div style={{padding:"40px 0",display:"flex",flexDirection:"column",gap:12}}>
+function Top10TrendingSection({ onSelect, userSubs }) {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const PROVIDER_MAP = {8:"netflix",337:"disney",1899:"max",15:"hulu",350:"apple",9:"prime",386:"peacock",531:"paramount",203:"crunchyroll",2:"apple",529:"tubi",257:"fubo"};
+    tmdbFetch("/trending/all/day?language=en-US&page=1")
+      .then(async d => {
+        const top10 = (d.results||[]).slice(0,10);
+        // Enrich with streaming providers in parallel
+        const enriched = await Promise.all(top10.map(async m => {
+          try {
+            const type = m.first_air_date ? "tv" : "movie";
+            const pd = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
+            const res = pd.results?.US || pd.results?.GB || Object.values(pd.results||{})[0] || {};
+            const providers = (res.flatrate||[]).map(p=>PROVIDER_MAP[p.provider_id]).filter(Boolean);
+            return {...m, providers};
+          } catch { return {...m, providers:[]}; }
+        }));
+        setMovies(enriched);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {Array.from({length:5}).map((_,i)=>(
         <div key={i} className="skeleton" style={{height:88,borderRadius:14}}/>
       ))}
+    </div>
+  );
+
+  if (!movies.length) return (
+    <div style={{padding:"40px 0",textAlign:"center",color:"var(--muted)",fontSize:14}}>
+      Could not load trending. Check your connection.
     </div>
   );
 
@@ -2011,8 +2042,8 @@ function Top10TrendingSection({ movies, onSelect, userSubs }) {
         const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
         const poster = movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : null;
         const providers = movie.providers || [];
-        const subs = SERVICES.filter(s => providers.includes(s.id) && userSubs.includes(s.id));
-        const others = SERVICES.filter(s => providers.includes(s.id) && !userSubs.includes(s.id));
+        const subs = SERVICES.filter(s => providers.includes(s.id) && (userSubs||[]).includes(s.id));
+        const others = SERVICES.filter(s => providers.includes(s.id) && !(userSubs||[]).includes(s.id));
 
         return (
           <div key={movie.id} onClick={() => onSelect(movie)}
@@ -5785,7 +5816,7 @@ export default function StreamHub() {
         {!user && view==="home" && !search.trim() && <WelcomeBanner />}
 
         {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
-        {!search.trim() && view==="trending" && (
+        {!search.trim() && view==="home" && (
           <div style={{
             margin:"4px 14px 16px",
             borderRadius:20,
@@ -5947,7 +5978,7 @@ export default function StreamHub() {
               <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
               <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
             </div>
-            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
           </div>
         ) : view==="sports" ? (
           /* ── DEDICATED SPORTS HUB ── */
@@ -6206,7 +6237,7 @@ export default function StreamHub() {
               <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
               <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
             </div>
-            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
           </div>
         ) : view==="sports" ? (
             /* ── DEDICATED SPORTS HUB — tablet ── */
@@ -6538,7 +6569,7 @@ export default function StreamHub() {
               <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
               <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
             </div>
-            <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
           </div>
         ) : view==="sports" ? (
               /* ── DEDICATED SPORTS HUB — desktop ── */
