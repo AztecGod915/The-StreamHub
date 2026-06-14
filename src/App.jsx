@@ -2682,13 +2682,15 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
   const [submitting, setSubmitting] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
-  const [allProviders, setAllProviders] = useState({flatrate:[],rent:[],buy:[],free:[]});
+  const [allProviders, setAllProviders] = useState({flatrate:[],rent:[],buy:[],free:[],link:""});
+  const [communityRating, setCommunityRating] = useState(null);
 
   useEffect(() => {
     if (!movie?.id) return;
     setRating(userRatings?.[movie.id] || 0);
     setTrailerKey(null); setShowTrailer(false);
-    setAllProviders({flatrate:[],rent:[],buy:[],free:[]});
+    setAllProviders({flatrate:[],rent:[],buy:[],free:[],link:""});
+    setCommunityRating(null);
     const type = movie.first_air_date ? "tv" : "movie";
     tmdbFetch(`/${type}/${movie.id}?append_to_response=credits,similar,videos`).then(d => {
       setDetails(d);
