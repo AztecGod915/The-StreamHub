@@ -1787,7 +1787,7 @@ function SportsStreamingGuide({ onSearch }) {
 }
 
 const CATEGORY_TABS = [
-  { id:"trending", label:"Trending",  icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
+  { id:"trending", label:"Top 10",    icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
   { id:"movies",   label:"Movies",    icon:"🎬", color:"#06B6D4",  anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
@@ -1989,6 +1989,95 @@ function DailyPickBanner({ movie, onSelect, onShare }) {
 }
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
+// ─── TOP 10 TRENDING SECTION ──────────────────────────────────────────────────
+function Top10TrendingSection({ movies, onSelect, userSubs }) {
+  if (!movies || movies.length === 0) return (
+    <div style={{padding:"40px 0",display:"flex",flexDirection:"column",gap:12}}>
+      {Array.from({length:5}).map((_,i)=>(
+        <div key={i} className="skeleton" style={{height:88,borderRadius:14}}/>
+      ))}
+    </div>
+  );
+
+  const top10 = movies.slice(0, 10);
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {top10.map((movie, idx) => {
+        const rank = idx + 1;
+        const title = movie.title || movie.name || "";
+        const year = (movie.release_date || movie.first_air_date || "").slice(0,4);
+        const isTV = !!movie.first_air_date;
+        const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
+        const poster = movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : null;
+        const providers = movie.providers || [];
+        const subs = SERVICES.filter(s => providers.includes(s.id) && userSubs.includes(s.id));
+        const others = SERVICES.filter(s => providers.includes(s.id) && !userSubs.includes(s.id));
+
+        return (
+          <div key={movie.id} onClick={() => onSelect(movie)}
+            style={{
+              display:"flex", alignItems:"center", gap:12,
+              background:"rgba(255,255,255,.03)",
+              border:"1px solid rgba(255,255,255,.06)",
+              borderRadius:14, padding:"10px 14px",
+              cursor:"pointer", transition:"all .2s",
+              position:"relative", overflow:"hidden",
+            }}
+            onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.07)";e.currentTarget.style.borderColor="rgba(139,92,246,.3)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.03)";e.currentTarget.style.borderColor="rgba(255,255,255,.06)";}}>
+
+            {/* Rank number */}
+            <div style={{
+              fontFamily:"var(--font-head)", fontWeight:900,
+              fontSize: rank <= 3 ? 36 : 28,
+              color: rank===1 ? "#F59E0B" : rank===2 ? "#C0C0C0" : rank===3 ? "#CD7F32" : "rgba(255,255,255,.15)",
+              minWidth: rank <= 9 ? 36 : 46,
+              textAlign:"center", flexShrink:0, lineHeight:1,
+              textShadow: rank <= 3 ? `0 0 20px currentColor` : "none",
+            }}>
+              {rank}
+            </div>
+
+            {/* Poster */}
+            {poster
+              ? <img src={poster} alt={title} style={{width:46,height:69,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
+              : <div style={{width:46,height:69,borderRadius:8,background:"rgba(139,92,246,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🎬</div>
+            }
+
+            {/* Info */}
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                {year && <span style={{fontSize:11,color:"var(--muted)"}}>{year}</span>}
+                <span style={{fontSize:10,background:isTV?"rgba(139,92,246,.2)":"rgba(6,182,212,.15)",color:isTV?"#C4B5FD":"#67E8F9",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{isTV?"TV":"Movie"}</span>
+                {rating && <span style={{fontSize:11,color:"#F59E0B",fontWeight:700}}>★ {rating}</span>}
+              </div>
+              {/* Streaming badges */}
+              {providers.length > 0 && (
+                <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
+                  {subs.slice(0,3).map(s=>(
+                    <div key={s.id} style={{background:s.color,borderRadius:5,padding:"2px 7px",fontSize:9,fontWeight:800,color:"#fff"}}>{s.logo}</div>
+                  ))}
+                  {others.slice(0,subs.length>0?1:3).map(s=>(
+                    <div key={s.id} style={{background:"rgba(255,255,255,.1)",borderRadius:5,padding:"2px 7px",fontSize:9,fontWeight:600,color:"var(--muted)"}}>{s.name}</div>
+                  ))}
+                  {subs.length===0 && others.length===0 && (
+                    <span style={{fontSize:10,color:"var(--muted)"}}>Not on streaming</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Arrow */}
+            <span style={{color:"var(--muted)",fontSize:16,flexShrink:0}}>›</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── ONBOARDING MODAL ─────────────────────────────────────────────────────────
 function OnboardingModal({ onFinish }) {
   const [step, setStep] = useState(0);
@@ -3540,7 +3629,7 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"trending",  icon:"🏠", label:"Home",       color:"#F59E0B", anim:null},
+    {id:"trending",  icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
     {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
@@ -5838,8 +5927,15 @@ export default function StreamHub() {
             )}
 
             {/* Mobile Featured Rows */}
+            {/* 🔥 Top 10 Trending — ranked list */}
+            <div style={{padding:"0 14px 8px"}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🔥 Top 10 Trending</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>Across all streaming services · Updated daily</div>
+              <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+            </div>
+
+            {/* Other featured rows below */}
             {[
-              {title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},
               {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
@@ -6158,7 +6254,7 @@ export default function StreamHub() {
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {[
-            {id:"trending",  icon:"🏠", label:"Home",       color:"#F59E0B", anim:null},
+            {id:"trending",  icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
             {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
@@ -6218,7 +6314,7 @@ export default function StreamHub() {
           <nav style={{display:"flex",gap:2,marginLeft:8,flexShrink:0}}>
             <button onClick={()=>{setView("trending");setSearch("");}}
               style={{background:view==="trending"&&!search?"rgba(245,158,11,.12)":"none",border:"none",color:view==="trending"&&!search?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"6px 10px",borderRadius:9,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-              🏠 Home
+              🔥 Top 10
             </button>
             {CATEGORY_TABS.filter(t=>t.id!=="search").map(t=>(
               <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
@@ -6430,7 +6526,11 @@ export default function StreamHub() {
                   <HeroBanner movie={heroMovie} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} watchlist={watchlist} />
                 </div>
                 <div style={{paddingTop:24}}>
-                  <FeaturedRow title="Trending This Week" icon="🔥" movies={featuredRows.trending} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--gold)" />
+                  <div style={{marginBottom:28}}>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🔥 Top 10 Trending</div>
+                    <div style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>Across all streaming services · Updated daily</div>
+                    <Top10TrendingSection movies={featuredRows.trending} onSelect={handleSelectMovie} userSubs={userSubs}/>
+                  </div>
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
