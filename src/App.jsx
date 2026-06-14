@@ -4174,6 +4174,7 @@ function getWatchUrl(serviceId, title, webUrl) {
 function WatchButton({ serviceId, title, webUrl, movieId, style }) {
   const svc = SERVICES.find(s => s.id === serviceId);
   if (!svc) return null;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   // Reliable watch URL: TMDB JustWatch page > passed webUrl > platform homepage
   const reliableUrl = webUrl && webUrl.includes("themoviedb.org")
