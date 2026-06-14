@@ -5722,11 +5722,10 @@ export default function StreamHub() {
         <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.1)",paddingTop:"env(safe-area-inset-top)"}}>
           {/* Top row - logo + buttons */}
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
-            {/* Logo - wider to fill space */}
-            <div style={{flex:1,display:"flex",flexDirection:"column",gap:2}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {/* Home button + Logo */}
+            <div style={{flex:1,display:"flex",alignItems:"center",gap:8}}>
               <button onClick={()=>{setView("home");setSearch("");}}
-                style={{background:view==="home"?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 🏠
               </button>
               <img
@@ -5735,22 +5734,13 @@ export default function StreamHub() {
                 onClick={()=>{setView("home");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{
-                  height:64,
-                  width:"auto",
-                  maxWidth:200,
-                  objectFit:"contain",
-                  cursor:"pointer",
+                  height:64, width:"auto", maxWidth:180,
+                  objectFit:"contain", cursor:"pointer",
                   filter:"drop-shadow(0 0 10px rgba(245,158,11,.5)) drop-shadow(0 0 20px rgba(139,92,246,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
               />
-
             </div>
-            {/* 🏠 Home button next to logo */}
-            <button onClick={()=>{setView("home");setSearch("");}}
-              style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.5)":"rgba(255,255,255,.12)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              🏠
-            </button>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
