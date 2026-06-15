@@ -1791,6 +1791,7 @@ const CATEGORY_TABS = [
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
   { id:"watchlist",label:"Watchlist", icon:"❤️", color:"#ef4444",  anim:null },
+  { id:"stats",    label:"My Stats",  icon:"📊", color:"#10B981",  anim:null },
 ];
 
 const GR = [
@@ -3663,6 +3664,7 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
     {id:"watchlist", icon:"❤️", label:"Watchlist", color:"#ef4444", anim:null},
+    {id:"stats",     icon:"📊", label:"Stats",     color:"#10B981", anim:null},
   ];
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
@@ -5752,18 +5754,19 @@ export default function StreamHub() {
           {/* Top row - logo + buttons */}
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
             {/* Home button + Logo */}
-            <div style={{flex:1,display:"flex",alignItems:"center",gap:8}}>
+            <div style={{flex:1,display:"flex",alignItems:"center",gap:0}}>
               <button onClick={()=>{setView("home");setSearch("");}}
-                style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:34,height:34,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:10}}>
                 🏠
               </button>
+              <div style={{width:"1px",height:28,background:"rgba(255,255,255,.1)",flexShrink:0,marginRight:10}}/>
               <img
                 src="/logo-clean.png"
                 alt="The StreamHub"
                 onClick={()=>{setView("home");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{
-                  height:64, width:"auto", maxWidth:180,
+                  height:52, width:"auto", maxWidth:160,
                   objectFit:"contain", cursor:"pointer",
                   filter:"drop-shadow(0 0 10px rgba(245,158,11,.5)) drop-shadow(0 0 20px rgba(139,92,246,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
@@ -5990,6 +5993,12 @@ export default function StreamHub() {
               </>
             )}
           </div>
+        ) : view==="stats" ? (
+          <div style={{padding:"14px 14px 100px"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>📊 My Stats</div>
+            <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
+            <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+          </div>
         ) : (
           /* Regular grid */
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
@@ -6005,7 +6014,6 @@ export default function StreamHub() {
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
-        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
 
         {/* Spacer so content scrolls fully above bottom nav + tagline */}
         <div style={{height:160}} />
@@ -6241,10 +6249,13 @@ export default function StreamHub() {
                 </>
               )}
             </div>
+          ) : view==="stats" ? (
+            <div style={{padding:"0 0 40px"}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>📊 My Stats</div>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
+              <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+            </div>
           ) : (
-            <>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:16}}>
-                {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
                 {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
               </div>
               {loading&&!search
@@ -6260,7 +6271,6 @@ export default function StreamHub() {
         </div>
 
         {/* Advanced Stats Section */}
-        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
 
         {/* Spacer so content scrolls above bottom nav */}
         <div style={{height:100}} />
@@ -6272,6 +6282,7 @@ export default function StreamHub() {
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
             {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F59E0B",anim:null},
+            {id:"stats",    icon:"📊",label:"Stats",    color:"#10B981",anim:null},
           ].map(t=>{
             const active=view===t.id;
             return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
@@ -6564,13 +6575,13 @@ export default function StreamHub() {
                   </>
                 )}
               </div>
+            ) : view==="stats" ? (
+              <div style={{padding:"0 0 40px"}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>📊 My Stats</div>
+                <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
+                <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
+              </div>
             ) : (
-              <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>
-                    {search.trim()
-                      ? searching?"Searching…":`${searchResults.length} results for "${search}"`
-                      : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label
                     }
                     {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
                   </div>
@@ -6631,7 +6642,6 @@ export default function StreamHub() {
         {/* Footer */}
         <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)"}}>
         {/* Advanced Stats Section */}
-        <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} />
 
           {/* Footer hero tagline */}
           <div style={{
