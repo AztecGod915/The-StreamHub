@@ -5805,11 +5805,10 @@ export default function StreamHub() {
           <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
-              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
-
-              {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
-              {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),      color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
+              {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),      color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
+              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
+              {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
             ].map(item=>(
               <button key={item.label} onClick={item.onClick}
                 style={{flexShrink:0,background:item.grad,border:`1.5px solid ${item.color}55`,borderRadius:16,padding:"14px 14px 12px",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,cursor:"pointer",minWidth:144,transition:"all .2s",position:"relative"}}
@@ -5928,7 +5927,19 @@ export default function StreamHub() {
         {/* Tablet Header */}
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.15)",paddingTop:"env(safe-area-inset-top)"}}>
           <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
-            <div style={{flex:1,position:"relative",maxWidth:400}}>
+
+            {/* Home button + Logo */}
+            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <button onClick={()=>{setView("home");setSearch("");}}
+                style={{background:view==="home"&&!search?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                🏠
+              </button>
+              <img src="/logo-clean.png" alt="StreamHub" onClick={()=>{setView("home");setSearch("");}}
+                onError={e=>e.target.style.display="none"}
+                style={{height:36,width:"auto",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}}/>
+            </div>
+
+            <div style={{flex:1,position:"relative",maxWidth:380}}>
               <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
                 style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,158,11,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,158,11,.12)"}}
@@ -6078,10 +6089,10 @@ export default function StreamHub() {
             <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
+                {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
+                {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
                 {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
                 {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",          onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.1)"},
-                {icon:"🆕", label:"New Releases", sub:"Fresh drops across all streaming platforms", onClick:()=>setShowNewReleases(true),color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
-                {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
               ].map(item=>(
                 <button key={item.label} onClick={item.onClick}
                   style={{background:item.grad,border:`1.5px solid ${item.color}55`,borderRadius:14,padding:"16px 12px",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,cursor:"pointer",transition:"all .2s",width:"100%",position:"relative",textAlign:"left"}}
@@ -6097,7 +6108,7 @@ export default function StreamHub() {
           </div>
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"Trending",icon:"🔥",key:"trending",color:"var(--gold)"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.key} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
@@ -6433,6 +6444,7 @@ export default function StreamHub() {
                 </div>
                 <div style={{paddingTop:24}}>
 
+                  <FeaturedRow title="New on Streaming" icon="🆕" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="#10B981" />
                   <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
@@ -6505,10 +6517,10 @@ export default function StreamHub() {
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
+                  {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
+                  {icon:"🌙",label:"Watch Tonight",sub:"AI picks one perfect thing right now",onClick:()=>setShowWatchTonight(true),color:"#8B5CF6",grad:"rgba(139,92,246,.1)"},
                   {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.08)"},
                   {icon:"🚨",label:"Leaving Soon", sub:"Titles leaving your services this month",onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.07)"},
-                  {icon:"🆕",label:"New Releases", sub:"Fresh drops across all streaming platforms",onClick:()=>setShowNewReleases(true),color:"#8B5CF6",grad:"rgba(139,92,246,.07)"},
-                  {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
                 ].map(item=>(
                   <button key={item.label} onClick={item.onClick}
                     style={{background:item.grad,border:`1.5px solid ${item.color}44`,borderRadius:12,padding:"11px 12px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",transition:"all .2s",textAlign:"left",width:"100%"}}
