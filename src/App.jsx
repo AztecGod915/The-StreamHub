@@ -6065,8 +6065,8 @@ export default function StreamHub() {
 
         {/* Tablet Grid */}
         <div style={{padding:"20px 20px 120px"}}>
-          {/* Tablet Premium Tools */}
-          <div style={{marginBottom:24}}>
+          {/* Tablet Premium Tools — home view only */}
+          {view==="home"&&!search.trim()&&<div style={{marginBottom:24}}>
             {/* Sports Hub Button */}
             <button onClick={()=>{setView("sports");setSearch("");}}
               style={{
@@ -6111,7 +6111,7 @@ export default function StreamHub() {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
           {view==="home"&&!search.trim() ? (
             <div>
               {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
@@ -6520,6 +6520,7 @@ export default function StreamHub() {
             <div style={{marginTop:16}}>
               {/* Sports Hub Button */}
               {/* Mood Search & Sports Hub are featured below the banner — not duplicated here */}
+              {view==="home"&&<>
               <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
@@ -6540,6 +6541,7 @@ export default function StreamHub() {
                   </button>
                 ))}
               </div>
+              </>}
             </div>
 
           </aside>
