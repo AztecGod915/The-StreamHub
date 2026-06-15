@@ -2211,31 +2211,34 @@ function WatchTonightModal({ onClose, user, tier, userSubs, watchlist, userRatin
     const day = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
     const isWeekend = [0,6].includes(new Date().getDay());
     const services = (userSubs||[]).map(id=>SERVICES.find(s=>s.id===id)?.name).filter(Boolean);
-    const ratingCount = Object.keys(userRatings||{}).length;
-    const highRated = Object.values(userRatings||{}).filter(r=>r>=4).length;
     const prompt = `You are a personal streaming assistant. Pick ONE perfect movie or show for this user to watch right now.
 
 User profile:
-- It's ${timeOfDay} on a ${day}${isWeekend?" (weekend)":""}
-- Their streaming services: ${services.length?services.join(", "):"Netflix, Hulu"}
-- They've rated ${ratingCount} titles, ${highRated} rated 4-5 stars
+- It is ${timeOfDay} on a ${day}${isWeekend?" (weekend)":""}
+- Their streaming services: ${services.length?services.join(", "):"Netflix, Hulu, Disney+"}
 - Watchlist size: ${(watchlist||[]).length} saved titles
+- Ratings given: ${Object.keys(userRatings||{}).length}
 
-Rules:
-- Pick something CURRENTLY AVAILABLE on one of their services
-- Match the vibe to the time/day (e.g. lighter for morning, intense for late night on a weekend)
-- Be specific and confident — pick ONE title only
-
-Respond ONLY in this exact JSON (no markdown, no extra text):
-{"title":"Movie Name","year":2023,"type":"movie","service":"Netflix","reason":"One sentence why this is perfect RIGHT NOW — mention the time or day","duration":"1h 52m","vibe":"gripping thriller"}`;
+Pick something AVAILABLE on one of their services that fits the time and day. Respond ONLY with this JSON (no markdown, no backticks):
+{"title":"Movie Name","year":2023,"type":"movie","service":"Netflix","reason":"One sentence why this is perfect for right now","duration":"1h 52m","vibe":"gripping thriller"}`;
     try {
       const res = await fetch("/api/ai", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({messages:[{role:"user",content:prompt}], max_tokens:300})
+        body:JSON.stringify({
+          model:"claude-sonnet-4-6",
+          max_tokens:300,
+          messages:[{role:"user",content:prompt}]
+        })
       });
-      const d = await res.json();
-      const text = (d.content?.[0]?.text||d.choices?.[0]?.message?.content||"").replace(/```json|```/g,"").trim();
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.error||`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const text = (data.content?.find(b=>b.type==="text")?.text || data.content?.[0]?.text || "")
+        .replace(/```json|```/g,"").trim();
+      if (!text) throw new Error("Empty response from AI");
       const parsed = JSON.parse(text);
       // Fetch poster from TMDB
       const sr = await tmdbFetch(`/search/multi?query=${encodeURIComponent(parsed.title)}&language=en-US&page=1`);
@@ -2245,7 +2248,10 @@ Respond ONLY in this exact JSON (no markdown, no extra text):
       }) || sr.results?.[0];
       if (tier!=="premium") localStorage.setItem(FREE_KEY,"1");
       setPick({...parsed, movie:found||null});
-    } catch(e) { setError("Couldn't generate a pick. Check your connection and try again."); }
+    } catch(e) {
+      console.error("Watch Tonight error:", e);
+      setError("Couldn't generate a pick. Try again!");
+    }
     setLoading(false);
   };
 
