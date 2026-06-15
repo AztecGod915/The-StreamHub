@@ -5837,17 +5837,16 @@ export default function StreamHub() {
             {/* Other featured rows */}
             {[
               {title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},
-              {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
               {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
-              <div key={row.key} style={{marginBottom:24}}>
+              <div key={row.title} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
                   <span>{row.icon}</span>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:row.color}}>{row.title}</div>
                 </div>
-                <div style={{display:"flex",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none"}}>
+                <div style={{display:"flex",flexWrap:"nowrap",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
                   {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
                     <div key={m.id} style={{flexShrink:0,width:130}}>
                       <MovieCard movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} />
@@ -6114,8 +6113,8 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
-                <div key={row.key} style={{marginBottom:32}}>
+              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+                <div key={row.title} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
                     <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
@@ -6451,7 +6450,7 @@ export default function StreamHub() {
                 <div style={{paddingTop:24}}>
 
                   <FeaturedRow title="New on Streaming" icon="🆕" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="#10B981" />
-                  <FeaturedRow title="New in Cinemas" icon="🎬" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--cyan)" />
+
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
                   <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
