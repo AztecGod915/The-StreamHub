@@ -1787,7 +1787,6 @@ function SportsStreamingGuide({ onSearch }) {
 }
 
 const CATEGORY_TABS = [
-  { id:"top10",    label:"Top 10",    icon:"🔥", color:"#F59E0B",  anim:"flameDance" },
   { id:"movies",   label:"Movies",    icon:"🎬", color:"#06B6D4",  anim:null },
   { id:"tv",       label:"TV Shows",  icon:"📺", color:"#A78BFA",  anim:"tvFlicker" },
   { id:"anime",    label:"Anime",     icon:"✦",  color:"var(--anime)", anim:"swordSwing" },
@@ -3660,7 +3659,6 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"top10",     icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
     {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
     {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
@@ -5974,14 +5972,6 @@ export default function StreamHub() {
               </div>
             ))}
           </div>
-                ) : view==="trending" ? (
-          <div style={{padding:"0 14px 20px"}}>
-            <div style={{paddingTop:16,paddingBottom:8}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
-            </div>
-            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
-          </div>
         ) : view==="sports" ? (
           /* ── DEDICATED SPORTS HUB ── */
           <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
@@ -6233,15 +6223,7 @@ export default function StreamHub() {
                 </div>
               ))}
             </div>
-                  ) : view==="trending" ? (
-          <div style={{padding:"0 14px 20px"}}>
-            <div style={{paddingTop:16,paddingBottom:8}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
-            </div>
-            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
-          </div>
-        ) : view==="sports" ? (
+          ) : view==="sports" ? (
             /* ── DEDICATED SPORTS HUB — tablet ── */
             <div>
               {!search.trim() ? (
@@ -6286,8 +6268,7 @@ export default function StreamHub() {
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {[
-            {id:"top10",     icon:"🔥", label:"Top 10",     color:"#F59E0B", anim:null},
-            {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
+                    {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
             {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F59E0B",anim:null},
@@ -6565,15 +6546,7 @@ export default function StreamHub() {
                   <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
-                    ) : view==="trending" ? (
-          <div style={{padding:"0 14px 20px"}}>
-            <div style={{paddingTop:16,paddingBottom:8}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>🔥 Top 10 Trending</div>
-              <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Across all streaming services · Updated daily</div>
-            </div>
-            <Top10TrendingSection onSelect={handleSelectMovie} userSubs={userSubs}/>
-          </div>
-        ) : view==="sports" ? (
+            ) : view==="sports" ? (
               /* ── DEDICATED SPORTS HUB — desktop ── */
               <div>
                 {!search.trim() ? (
