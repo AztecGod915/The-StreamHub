@@ -1990,124 +1990,6 @@ function DailyPickBanner({ movie, onSelect, onShare }) {
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 // ─── TOP 10 TRENDING SECTION ──────────────────────────────────────────────────
-function Top10TrendingSection({ onSelect, userSubs }) {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const PROVIDER_MAP = {8:"netflix",337:"disney",1899:"max",15:"hulu",350:"apple",9:"prime",386:"peacock",531:"paramount",203:"crunchyroll",2:"apple",529:"tubi",257:"fubo"};
-    tmdbFetch("/trending/all/day?language=en-US&page=1")
-      .then(async d => {
-        const top10 = (d.results||[]).slice(0,10);
-        // Enrich with streaming providers in parallel
-        const enriched = await Promise.all(top10.map(async m => {
-          try {
-            const type = m.first_air_date ? "tv" : "movie";
-            const pd = await tmdbFetch(`/${type}/${m.id}/watch/providers`);
-            const res = pd.results?.US || pd.results?.GB || Object.values(pd.results||{})[0] || {};
-            const providers = (res.flatrate||[]).map(p=>PROVIDER_MAP[p.provider_id]).filter(Boolean);
-            return {...m, providers};
-          } catch { return {...m, providers:[]}; }
-        }));
-        setMovies(enriched);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading) return (
-    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {Array.from({length:5}).map((_,i)=>(
-        <div key={i} className="skeleton" style={{height:88,borderRadius:14}}/>
-      ))}
-    </div>
-  );
-
-  if (!movies.length) return (
-    <div style={{padding:"40px 0",textAlign:"center",color:"var(--muted)",fontSize:14}}>
-      Could not load trending. Check your connection.
-    </div>
-  );
-
-  const top10 = movies.slice(0, 10);
-
-  return (
-    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {top10.map((movie, idx) => {
-        const rank = idx + 1;
-        const title = movie.title || movie.name || "";
-        const year = (movie.release_date || movie.first_air_date || "").slice(0,4);
-        const isTV = !!movie.first_air_date;
-        const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
-        const poster = movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : null;
-        const providers = movie.providers || [];
-        const subs = SERVICES.filter(s => providers.includes(s.id) && (userSubs||[]).includes(s.id));
-        const others = SERVICES.filter(s => providers.includes(s.id) && !(userSubs||[]).includes(s.id));
-
-        return (
-          <div key={movie.id} onClick={() => onSelect(movie)}
-            style={{
-              display:"flex", alignItems:"center", gap:12,
-              background:"rgba(255,255,255,.03)",
-              border:"1px solid rgba(255,255,255,.06)",
-              borderRadius:14, padding:"10px 14px",
-              cursor:"pointer", transition:"all .2s",
-              position:"relative", overflow:"hidden",
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,255,255,.07)";e.currentTarget.style.borderColor="rgba(139,92,246,.3)";}}
-            onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,.03)";e.currentTarget.style.borderColor="rgba(255,255,255,.06)";}}>
-
-            {/* Rank number */}
-            <div style={{
-              fontFamily:"var(--font-head)", fontWeight:900,
-              fontSize: rank <= 3 ? 36 : 28,
-              color: rank===1 ? "#F59E0B" : rank===2 ? "#C0C0C0" : rank===3 ? "#CD7F32" : "rgba(255,255,255,.15)",
-              minWidth: rank <= 9 ? 36 : 46,
-              textAlign:"center", flexShrink:0, lineHeight:1,
-              textShadow: rank <= 3 ? `0 0 20px currentColor` : "none",
-            }}>
-              {rank}
-            </div>
-
-            {/* Poster */}
-            {poster
-              ? <img src={poster} alt={title} style={{width:46,height:69,objectFit:"cover",borderRadius:8,flexShrink:0}}/>
-              : <div style={{width:46,height:69,borderRadius:8,background:"rgba(139,92,246,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🎬</div>
-            }
-
-            {/* Info */}
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{title}</div>
-              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                {year && <span style={{fontSize:11,color:"var(--muted)"}}>{year}</span>}
-                <span style={{fontSize:10,background:isTV?"rgba(139,92,246,.2)":"rgba(6,182,212,.15)",color:isTV?"#C4B5FD":"#67E8F9",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{isTV?"TV":"Movie"}</span>
-                {rating && <span style={{fontSize:11,color:"#F59E0B",fontWeight:700}}>★ {rating}</span>}
-              </div>
-              {/* Streaming badges */}
-              {providers.length > 0 && (
-                <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
-                  {subs.slice(0,3).map(s=>(
-                    <div key={s.id} style={{background:s.color,borderRadius:5,padding:"2px 7px",fontSize:9,fontWeight:800,color:"#fff"}}>{s.logo}</div>
-                  ))}
-                  {others.slice(0,subs.length>0?1:3).map(s=>(
-                    <div key={s.id} style={{background:"rgba(255,255,255,.1)",borderRadius:5,padding:"2px 7px",fontSize:9,fontWeight:600,color:"var(--muted)"}}>{s.name}</div>
-                  ))}
-                  {subs.length===0 && others.length===0 && (
-                    <span style={{fontSize:10,color:"var(--muted)"}}>Not on streaming</span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Arrow */}
-            <span style={{color:"var(--muted)",fontSize:16,flexShrink:0}}>›</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── ONBOARDING MODAL ─────────────────────────────────────────────────────────
 function OnboardingModal({ onFinish }) {
@@ -2303,6 +2185,153 @@ function OnboardingModal({ onFinish }) {
               style={{width:"100%",background:"none",border:"none",color:"var(--muted)",fontSize:12,cursor:"pointer",marginTop:8,padding:"6px 0"}}>
               ← Back
             </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── WATCH TONIGHT MODAL ──────────────────────────────────────────────────────
+function WatchTonightModal({ onClose, user, tier, userSubs, watchlist, userRatings, onUpgrade, onSelect }) {
+  const [loading, setLoading] = useState(false);
+  const [pick, setPick]     = useState(null);
+  const [error, setError]   = useState(null);
+
+  const FREE_KEY = "streamhub_watch_tonight_used";
+  const hasUsedFree = !!localStorage.getItem(FREE_KEY);
+  const canAccess   = tier === "premium" || !hasUsedFree;
+
+  useEffect(() => { if (canAccess) generate(); }, []);
+
+  const generate = async () => {
+    setLoading(true); setPick(null); setError(null);
+    const h = new Date().getHours();
+    const timeOfDay = h<12?"morning":h<17?"afternoon":h<21?"evening":"late night";
+    const day = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+    const isWeekend = [0,6].includes(new Date().getDay());
+    const services = (userSubs||[]).map(id=>SERVICES.find(s=>s.id===id)?.name).filter(Boolean);
+    const ratingCount = Object.keys(userRatings||{}).length;
+    const highRated = Object.values(userRatings||{}).filter(r=>r>=4).length;
+    const prompt = `You are a personal streaming assistant. Pick ONE perfect movie or show for this user to watch right now.
+
+User profile:
+- It's ${timeOfDay} on a ${day}${isWeekend?" (weekend)":""}
+- Their streaming services: ${services.length?services.join(", "):"Netflix, Hulu"}
+- They've rated ${ratingCount} titles, ${highRated} rated 4-5 stars
+- Watchlist size: ${(watchlist||[]).length} saved titles
+
+Rules:
+- Pick something CURRENTLY AVAILABLE on one of their services
+- Match the vibe to the time/day (e.g. lighter for morning, intense for late night on a weekend)
+- Be specific and confident — pick ONE title only
+
+Respond ONLY in this exact JSON (no markdown, no extra text):
+{"title":"Movie Name","year":2023,"type":"movie","service":"Netflix","reason":"One sentence why this is perfect RIGHT NOW — mention the time or day","duration":"1h 52m","vibe":"gripping thriller"}`;
+    try {
+      const res = await fetch("/api/ai", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({messages:[{role:"user",content:prompt}], max_tokens:300})
+      });
+      const d = await res.json();
+      const text = (d.content?.[0]?.text||d.choices?.[0]?.message?.content||"").replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(text);
+      // Fetch poster from TMDB
+      const sr = await tmdbFetch(`/search/multi?query=${encodeURIComponent(parsed.title)}&language=en-US&page=1`);
+      const found = (sr.results||[]).find(m=>{
+        const y = parseInt((m.release_date||m.first_air_date||"0").slice(0,4));
+        return !parsed.year || Math.abs(y-parsed.year)<=1;
+      }) || sr.results?.[0];
+      if (tier!=="premium") localStorage.setItem(FREE_KEY,"1");
+      setPick({...parsed, movie:found||null});
+    } catch(e) { setError("Couldn't generate a pick. Check your connection and try again."); }
+    setLoading(false);
+  };
+
+  const svc = pick ? SERVICES.find(s=>s.name===pick.service||s.id===pick.service?.toLowerCase()) : null;
+
+  // Paywall
+  if (!canAccess) return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:420,border:"1px solid rgba(139,92,246,.3)",padding:32,textAlign:"center"}}>
+        <div style={{fontSize:48,marginBottom:12}}>🌙</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20,marginBottom:8}}>You've used your free Watch Tonight</div>
+        <div style={{color:"var(--muted)",fontSize:14,marginBottom:24,lineHeight:1.6}}>Upgrade to Premium for unlimited instant picks — every night, every mood.</div>
+        <button onClick={()=>{onUpgrade();onClose();}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"12px 32px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:24,width:"100%",maxWidth:460,border:"1px solid rgba(139,92,246,.25)",boxShadow:"0 40px 80px rgba(0,0,0,.8)",overflow:"hidden"}}>
+        {/* Header */}
+        <div style={{padding:"20px 20px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"linear-gradient(135deg,rgba(139,92,246,.1),rgba(9,7,15,0))"}}>
+          <div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18}}>🌙 Watch Tonight</div>
+            <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>AI picks one perfect thing for right now</div>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div style={{padding:20}}>
+          {loading && (
+            <div style={{textAlign:"center",padding:"40px 0"}}>
+              <div style={{width:48,height:48,border:"3px solid rgba(139,92,246,.2)",borderTopColor:"var(--purple)",borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto 16px"}}/>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:15,marginBottom:6}}>Finding your perfect watch…</div>
+              <div style={{fontSize:12,color:"var(--muted)"}}>Checking your services · Matching your vibe</div>
+            </div>
+          )}
+
+          {error && (
+            <div style={{textAlign:"center",padding:"32px 0"}}>
+              <div style={{fontSize:36,marginBottom:12}}>😔</div>
+              <div style={{fontSize:14,color:"var(--muted)",marginBottom:16}}>{error}</div>
+              <button onClick={generate} style={{background:"var(--purple)",border:"none",borderRadius:10,color:"#fff",padding:"9px 22px",fontWeight:700,cursor:"pointer"}}>Try Again</button>
+            </div>
+          )}
+
+          {pick && !loading && (
+            <div>
+              {/* Movie card */}
+              <div style={{display:"flex",gap:14,marginBottom:16}}>
+                {pick.movie?.poster_path
+                  ? <img src={`https://image.tmdb.org/t/p/w185${pick.movie.poster_path}`} alt={pick.title} style={{width:90,height:135,objectFit:"cover",borderRadius:12,flexShrink:0,boxShadow:"0 8px 24px rgba(0,0,0,.5)"}}/>
+                  : <div style={{width:90,height:135,borderRadius:12,background:"rgba(139,92,246,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>🎬</div>
+                }
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:4,lineHeight:1.2}}>{pick.title}</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+                    {pick.year&&<span style={{fontSize:11,color:"var(--muted)"}}>{pick.year}</span>}
+                    <span style={{fontSize:10,background:"rgba(139,92,246,.2)",color:"#C4B5FD",borderRadius:4,padding:"1px 6px",fontWeight:700}}>{pick.type==="movie"?"Movie":"TV"}</span>
+                    {pick.vibe&&<span style={{fontSize:10,color:"var(--muted)",fontStyle:"italic"}}>"{pick.vibe}"</span>}
+                  </div>
+                  {pick.duration&&<div style={{fontSize:11,color:"var(--muted)",marginBottom:6}}>⏱ {pick.duration}</div>}
+                  {svc&&<div style={{display:"inline-flex",alignItems:"center",gap:5,background:svc.color,borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:800,color:"#fff"}}>{svc.logo} {svc.name}</div>}
+                </div>
+              </div>
+
+              {/* AI Reason */}
+              <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:12,padding:"12px 14px",marginBottom:16}}>
+                <div style={{fontSize:10,fontWeight:800,color:"var(--purple)",letterSpacing:.5,marginBottom:5}}>✦ WHY TONIGHT</div>
+                <div style={{fontSize:13,lineHeight:1.6,color:"rgba(240,240,250,.85)"}}>{pick.reason}</div>
+              </div>
+
+              {/* Actions */}
+              <div style={{display:"flex",gap:8}}>
+                {pick.movie&&<button onClick={()=>{onSelect({...pick.movie,providers:[]});onClose();}}
+                  style={{flex:1,background:"var(--purple)",border:"none",borderRadius:12,color:"#fff",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>
+                  ▶ Open {pick.type==="movie"?"Movie":"Show"}
+                </button>}
+                <button onClick={generate}
+                  style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:12,color:"var(--muted)",padding:"12px 16px",fontWeight:700,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>
+                  ↻ Different pick
+                </button>
+              </div>
+              {tier!=="premium"&&<div style={{textAlign:"center",fontSize:10,color:"var(--muted)",marginTop:8}}>1 free pick used · <button onClick={()=>{onUpgrade();onClose();}} style={{background:"none",border:"none",color:"var(--gold)",fontSize:10,cursor:"pointer",fontWeight:700}}>Upgrade for unlimited ✦</button></div>}
+            </div>
           )}
         </div>
       </div>
@@ -3543,70 +3572,6 @@ function SetupModal({ userSubs, onSave, onClose, isFirst }) {
 }
 
 // ─── HERO BANNER ─────────────────────────────────────────────────────────────
-function HeroBanner({ movie, onSelect, onToggleWatchlist, watchlist }) {
-  const [loaded, setLoaded] = useState(false);
-  const [trailerKey, setTrailerKey] = useState(null);
-  const [showTrailer, setShowTrailer] = useState(false);
-
-  useEffect(() => {
-    if (!movie) return;
-    setTrailerKey(null); setShowTrailer(false);
-    const type = movie.first_air_date ? "tv" : "movie";
-    tmdbFetch(`/${type}/${movie.id}/videos?language=en-US`).then(data => {
-      const t = (data.results||[]).find(v=>v.type==="Trailer"&&v.site==="YouTube")||(data.results||[])[0];
-      if (t) setTrailerKey(t.key);
-    }).catch(()=>{});
-  }, [movie?.id]);
-
-  if (!movie) return (
-    <div style={{height:520,background:"linear-gradient(135deg,#0d0d1a,#1a0533)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{width:40,height:40,border:"3px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}} />
-    </div>
-  );
-  const backdrop = movie.backdrop_path ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` : null;
-  const poster   = movie.poster_path   ? `${TMDB_IMG}${movie.poster_path}` : null;
-  const title    = movie.title||movie.name||"";
-  const year     = (movie.release_date||movie.first_air_date||"").slice(0,4);
-  const rating   = movie.vote_average?.toFixed(1)||"—";
-  const inWL     = watchlist.includes(movie.id);
-  const providers = movie.providers||[];
-  return (
-    <div style={{position:"relative",height:520,overflow:"hidden",cursor:showTrailer?"default":"pointer"}} onClick={()=>!showTrailer&&onSelect(movie)}>
-      {/* Trailer or backdrop */}
-      {showTrailer && trailerKey
-        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2}} allow="autoplay; fullscreen" allowFullScreen />
-        : backdrop && <img src={backdrop} alt="" onLoad={()=>setLoaded(true)} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",opacity:loaded?0.55:0.2,transition:"opacity 1s"}} />
-      }
-      {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(9,7,15,.95) 0%,rgba(9,7,15,.6) 50%,rgba(9,7,15,.2) 100%)"}} />
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 40%)"}} />
-      </>}
-      {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:16,right:16,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close Trailer</button>}
-      {!showTrailer && (
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",padding:"0 60px"}}>
-          <div style={{maxWidth:560}}>
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,padding:"5px 14px",marginBottom:20,fontSize:11,fontWeight:700,color:"var(--gold)",letterSpacing:.5}}>🔥 FEATURED</div>
-            <h1 style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:"clamp(36px,5vw,64px)",lineHeight:1.05,letterSpacing:"-.02em",marginBottom:16,textShadow:"0 4px 24px rgba(0,0,0,.8)"}}>{title}</h1>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16,flexWrap:"wrap"}}>
-              <span style={{color:"var(--gold)",fontWeight:700,fontSize:15}}>★ {rating}</span>
-              <span style={{color:"var(--muted)",fontSize:14}}>{year}</span>
-              {providers.slice(0,3).map(p=><ServiceBadge key={p} platformId={p} />)}
-            </div>
-            <p style={{fontSize:15,color:"rgba(240,240,250,.75)",lineHeight:1.7,marginBottom:28,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{movie.overview}</p>
-            <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-              <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:12,color:"#000",padding:"13px 28px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>▶ Watch Now</button>
-              {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:12,color:"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.08)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.15)"}`,borderRadius:12,color:inWL?"var(--gold)":"#fff",padding:"13px 24px",fontWeight:700,fontSize:15,cursor:"pointer"}}>
-                {inWL?"♥ Saved":"♡ Save"}
-              </button>
-            </div>
-          </div>
-          {poster && <img src={poster} alt={title} style={{marginLeft:"auto",height:340,borderRadius:16,boxShadow:"0 32px 80px rgba(0,0,0,.8)",objectFit:"cover",flexShrink:0}} />}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── FEATURED ROW ─────────────────────────────────────────────────────────────
 function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, onSelect, onToggleWatchlist, color="var(--gold)" }) {
@@ -3660,11 +3625,11 @@ function useIsMobile() { return useDevice() === "mobile"; }
 
 function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
-    {id:"movies",    icon:"🎬", label:"Movies",    color:"#06B6D4", anim:null},
-    {id:"tv",        icon:"📺", label:"TV",        color:"#A78BFA", anim:"tvFlicker"},
-    {id:"anime",     icon:"✦",  label:"Anime",     color:"#FF6B9D", anim:"swordSwing"},
-    {id:"watchlist", icon:"❤️", label:"Watchlist", color:"#ef4444", anim:null},
-    {id:"stats",     icon:"📊", label:"Stats",     color:"#10B981", anim:null},
+    {id:"movies",    icon:"🎬", label:"Movies",  color:"#06B6D4", anim:null},
+    {id:"tv",        icon:"📺", label:"TV",      color:"#A78BFA", anim:"tvFlicker"},
+    {id:"sports",    icon:"🏆", label:"Sports",  color:"#10B981", anim:"trophyBounce"},
+    {id:"watchlist", icon:"❤️", label:"Saved",   color:"#ef4444", anim:null},
+    {id:"stats",     icon:"📊", label:"Stats",   color:"#10B981", anim:null},
   ];
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
@@ -5107,97 +5072,7 @@ function AdvancedStats({ user, watchlist, userRatings, watchHistory, onOpenHisto
 }
 
 // ─── MOBILE HERO WITH TRAILER ────────────────────────────────────────────────
-function MobileHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
-  const [trailerKey, setTrailerKey] = useState(null);
-  const [showTrailer, setShowTrailer] = useState(false);
-  useEffect(() => {
-    if (!movie) return;
-    setTrailerKey(null); setShowTrailer(false);
-    const type = movie.first_air_date ? "tv" : "movie";
-    tmdbFetch(`/${type}/${movie.id}/videos?language=en-US`).then(data => {
-      const t = (data.results||[]).find(v=>v.type==="Trailer"&&v.site==="YouTube")||(data.results||[])[0];
-      if (t) setTrailerKey(t.key);
-    }).catch(()=>{});
-  }, [movie?.id]);
-  if (!movie) return null;
-  const inWL = watchlist.includes(movie.id);
-  return (
-    <div style={{margin:"0 14px 20px",borderRadius:16,overflow:"hidden",position:"relative",height:showTrailer?220:220}}>
-      {showTrailer && trailerKey
-        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2,borderRadius:16}} allow="autoplay; fullscreen" allowFullScreen />
-        : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w780${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
-      }
-      {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(9,7,15,.95) 0%,transparent 60%)"}} />
-        <img src="/logo-clean.png" alt="" style={{position:"absolute",top:10,right:10,height:36,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,158,11,.6))",opacity:.85}} />
-      </>}
-      {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:8,right:8,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>✕</button>}
-      {!showTrailer && (
-        <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 14px 14px"}}>
-          <div style={{fontSize:9,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:4}}>🔥 FEATURED</div>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,marginBottom:6}}>{movie.title||movie.name}</div>
-          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            <span style={{color:"var(--gold)",fontSize:12}}>★ {movie.vote_average?.toFixed(1)}</span>
-            {(movie.providers||[]).slice(0,2).map(p=><ServiceBadge key={p} platformId={p} small />)}
-            <div style={{display:"flex",gap:6,marginLeft:"auto"}}>
-              <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,cursor:"pointer"}}>▶ Watch</button>
-              {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.15)",border:"1px solid rgba(255,255,255,.25)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:8,color:inWL?"var(--gold)":"#fff",padding:"6px 10px",fontSize:11,cursor:"pointer"}}>{inWL?"♥":"♡"}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
-// ─── TABLET HERO WITH TRAILER ─────────────────────────────────────────────────
-function TabletHero({ movie, watchlist, onSelect, onToggleWatchlist }) {
-  const [trailerKey, setTrailerKey] = useState(null);
-  const [showTrailer, setShowTrailer] = useState(false);
-  useEffect(() => {
-    if (!movie) return;
-    setTrailerKey(null); setShowTrailer(false);
-    const type = movie.first_air_date ? "tv" : "movie";
-    tmdbFetch(`/${type}/${movie.id}/videos?language=en-US`).then(data => {
-      const t = (data.results||[]).find(v=>v.type==="Trailer"&&v.site==="YouTube")||(data.results||[])[0];
-      if (t) setTrailerKey(t.key);
-    }).catch(()=>{});
-  }, [movie?.id]);
-  if (!movie) return null;
-  const inWL = watchlist.includes(movie.id);
-  return (
-    <div style={{position:"relative",height:300,overflow:"hidden",cursor:showTrailer?"default":"pointer"}} onClick={()=>!showTrailer&&onSelect(movie)}>
-      {showTrailer && trailerKey
-        ? <iframe src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none",zIndex:2}} allow="autoplay; fullscreen" allowFullScreen />
-        : movie.backdrop_path && <img src={`https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.5}} />
-      }
-      {!showTrailer && <>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,rgba(9,7,15,.95) 0%,rgba(9,7,15,.5) 60%,rgba(9,7,15,.1) 100%)"}}/>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--bg) 0%,transparent 50%)"}}/>
-      </>}
-      {showTrailer && <button onClick={e=>{e.stopPropagation();setShowTrailer(false);}} style={{position:"absolute",top:12,right:12,zIndex:10,background:"rgba(0,0,0,.75)",border:"1px solid rgba(255,255,255,.2)",borderRadius:10,color:"#fff",padding:"7px 14px",fontSize:13,fontWeight:700,cursor:"pointer"}}>✕ Close</button>}
-      {!showTrailer && (
-        <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 24px 24px",display:"flex",alignItems:"flex-end",gap:20}}>
-          {movie.poster_path&&<img src={`${TMDB_IMG}${movie.poster_path}`} alt="" style={{height:150,borderRadius:12,boxShadow:"0 16px 40px rgba(0,0,0,.8)",flexShrink:0}}/>}
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1,marginBottom:6}}>🔥 FEATURED</div>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:26,marginBottom:8}}>{movie.title||movie.name}</div>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
-              <span style={{color:"var(--gold)",fontWeight:700}}>★ {movie.vote_average?.toFixed(1)}</span>
-              {(movie.providers||[]).slice(0,3).map(p=><ServiceBadge key={p} platformId={p}/>)}
-            </div>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              <button onClick={e=>{e.stopPropagation();onSelect(movie);}} style={{background:"var(--gold)",border:"none",borderRadius:10,color:"#000",padding:"10px 22px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Watch Now</button>
-              {trailerKey && <button onClick={e=>{e.stopPropagation();setShowTrailer(true);}} style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.25)",borderRadius:10,color:"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>🎬 Trailer</button>}
-              <button onClick={e=>{e.stopPropagation();onToggleWatchlist(movie.id);}} style={{background:inWL?"rgba(245,158,11,.2)":"rgba(255,255,255,.1)",border:`1px solid ${inWL?"var(--gold)":"rgba(255,255,255,.2)"}`,borderRadius:10,color:inWL?"var(--gold)":"#fff",padding:"10px 18px",fontWeight:700,fontSize:14,cursor:"pointer"}}>{inWL?"♥ Saved":"♡ Save"}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── GENRE SEARCH HELPERS ────────────────────────────────────────────────────
 const GENRE_MAP = {
@@ -5367,6 +5242,7 @@ export default function StreamHub() {
   const [showWatchHistory, setShowWatchHistory] = useState(false);
   const [showNewReleases, setShowNewReleases] = useState(false);
   const [showCostCalc, setShowCostCalc] = useState(false);
+  const [showWatchTonight, setShowWatchTonight] = useState(false);
 
   const [favoriteTeams, setFavoriteTeams] = useState(() => {
     try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); }
@@ -5932,7 +5808,7 @@ export default function StreamHub() {
               {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
 
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
-              {icon:"🆕", label:"New Releases", sub:"Fresh drops on streaming now",         onClick:()=>setShowNewReleases(true),       color:"#8B5CF6",grad:"rgba(139,92,246,.08)"},
+              {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),      color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
             ].map(item=>(
               <button key={item.label} onClick={item.onClick}
@@ -5955,6 +5831,7 @@ export default function StreamHub() {
           <div>
             {/* Other featured rows */}
             {[
+              {title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},
               {title:"New in Cinemas",icon:"🎬",key:"newReleases",color:"var(--cyan)"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
@@ -6030,6 +5907,7 @@ export default function StreamHub() {
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchTonight&&<WatchTonightModal onClose={()=>setShowWatchTonight(false)} user={user} tier={tier} userSubs={userSubs} watchlist={watchlist} userRatings={userRatings} onUpgrade={()=>setShowUpgrade(true)} onSelect={handleSelectMovie}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
@@ -6319,6 +6197,7 @@ export default function StreamHub() {
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchTonight&&<WatchTonightModal onClose={()=>setShowWatchTonight(false)} user={user} tier={tier} userSubs={userSubs} watchlist={watchlist} userRatings={userRatings} onUpgrade={()=>setShowUpgrade(true)} onSelect={handleSelectMovie}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
@@ -6733,6 +6612,7 @@ export default function StreamHub() {
       {showLeavingSoon&&<LeavingSoonModal onClose={()=>setShowLeavingSoon(false)} userSubs={userSubs} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} profile={profile}/>}
       {showNewReleases&&<NewReleasesModal onClose={()=>setShowNewReleases(false)} user={user} tier={tier} userSubs={userSubs} onSelect={handleSelectMovie} onUpgrade={()=>setShowUpgrade(true)}/>}
       {showCostCalc&&<CostCalculatorModal onClose={()=>setShowCostCalc(false)} userSubs={userSubs} watchHistory={watchHistory} watchlist={watchlist} userRatings={userRatings} tier={tier} onUpgrade={()=>setShowUpgrade(true)}/>}
+      {showWatchTonight&&<WatchTonightModal onClose={()=>setShowWatchTonight(false)} user={user} tier={tier} userSubs={userSubs} watchlist={watchlist} userRatings={userRatings} onUpgrade={()=>setShowUpgrade(true)} onSelect={handleSelectMovie}/>}
       {showMoodSearch&&<MoodSearchModal onClose={()=>setShowMoodSearch(false)} tier={tier} onUpgrade={()=>setShowUpgrade(true)} onResults={(q)=>setSearch(q)}/>}
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
