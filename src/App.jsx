@@ -5890,7 +5890,8 @@ export default function StreamHub() {
           />
         )}
 
-        {/* Sports Hub standalone button */}
+        {/* Sports Hub + Premium Tools — home view only */}
+        {view==="home"&&!search.trim()&&(
         <div style={{padding:"0 14px 12px"}}>
           <button onClick={()=>{setView("sports");setSearch("");}}
             style={{
@@ -5946,8 +5947,9 @@ export default function StreamHub() {
             ))}
           </div>
         </div>
+        )}
 
-        {/* Mobile Hero + Featured Rows for trending */}
+        {/* Mobile content area */}
         {view==="home"&&!search.trim() ? (
           <div>
             {/* Other featured rows */}
