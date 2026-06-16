@@ -5399,7 +5399,7 @@ export default function StreamHub() {
     const v = teams?.[sport]; if (!v) return [];
     return Array.isArray(v) ? v : [v]; // backward compat
   };
-  const toggleFavoriteTeam = (sport, teamName) => {
+  const toggleFavoriteTeam = useCallback((sport, teamName) => {
     setFavoriteTeams(prev => {
       const updated = { ...prev };
       if (teamName === "_clear") { delete updated[sport]; }
@@ -5410,7 +5410,7 @@ export default function StreamHub() {
           : [...arr, teamName];            // add
         if (updated[sport].length===0) delete updated[sport];
       }
-      // Save to localStorage immediately
+      // Save to localStorage immediately — works for all users
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
       // Sync to Supabase in background if logged in
       supabase.auth.getSession().then(({data:{session}})=>{
@@ -5419,11 +5419,14 @@ export default function StreamHub() {
             .update({ favorite_teams: updated })
             .eq("id", session.user.id)
             .catch(()=>{});
+        } else if (teamName !== "_clear" && Object.keys(updated).length === 1 && !prev[sport]) {
+          // First team added while not logged in — nudge to sign up for cross-device sync
+          showToast("⭐ Team saved! Sign in to sync across all your devices.");
         }
       });
       return updated;
     });
-  };
+  }, []);
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [shareContent, setShareContent] = useState(null); // {title,text,url}
@@ -5526,8 +5529,18 @@ export default function StreamHub() {
     // Load profile
     let { data:prof } = await supabase.from("profiles").select("*").eq("id",u.id).single();
     if (!prof) {
-      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false });
-      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false };
+      // Carry over any favorite teams set before signup
+      const localFt = (() => { try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); } catch { return {}; } })();
+      const hasFt = Object.keys(localFt).length > 0;
+      await supabase.from("profiles").insert({
+        id: u.id,
+        username: u.email.split("@")[0],
+        tier: "free",
+        setup_done: false,
+        ...(hasFt ? { favorite_teams: localFt } : {}),
+      });
+      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false,
+               ...(hasFt ? { favorite_teams: localFt } : {}) };
     }
     setProfile(prof);
     setTier(prof.tier||"free");
@@ -5541,16 +5554,26 @@ export default function StreamHub() {
       } catch(e) {}
     }
 
-    // Load favorite teams from Supabase (overrides localStorage — cloud wins)
-    if (prof.favorite_teams) {
-      try {
-        const ft = typeof prof.favorite_teams === "string" ? JSON.parse(prof.favorite_teams) : prof.favorite_teams;
-        if (ft && typeof ft === "object") {
-          setFavoriteTeams(ft);
-          localStorage.setItem("streamhub_fav_teams", JSON.stringify(ft));
+    // Load favorite teams — merge localStorage (set before login) with cloud
+    try {
+      const localFt = JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}");
+      const cloudFtRaw = prof.favorite_teams;
+      const cloudFt = cloudFtRaw
+        ? (typeof cloudFtRaw === "string" ? JSON.parse(cloudFtRaw) : cloudFtRaw)
+        : {};
+      const hasLocal = Object.keys(localFt).length > 0;
+      const hasCloud = Object.keys(cloudFt).length > 0;
+      if (hasCloud || hasLocal) {
+        // Merge: cloud wins on conflict, but keep any local-only entries
+        const merged = { ...localFt, ...cloudFt };
+        setFavoriteTeams(merged);
+        localStorage.setItem("streamhub_fav_teams", JSON.stringify(merged));
+        // If local had entries that cloud didn't, upload the merged result
+        if (hasLocal) {
+          supabase.from("profiles").update({ favorite_teams: merged }).eq("id", u.id).catch(()=>{});
         }
-      } catch(e) {}
-    }
+      }
+    } catch(e) {}
 
     // Hide setup if user already completed it
     if (prof.setup_done) {
