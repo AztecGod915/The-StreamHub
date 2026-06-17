@@ -487,7 +487,7 @@ function openLink(url) {
 }
 
 // ─── GAME DETAIL MODAL ───────────────────────────────────────────────────────
-function GameDetailModal({ evt, onClose }) {
+function GameDetailModal({ evt, onClose, user, showToast, onPredResult }) {
   const [showReminder, setShowReminder] = useState(false);
   const broadcastLink = evt.broadcastLink ||
     `https://www.google.com/search?q=watch+${encodeURIComponent((evt.shortName||evt.name||"").replace(/\s+/g,"+"))}+live+stream`;
@@ -679,9 +679,285 @@ function GameDetailModal({ evt, onClose }) {
             style={{display:"block",textAlign:"center",fontSize:11,color:"var(--muted)",textDecoration:"underline",marginBottom:6,opacity:.7}}>
             Search all options on Google →
           </a>
+
+          {/* ── 🔮 PREDICTION SECTION ─────────────────────────────── */}
+          {evt.home?.name && evt.away?.name && (
+            <GamePrediction evt={evt} user={user} showToast={showToast} onPredResult={onPredResult}/>
+          )}
         </div>
         <div style={{height:20}}/>
       </div>
+    </div>
+  );
+}
+
+// ─── GAME PREDICTION (lives inside GameDetailModal) ──────────────────────────
+function GamePrediction({ evt, user, showToast, onPredResult }) {
+  const key = `sh_pred_${evt.id}`;
+  const [myPick, setMyPick]   = useState(() => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } });
+  const [homeScore, setHomeScore] = useState("");
+  const [awayScore, setAwayScore] = useState("");
+  const [community, setCommunity] = useState(null);
+  const [saving, setSaving]   = useState(false);
+  const [resolved, setResolved] = useState(false);
+  const isUpcoming = !evt.isLive && !evt.isOver;
+  const canPredict = isUpcoming && !myPick;
+
+  // Determine actual result once game is over
+  const actualResult = evt.isOver && evt.home?.score !== undefined && evt.away?.score !== undefined
+    ? (Number(evt.home.score) > Number(evt.away.score) ? "home"
+       : Number(evt.away.score) > Number(evt.home.score) ? "away" : "draw")
+    : null;
+  const predCorrect = myPick && actualResult ? myPick.pick === actualResult : null;
+
+  // Fetch community votes when we have a pick
+  useEffect(() => {
+    if (!myPick) return;
+    supabase.from("predictions").select("prediction").eq("game_id", evt.id)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const t = data.length;
+        const c = data.reduce((a,p) => { a[p.prediction]=(a[p.prediction]||0)+1; return a; }, {});
+        setCommunity({
+          home: Math.round((c.home||0)/t*100),
+          draw: Math.round((c.draw||0)/t*100),
+          away: Math.round((c.away||0)/t*100),
+          total: t,
+        });
+      }).catch(()=>{});
+  }, [myPick]);
+
+  // Resolve result when game ends
+  useEffect(() => {
+    if (!myPick || !evt.isOver || resolved || predCorrect===null) return;
+    setResolved(true);
+    const old = getPredStats();
+    if (predCorrect) {
+      const newStreak = old.streak + 1;
+      const pts = getPointsForStreak(newStreak);
+      savePredStats({ streak:newStreak, best:Math.max(old.best,newStreak), total:old.total+1, correct:old.correct+1, points:old.points+pts });
+      const milestone = [...PRED_MILESTONES].reverse().find(m => newStreak === m.n);
+      onPredResult?.({ correct:true, streak:newStreak, points:pts, milestone });
+    } else {
+      savePredStats({ ...old, streak:0, total:old.total+1 });
+      onPredResult?.({ correct:false, streak:0, points:0 });
+    }
+  }, [evt.isOver, predCorrect, resolved]);
+
+  const teamLabel = p => p==="home" ? evt.home?.name : p==="away" ? evt.away?.name : "Draw";
+
+  const makePick = async (pick) => {
+    if (!canPredict || saving) return;
+    setSaving(true);
+    const hs = homeScore.trim() || null;
+    const as = awayScore.trim() || null;
+    const pred = { pick, gameId:evt.id, home:evt.home?.name, away:evt.away?.name, homeScore:hs, awayScore:as };
+    localStorage.setItem(key, JSON.stringify(pred));
+    setMyPick(pred);
+    if (user) {
+      supabase.from("predictions").upsert({
+        user_id: user.id, game_id: evt.id,
+        home_team: evt.home?.name, away_team: evt.away?.name,
+        prediction: pick,
+        predicted_home_score: hs, predicted_away_score: as,
+      }, { onConflict:"user_id,game_id" }).catch(()=>{});
+    }
+    setSaving(false);
+    showToast?.("🔮 Prediction locked in! Check back after the game.");
+  };
+
+  const shareResult = () => {
+    const scoreStr = myPick?.homeScore && myPick?.awayScore
+      ? ` (${myPick.awayScore}-${myPick.homeScore})`
+      : "";
+    const streak = getPredStats().streak;
+    const txt = predCorrect
+      ? `✅ I predicted ${teamLabel(myPick.pick)}${scoreStr} wins and I was RIGHT! 🔮 Can you beat my ${streak} 🔥 streak? → thestreamhub.app`
+      : `❌ I predicted ${teamLabel(myPick.pick)} but got it wrong. Still hunting that streak 🔥 → thestreamhub.app`;
+    if (navigator.share) {
+      navigator.share({ text:txt, url:"https://thestreamhub.app" }).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(txt)
+        .then(() => showToast?.("📋 Copied! Paste it anywhere to share."))
+        .catch(() => showToast?.("📋 " + txt));
+    }
+  };
+
+  return (
+    <div style={{marginTop:12,borderTop:"1px solid rgba(139,92,246,.2)",paddingTop:14}}>
+      {/* Header */}
+      <div style={{fontSize:11,fontWeight:800,color:"#C4B5FD",letterSpacing:1,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+        🔮 <span>{canPredict ? "PREDICT THE RESULT" : myPick && !evt.isOver ? "YOUR PREDICTION" : evt.isOver ? "PREDICTION RESULT" : "PREDICTIONS"}</span>
+      </div>
+
+      {/* ── Can predict ── */}
+      {canPredict && (
+        <>
+          {/* Score input row */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{flex:1,textAlign:"center"}}>
+              <div style={{fontSize:10,color:"var(--muted)",marginBottom:4,fontWeight:700}}>{evt.away?.name}</div>
+              <input
+                type="number" min="0" max="99" placeholder="0"
+                value={awayScore}
+                onChange={e=>setAwayScore(e.target.value)}
+                onClick={e=>e.stopPropagation()}
+                style={{
+                  width:"100%",textAlign:"center",
+                  background:"rgba(139,92,246,.1)",border:"1.5px solid rgba(139,92,246,.3)",
+                  borderRadius:10,padding:"10px 6px",
+                  fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,color:"#C4B5FD",
+                  outline:"none",
+                }}
+              />
+            </div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,color:"var(--muted)",flexShrink:0}}>—</div>
+            <div style={{flex:1,textAlign:"center"}}>
+              <div style={{fontSize:10,color:"var(--muted)",marginBottom:4,fontWeight:700}}>{evt.home?.name}</div>
+              <input
+                type="number" min="0" max="99" placeholder="0"
+                value={homeScore}
+                onChange={e=>setHomeScore(e.target.value)}
+                onClick={e=>e.stopPropagation()}
+                style={{
+                  width:"100%",textAlign:"center",
+                  background:"rgba(139,92,246,.1)",border:"1.5px solid rgba(139,92,246,.3)",
+                  borderRadius:10,padding:"10px 6px",
+                  fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,color:"#C4B5FD",
+                  outline:"none",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Winner pick buttons */}
+          <div style={{fontSize:9,color:"var(--muted)",textAlign:"center",marginBottom:7,fontWeight:700,letterSpacing:.5}}>WHO WINS?</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 60px 1fr",gap:6,marginBottom:8}}>
+            {["away","draw","home"].map(p => (
+              <button key={p} onClick={e=>{e.stopPropagation(); makePick(p);}}
+                disabled={saving}
+                style={{
+                  background:"rgba(139,92,246,.12)",
+                  border:"1.5px solid rgba(139,92,246,.3)",
+                  borderRadius:10,padding:"9px 4px",
+                  fontSize:11,fontWeight:800,color:"#C4B5FD",
+                  cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
+                  transition:"all .15s",opacity:saving?.5:1,
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(139,92,246,.28)";e.currentTarget.style.borderColor="rgba(139,92,246,.7)";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(139,92,246,.12)";e.currentTarget.style.borderColor="rgba(139,92,246,.3)";}}>
+                {p==="draw" ? "🤝 Draw" : p==="away" ? evt.away?.abbr||evt.away?.name : evt.home?.abbr||evt.home?.name}
+              </button>
+            ))}
+          </div>
+          <div style={{fontSize:9,color:"rgba(240,240,250,.25)",textAlign:"center"}}>Tap to lock in • Can't change after</div>
+        </>
+      )}
+
+      {/* ── Pending (picked, game not over) ── */}
+      {myPick && !evt.isOver && (
+        <>
+          <div style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.25)",borderRadius:12,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:800,color:"#C4B5FD",marginBottom:4}}>
+              🔮 {teamLabel(myPick.pick)} to win
+              {myPick.awayScore!=null && myPick.homeScore!=null && myPick.awayScore!=="" && myPick.homeScore!==""
+                ? ` · ${myPick.awayScore}–${myPick.homeScore}` : ""}
+            </div>
+            <div style={{fontSize:10,color:"rgba(240,240,250,.4)"}}>Locked in — check back after the final whistle</div>
+          </div>
+          {community ? (
+            <>
+              <div style={{fontSize:9,color:"var(--muted)",marginBottom:6,fontWeight:700,letterSpacing:.5}}>COMMUNITY VOTES</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 60px 1fr",gap:6,marginBottom:6}}>
+                {["away","draw","home"].map(p=>(
+                  <div key={p} style={{
+                    background:myPick.pick===p?"rgba(139,92,246,.2)":"rgba(255,255,255,.04)",
+                    border:`1.5px solid ${myPick.pick===p?"rgba(139,92,246,.5)":"rgba(255,255,255,.08)"}`,
+                    borderRadius:10,padding:"8px 4px",textAlign:"center",
+                  }}>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,color:myPick.pick===p?"#C4B5FD":"rgba(240,240,250,.35)"}}>{community[p]}%</div>
+                    <div style={{fontSize:8,color:"rgba(240,240,250,.3)",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                      {p==="draw"?"Draw":p==="away"?evt.away?.abbr||evt.away?.name:evt.home?.abbr||evt.home?.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:9,color:"rgba(240,240,250,.25)",textAlign:"center",marginBottom:8}}>{community.total} StreamHub fan{community.total!==1?"s":""} predicted</div>
+            </>
+          ) : (
+            <div style={{fontSize:10,color:"rgba(240,240,250,.3)",textAlign:"center",marginBottom:8}}>Be the first — share with friends to see the vote!</div>
+          )}
+          {/* Share before result */}
+          <button onClick={e=>{
+            e.stopPropagation();
+            const scoreStr = myPick.awayScore!=null&&myPick.homeScore!=null&&myPick.awayScore!==""&&myPick.homeScore!==""
+              ? ` ${myPick.awayScore}–${myPick.homeScore}` : "";
+            const txt = `🔮 I'm predicting ${teamLabel(myPick.pick)}${scoreStr} in ${evt.shortName||evt.name}. Can you top it? → thestreamhub.app`;
+            if(navigator.share){navigator.share({text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
+            else{navigator.clipboard.writeText(txt).then(()=>showToast?.("📋 Copied!")).catch(()=>{});}
+          }} style={{
+            width:"100%",background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.25)",
+            borderRadius:10,padding:"8px 0",fontSize:11,fontWeight:700,color:"#C4B5FD",
+            cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          }}
+          onMouseEnter={e=>e.currentTarget.style.background="rgba(139,92,246,.22)"}
+          onMouseLeave={e=>e.currentTarget.style.background="rgba(139,92,246,.12)"}>
+            📤 Share your prediction
+          </button>
+        </>
+      )}
+
+      {/* ── Result ── */}
+      {myPick && evt.isOver && predCorrect !== null && (
+        <>
+          <div style={{
+            background:predCorrect?"rgba(16,185,129,.1)":"rgba(239,68,68,.08)",
+            border:`1.5px solid ${predCorrect?"rgba(16,185,129,.4)":"rgba(239,68,68,.25)"}`,
+            borderRadius:12,padding:"12px 14px",marginBottom:10,
+          }}>
+            <div style={{fontSize:16,fontWeight:800,color:predCorrect?"#10B981":"#ef4444",marginBottom:4}}>
+              {predCorrect ? "✅ You called it!" : "❌ Better luck next game"}
+            </div>
+            <div style={{fontSize:11,color:"rgba(240,240,250,.5)"}}>
+              Your pick: {teamLabel(myPick.pick)}
+              {myPick.awayScore!=null&&myPick.homeScore!=null&&myPick.awayScore!==""&&myPick.homeScore!==""
+                ? ` · ${myPick.awayScore}–${myPick.homeScore}` : ""}
+              {" · "}Result: {actualResult ? teamLabel(actualResult) : "—"}
+              {evt.away?.score!=null&&evt.home?.score!=null ? ` · ${evt.away.score}–${evt.home.score}` : ""}
+            </div>
+            {predCorrect && (()=>{
+              const s = getPredStats();
+              const m = [...PRED_MILESTONES].reverse().find(x=>s.streak>=x.n);
+              return m ? (
+                <div style={{marginTop:8,display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:20}}>{m.icon}</span>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:800,color:"#10B981"}}>{m.label}</div>
+                    <div style={{fontSize:10,color:"rgba(240,240,250,.4)"}}>🔥 {s.streak} streak · {s.points} pts</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{marginTop:6,fontSize:10,color:"rgba(240,240,250,.4)"}}>
+                  🔥 {getPredStats().streak} streak · {getPredStats().points} pts
+                </div>
+              );
+            })()}
+          </div>
+          <button onClick={e=>{e.stopPropagation();shareResult();}}
+            style={{
+              width:"100%",
+              background:predCorrect?"rgba(16,185,129,.12)":"rgba(255,255,255,.06)",
+              border:`1px solid ${predCorrect?"rgba(16,185,129,.3)":"rgba(255,255,255,.12)"}`,
+              borderRadius:10,padding:"10px 0",fontSize:12,fontWeight:700,
+              color:predCorrect?"#10B981":"rgba(240,240,250,.5)",
+              cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+            }}
+            onMouseEnter={e=>e.currentTarget.style.opacity=".8"}
+            onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+            📤 Share your {predCorrect?"win":"prediction"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -977,7 +1253,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
         <FavoriteTeamModal sport={sportInfo?.display} events={events} favoriteTeams={favoriteTeams||{}} onToggle={onToggleFavorite} onClose={()=>setShowTeamPicker(false)}/>
       )}
       {selectedGame && (
-        <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)}/>
+        <GameDetailModal evt={selectedGame} onClose={()=>setSelectedGame(null)} user={user} showToast={showToast} onPredResult={onPredResult}/>
       )}
       {showFullSchedule && (
         <WeeklyScheduleModal sportQuery={sportQuery} sportDisplay={sportInfo?.display||""} onClose={()=>setShowFullSchedule(false)}/>
