@@ -1307,11 +1307,30 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
 function PredictionStatsBar() {
   const s = getPredStats();
   if (s.total === 0) return (
-    <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
-      <span style={{fontSize:24}}>🔮</span>
-      <div>
-        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,marginBottom:2}}>Predict the match!</div>
-        <div style={{fontSize:11,color:"var(--muted)"}}>Tap a game card below to predict who wins. Earn points and build your streak.</div>
+    <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+        <span style={{fontSize:26}}>🔮</span>
+        <div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,marginBottom:2,background:"linear-gradient(90deg,#C4B5FD,#818CF8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>YOUR PREDICTION RECORD</div>
+          <div style={{fontSize:11,color:"rgba(240,240,250,.4)"}}>Your streak, accuracy & points will appear here</div>
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+        {[
+          {label:"Streak",  value:"—", icon:"🔥"},
+          {label:"Best",    value:"—", icon:"⚡"},
+          {label:"Accuracy",value:"—", icon:"🎯"},
+          {label:"Points",  value:"—", icon:"⭐"},
+        ].map(stat=>(
+          <div key={stat.label} style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
+            <div style={{fontSize:14,marginBottom:2}}>{stat.icon}</div>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:15,color:"rgba(240,240,250,.2)"}}>—</div>
+            <div style={{fontSize:9,color:"var(--muted)",marginTop:2,fontWeight:700}}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{marginTop:10,fontSize:10,color:"rgba(139,92,246,.6)",fontWeight:700,textAlign:"center",letterSpacing:.5}}>
+        ↓ OPEN ANY GAME CARD BELOW TO MAKE YOUR FIRST PREDICTION
       </div>
     </div>
   );
