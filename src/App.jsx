@@ -33,7 +33,7 @@ function getPlatformLink(providerName, movieId, movieTitle, tmdbLink) {
   return homes[providerName] || "https://www.themoviedb.org";
 }
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -414,7 +414,7 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
                 }}>
                 {isFav && <div style={{position:"absolute",top:6,right:6,fontSize:12}}>✓</div>}
                 {logo
-                  ? <img loading="lazy" src={logo} alt={t.name} style={{width:36,height:36,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>
+                  ? <img src={logo} alt={t.name} style={{width:36,height:36,objectFit:"contain",flexShrink:0}} onError={e=>{e.target.style.display="none";}}/>
                   : <span style={{fontSize:24,flexShrink:0,lineHeight:1}}>{t.flag||"🏅"}</span>
                 }
                 <div style={{flex:1,minWidth:0}}>
@@ -534,7 +534,7 @@ function GameDetailModal({ evt, onClose }) {
               {/* Away */}
               <div style={{flex:1,textAlign:"center"}}>
                 {evt.away.logo
-                  ? <img loading="lazy" src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  ? <img src={evt.away.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
                   : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.away.abbr?.slice(0,3)}</div>
                 }
                 <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.away.winner?"var(--gold)":"var(--text)"}}>{evt.away.name}</div>
@@ -560,7 +560,7 @@ function GameDetailModal({ evt, onClose }) {
               {/* Home */}
               <div style={{flex:1,textAlign:"center"}}>
                 {evt.home.logo
-                  ? <img loading="lazy" src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
+                  ? <img src={evt.home.logo} alt="" style={{width:52,height:52,objectFit:"contain",marginBottom:8}}/>
                   : <div style={{width:52,height:52,borderRadius:12,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:16,color:"#fff",margin:"0 auto 8px"}}>{evt.home.abbr?.slice(0,3)}</div>
                 }
                 <div style={{fontSize:13,fontWeight:700,color:evt.isOver&&evt.home.winner?"var(--gold)":"var(--text)"}}>{evt.home.name}</div>
@@ -632,8 +632,7 @@ function GameDetailModal({ evt, onClose }) {
           )}
 
           {/* Watch button */}
-          <a href={broadcastLink||`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live+stream`}
-            target="_blank" rel="noopener noreferrer"
+          <a href={broadcastLink||"#"} onClick={e=>{if(!broadcastLink){e.preventDefault();}}} target="_blank" rel="noopener noreferrer"
             style={{
               display:"block", textAlign:"center",
               background: evt.isLive
@@ -649,47 +648,16 @@ function GameDetailModal({ evt, onClose }) {
               boxShadow: evt.isLive ? "0 8px 24px rgba(239,68,68,.4)" : "none",
               marginBottom:10,
             }}>
-            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay / Highlights" : "📺 Where to Watch →"}
+            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay / Highlights" : `📺 Where to Watch →`}
           </a>
 
-          {/* Streaming service badges — shown when no specific broadcast link */}
-          {(()=>{
-            const streamers = getSportStreamers(evt._sportDisplay||"");
-            if (!streamers.length) return null;
-            return (
-              <div style={{marginBottom:10}}>
-                <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",marginBottom:6,letterSpacing:.5}}>
-                  {evt.broadcast ? "ALSO AVAILABLE ON" : "USUALLY AVAILABLE ON"}
-                </div>
-                <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center"}}>
-                  {streamers.map(s=>(
-                    <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
-                      style={{
-                        display:"flex",alignItems:"center",gap:5,
-                        background:"rgba(255,255,255,.06)",
-                        border:"1px solid rgba(255,255,255,.12)",
-                        borderRadius:8,padding:"5px 10px",
-                        fontSize:11,fontWeight:700,color:"#fff",
-                        textDecoration:"none",
-                        transition:"background .15s",
-                      }}
-                      onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.12)"}
-                      onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.06)"}>
-                      <span style={{fontSize:13}}>{s.icon}</span>
-                      <span>{s.name}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Google fallback search link */}
-          <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live+stream`}
-            target="_blank" rel="noopener noreferrer"
-            style={{display:"block",textAlign:"center",fontSize:11,color:"var(--muted)",textDecoration:"underline",marginBottom:6,opacity:.7}}>
-            Search all options on Google →
-          </a>
+          {!evt.broadcastLink && (
+            <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`}
+              target="_blank" rel="noopener noreferrer"
+              style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>
+              Search all streaming options →
+            </a>
+          )}
         </div>
         <div style={{height:20}}/>
       </div>
@@ -697,142 +665,35 @@ function GameDetailModal({ evt, onClose }) {
   );
 }
 
-// ─── SPORTS STREAMING MAP ────────────────────────────────────────────────────
-// Maps sport display names → which streaming services typically carry them.
-// Shown in GameDetailModal when ESPN doesn't return specific broadcast data.
-const SPORTS_STREAM_MAP = {
-  "NFL": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
-    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "NBA": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Max",         url:"https://www.max.com/",               color:"#002BE7", icon:"M"  },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "MLB": [
-    { name:"MLB.TV",      url:"https://www.mlb.tv/",               color:"#002D72", icon:"⚾"  },
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
-    { name:"Apple TV+",   url:"https://tv.apple.com/",              color:"#555555", icon:"🍎" },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-  ],
-  "NHL": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Max",         url:"https://www.max.com/",               color:"#002BE7", icon:"M"  },
-    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-  ],
-  "FIFA World Cup 2026": [
-    { name:"Fox Sports",  url:"https://www.foxsports.com/",         color:"#003087", icon:"🦊" },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
-    { name:"Sling TV",    url:"https://www.sling.com/",             color:"#0097D4", icon:"S"  },
-  ],
-  "Premier League": [
-    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "La Liga": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "Bundesliga": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "Serie A": [
-    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "Ligue 1": [
-    { name:"beIN Sports", url:"https://www.beinsports.com/",        color:"#E4002B", icon:"b"  },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "Champions League": [
-    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
-    { name:"CBS Sports",  url:"https://www.cbssports.com/",         color:"#003087", icon:"CBS"},
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-  "Europa League": [
-    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
-    { name:"CBS Sports",  url:"https://www.cbssports.com/",         color:"#003087", icon:"CBS"},
-  ],
-  "MLS": [
-    { name:"Apple TV+",   url:"https://tv.apple.com/",              color:"#555555", icon:"🍎" },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-  ],
-  "UFC": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-  ],
-  "Formula 1": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
-    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
-  ],
-  "College Football": [
-    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
-    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
-    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
-    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
-  ],
-};
-
-// Get streaming services for a sport — exact match first, then partial
-function getSportStreamers(sportDisplay) {
-  if (!sportDisplay) return [];
-  if (SPORTS_STREAM_MAP[sportDisplay]) return SPORTS_STREAM_MAP[sportDisplay];
-  for (const [key, val] of Object.entries(SPORTS_STREAM_MAP)) {
-    if (sportDisplay.includes(key) || key.includes(sportDisplay)) return val;
-  }
-  return [];
-}
-
 // ─── BROADCAST LINK MAPPER ───────────────────────────────────────────────────
 function getBroadcastLink(broadcast) {
   if (!broadcast) return "";
   const b = broadcast.toUpperCase();
-  // Check ESPN+ before ESPN to avoid partial match issues
-  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD") || b.includes("ESPNPLUS")) return "https://plus.espn.com/";
-  if (b.includes("ESPN2")) return "https://www.espn.com/watch/";
-  if (b.includes("ESPNU")) return "https://www.espn.com/watch/";
-  if (b.includes("ESPN")) return "https://www.espn.com/watch/";
+  // Use root domain URLs — platform deep paths often block external navigation
+  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD")) return "https://plus.espn.com/";
+  if (b.includes("ESPN2") || b.includes("ESPN")) return "https://www.espn.com/watch/";
   if (b.includes("MLB.TV")) return "https://www.mlb.tv/";
-  if (b.includes("NFL+") || b.includes("NFL NETWORK") || b.includes("NFLX")) return "https://www.nfl.com/";
-  if (b.includes("NBA TV") || b.includes("NBA LEAGUE") || b.includes("NBATV")) return "https://www.nba.com/";
+  if (b.includes("NFL+") || b.includes("NFL NETWORK")) return "https://www.nfl.com/";
+  if (b.includes("NBA TV") || b.includes("NBA LEAGUE")) return "https://www.nba.com/";
   if (b.includes("HULU")) return "https://www.hulu.com/";
   if (b.includes("ABC")) return "https://abc.com/";
   if (b.includes("PEACOCK")) return "https://www.peacocktv.com/";
-  if (b.includes("NBC SPORTS") || b.includes("NBCSN") || b.includes("NBC")) return "https://www.nbc.com/";
+  if (b.includes("NBC")) return "https://www.nbc.com/";
   if (b.includes("PARAMOUNT")) return "https://www.paramountplus.com/";
-  if (b.includes("CBS SPORTS") || b.includes("CBS")) return "https://www.cbssports.com/";
-  if (b.includes("FS1") || b.includes("FS2") || b.includes("FOX SPORTS") || b.includes("FOX")) return "https://www.foxsports.com/";
+  if (b.includes("CBS")) return "https://www.cbssports.com/";
+  if (b.includes("FOX") || b.includes("FS1") || b.includes("FS2")) return "https://www.foxsports.com/";
   if (b.includes("TNT") || b.includes("TBS") || b.includes("TRUETV") || b.includes("MAX")) return "https://www.max.com/";
   if (b.includes("PRIME") || b.includes("AMAZON")) return "https://www.amazon.com/video/";
-  if (b.includes("APPLE TV") || b.includes("APPLE")) return "https://tv.apple.com/";
+  if (b.includes("APPLE")) return "https://tv.apple.com/";
   if (b.includes("NETFLIX")) return "https://www.netflix.com/";
   if (b.includes("DAZN")) return "https://www.dazn.com/";
-  if (b.includes("YOUTUBE TV") || b.includes("YOUTUBETV")) return "https://tv.youtube.com/";
-  if (b.includes("YOUTUBE")) return "https://www.youtube.com/";
+  if (b.includes("YOUTUBE TV")) return "https://tv.youtube.com/";
   if (b.includes("FUBO")) return "https://www.fubo.tv/";
   if (b.includes("DISNEY")) return "https://www.disneyplus.com/";
-  if (b.includes("SLING")) return "https://www.sling.com/";
-  if (b.includes("BEIN")) return "https://www.beinsports.com/";
-  if (b.includes("USA NETWORK") || b.includes("USA NET")) return "https://www.usanetwork.com/";
-  if (b.includes("TENNIS CHANNEL")) return "https://www.tennischannel.com/";
-  if (b.includes("GOLF CHANNEL")) return "https://www.golfchannel.com/";
-  if (b.includes("OUTDOOR") || b.includes("SPORTSMAN")) return "https://www.espn.com/watch/";
   return "";
 }
 
-function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
+function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, showToast, onPredResult }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sportInfo, setSportInfo] = useState(null);
@@ -895,7 +756,6 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
       away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score??"-", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
       broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
       broadcastLink: getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
-      _sportDisplay: sportRef.current?.display||"",
       venue: comp?.venue?.fullName||"",
       city: comp?.venue?.address?.city||"",
       isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
@@ -1015,14 +875,14 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
           {hasLive && <div style={{fontSize:11,color:"#ef4444",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>TAP A GAME TO WATCH LIVE</div>}
           {liveEvents.length>0 && (
             <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8,scrollbarWidth:"none",marginBottom:12}}>
-              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+              {sortByFav(liveEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={true} favTeam={favTeam} onSelect={setSelectedGame} user={user} showToast={showToast} onPredResult={onPredResult}/>)}
             </div>
           )}
           {upcomingEvents.length>0 && (
             <>
               {liveEvents.length>0 && <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>UPCOMING — tap to find where to watch</div>}
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+                {sortByFav(upcomingEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} favTeam={favTeam} onSelect={setSelectedGame} user={user} showToast={showToast} onPredResult={onPredResult}/>)}
               </div>
             </>
           )}
@@ -1030,7 +890,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
             <>
               <div style={{fontSize:11,color:"var(--muted)",letterSpacing:1.2,fontWeight:700,marginBottom:8}}>RECENT RESULTS</div>
               <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4,scrollbarWidth:"none"}}>
-                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onSelect={setSelectedGame}/>)}
+                {sortByFav(recentEvents).map(evt=><GameCard key={evt.id} evt={evt} isLive={false} isOver={true} favTeam={favTeam} onSelect={setSelectedGame} user={user} showToast={showToast} onPredResult={onPredResult}/>)}
               </div>
             </>
           )}
@@ -1045,7 +905,239 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite }) {
   );
 }
 
-function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
+// ─── PREDICTION STATS BAR ────────────────────────────────────────────────────
+function PredictionStatsBar() {
+  const s = getPredStats();
+  if (s.total === 0) return (
+    <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:24}}>🔮</span>
+      <div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,marginBottom:2}}>Predict the match!</div>
+        <div style={{fontSize:11,color:"var(--muted)"}}>Tap a game card below to predict who wins. Earn points and build your streak.</div>
+      </div>
+    </div>
+  );
+  const acc = s.total > 0 ? Math.round(s.correct/s.total*100) : 0;
+  const milestone = [...PRED_MILESTONES].reverse().find(m=>s.streak>=m.n);
+  return (
+    <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"12px 16px",marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,display:"flex",alignItems:"center",gap:6}}>
+          🔮 Your Predictions
+          {milestone && <span style={{fontSize:16}}>{milestone.icon}</span>}
+        </div>
+        {milestone && <div style={{fontSize:10,fontWeight:800,color:"#C4B5FD",background:"rgba(139,92,246,.15)",borderRadius:99,padding:"2px 8px"}}>{milestone.label}</div>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+        {[
+          {label:"Streak",value:`${s.streak} 🔥`,color:"var(--gold)"},
+          {label:"Best",value:`${s.best} ⚡`,color:"#C4B5FD"},
+          {label:"Accuracy",value:`${acc}%`,color:"#10B981"},
+          {label:"Points",value:`${s.points}`,color:"#F59E0B"},
+        ].map(stat=>(
+          <div key={stat.label} style={{background:"rgba(255,255,255,.04)",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,color:stat.color}}>{stat.value}</div>
+            <div style={{fontSize:9,color:"var(--muted)",marginTop:2,fontWeight:700}}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── PREDICTION SYSTEM ───────────────────────────────────────────────────────
+const PRED_MILESTONES = [
+  {n:1,  icon:"🎯", label:"First Blood",  msg:"You got your first one right!"},
+  {n:3,  icon:"🔥", label:"On Fire",      msg:"3 in a row. You're on a roll!"},
+  {n:5,  icon:"⚡", label:"Electric",     msg:"5 straight. Nobody stops you."},
+  {n:7,  icon:"🧠", label:"Big Brain",    msg:"7 correct. Are you cheating?"},
+  {n:10, icon:"👑", label:"Oracle",       msg:"10 in a row. You see the future."},
+  {n:15, icon:"🐐", label:"GOAT",         msg:"15 straight. Undisputed legend."},
+];
+const getPredStats = () => {
+  try { return JSON.parse(localStorage.getItem("sh_pred_stats") || '{"streak":0,"best":0,"total":0,"correct":0,"points":0}'); }
+  catch { return {streak:0,best:0,total:0,correct:0,points:0}; }
+};
+const savePredStats = s => localStorage.setItem("sh_pred_stats", JSON.stringify(s));
+const getPointsForStreak = n => n>=10?35:n>=7?25:n>=5?20:n>=3?15:10;
+
+function PredictionCelebrationModal({ streak, points, milestone, onClose }) {
+  useEffect(()=>{ const t=setTimeout(onClose,4000); return()=>clearTimeout(t); },[]);
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:2500,display:"flex",alignItems:"center",justifyContent:"center",padding:20,pointerEvents:"all"}}> 
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{
+        background:"var(--surface)",borderRadius:24,padding:"32px 36px",
+        border:`2px solid ${milestone?.n>=10?"rgba(245,158,11,.6)":"rgba(16,185,129,.4)"}`,
+        boxShadow:`0 0 60px ${milestone?.n>=10?"rgba(245,158,11,.3)":"rgba(16,185,129,.2)"}`,
+        textAlign:"center",maxWidth:320,width:"100%",
+        animation:"fadeIn .3s ease",
+      }}>
+        <div style={{fontSize:64,marginBottom:12,animation:"logoFloat 2s ease-in-out infinite"}}>{milestone?.icon||"✅"}</div>
+        <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:24,marginBottom:6,
+          background:milestone?.n>=10?"linear-gradient(135deg,#F59E0B,#FCD34D)":"linear-gradient(135deg,#10B981,#34D399)",
+          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+          {milestone?.label||"Correct!"}
+        </div>
+        <div style={{fontSize:14,color:"rgba(240,240,250,.6)",marginBottom:20,lineHeight:1.5}}>{milestone?.msg||"You called it right!"}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginBottom:20}}>
+          <div style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:12,padding:"10px 20px",textAlign:"center"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,color:"#10B981"}}>+{points}</div>
+            <div style={{fontSize:10,color:"var(--muted)",fontWeight:700}}>POINTS</div>
+          </div>
+          <div style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:12,padding:"10px 20px",textAlign:"center"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,color:"var(--gold)"}}>{streak} 🔥</div>
+            <div style={{fontSize:10,color:"var(--muted)",fontWeight:700}}>STREAK</div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:10,color:"var(--muted)",padding:"8px 24px",fontSize:13,cursor:"pointer",fontWeight:600}}>Keep going →</button>
+      </div>
+    </div>
+  );
+}
+
+function PredictionPoll({ evt, user, showToast, onResult }) {
+  const key = `sh_pred_${evt.id}`;
+  const [myPick, setMyPick]     = useState(() => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } });
+  const [community, setCommunity] = useState(null);
+  const [saving, setSaving]     = useState(false);
+  const [resolved, setResolved] = useState(false);
+
+  const isUpcoming = !evt.isLive && !evt.isOver;
+  const canPredict = isUpcoming && !myPick && evt.home?.name && evt.away?.name;
+
+  // Actual result from scores
+  const actualResult = evt.isOver && evt.home?.score !== undefined && evt.away?.score !== undefined
+    ? (evt.home.score > evt.away.score ? "home" : evt.away.score > evt.home.score ? "away" : "draw")
+    : null;
+  const predCorrect = myPick && actualResult ? myPick.pick === actualResult : null;
+
+  // Fetch community votes once user picks
+  useEffect(() => {
+    if (!myPick) return;
+    supabase.from("predictions").select("prediction").eq("game_id", evt.id)
+      .then(({data}) => {
+        if (!data?.length) return;
+        const t=data.length, c=data.reduce((a,p)=>{a[p.prediction]=(a[p.prediction]||0)+1;return a;},{});
+        setCommunity({home:Math.round((c.home||0)/t*100),draw:Math.round((c.draw||0)/t*100),away:Math.round((c.away||0)/t*100),total:t});
+      }).catch(()=>{});
+  }, [myPick]);
+
+  // Resolve result once game is over
+  useEffect(() => {
+    if (!myPick || !evt.isOver || resolved || predCorrect===null) return;
+    setResolved(true);
+    const old = getPredStats();
+    if (predCorrect) {
+      const newStreak = old.streak + 1;
+      const pts = getPointsForStreak(newStreak);
+      const next = {streak:newStreak,best:Math.max(old.best,newStreak),total:old.total+1,correct:old.correct+1,points:old.points+pts};
+      savePredStats(next);
+      const milestone = [...PRED_MILESTONES].reverse().find(m=>newStreak===m.n);
+      onResult?.({correct:true, streak:newStreak, points:pts, milestone});
+    } else {
+      savePredStats({...old,streak:0,total:old.total+1});
+      onResult?.({correct:false, streak:0, points:0});
+    }
+  }, [evt.isOver, predCorrect, resolved]);
+
+  const makePick = async (pick) => {
+    if (!canPredict||saving) return;
+    setSaving(true);
+    const pred = {pick, gameId:evt.id, home:evt.home?.name, away:evt.away?.name};
+    localStorage.setItem(key, JSON.stringify(pred));
+    setMyPick(pred);
+    if (user) {
+      supabase.from("predictions").upsert({user_id:user.id,game_id:evt.id,home_team:evt.home?.name,away_team:evt.away?.name,prediction:pick},{onConflict:"user_id,game_id"}).catch(()=>{});
+    }
+    setSaving(false);
+    showToast?.("🔮 Prediction locked in! Check back after the game.");
+  };
+
+  const teamName = p => p==="home"?evt.home?.name:p==="away"?evt.away?.name:"Draw";
+
+  if (!evt.home?.name || !evt.away?.name) return null;
+
+  return (
+    <div style={{borderTop:"1px solid rgba(255,255,255,.06)",padding:"8px 10px 10px",background:"rgba(139,92,246,.03)"}}>
+      {/* Can predict */}
+      {canPredict && (
+        <>
+          <div style={{fontSize:9,fontWeight:800,color:"rgba(139,92,246,.7)",letterSpacing:1.5,marginBottom:7,display:"flex",alignItems:"center",gap:5}}>
+            🔮 <span>WHO WINS? PREDICT NOW</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 52px 1fr",gap:5}}>
+            {["home","draw","away"].map(p=>(
+              <button key={p} onClick={e=>{e.stopPropagation();makePick(p);}}
+                style={{
+                  background:p==="draw"?"rgba(255,255,255,.05)":"rgba(139,92,246,.1)",
+                  border:`1.5px solid ${p==="draw"?"rgba(255,255,255,.1)":"rgba(139,92,246,.25)"}`,
+                  borderRadius:9,padding:p==="draw"?"6px 2px":"6px 4px",
+                  fontSize:p==="draw"?10:10,fontWeight:700,
+                  color:p==="draw"?"rgba(240,240,250,.45)":"#C4B5FD",
+                  cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
+                  transition:"all .15s",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(139,92,246,.6)";e.currentTarget.style.background="rgba(139,92,246,.22)";}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=p==="draw"?"rgba(255,255,255,.1)":"rgba(139,92,246,.25)";e.currentTarget.style.background=p==="draw"?"rgba(255,255,255,.05)":"rgba(139,92,246,.1)";}}>
+                {p==="draw"?"Draw":teamName(p)}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Pending result — show pick + community */}
+      {myPick && !evt.isOver && (
+        <>
+          <div style={{fontSize:9,fontWeight:800,color:"rgba(139,92,246,.7)",letterSpacing:1.5,marginBottom:6}}>
+            🔮 YOUR PICK: <span style={{color:"#C4B5FD"}}>{teamName(myPick.pick).toUpperCase()}</span>
+          </div>
+          {community ? (
+            <div style={{display:"grid",gridTemplateColumns:"1fr 52px 1fr",gap:5}}>
+              {["home","draw","away"].map(p=>(
+                <div key={p} style={{
+                  background:myPick.pick===p?"rgba(139,92,246,.18)":"rgba(255,255,255,.04)",
+                  border:`1.5px solid ${myPick.pick===p?"rgba(139,92,246,.5)":"rgba(255,255,255,.07)"}`,
+                  borderRadius:9,padding:"5px 4px",textAlign:"center",
+                }}>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:14,color:myPick.pick===p?"#C4B5FD":"rgba(240,240,250,.4)"}}>{community[p]}%</div>
+                  <div style={{fontSize:8,color:"rgba(240,240,250,.3)",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p==="draw"?"Draw":p==="home"?evt.home?.abbr||evt.home?.name:evt.away?.abbr||evt.away?.name}</div>
+                </div>
+              ))}
+            </div>
+          ) : <div style={{fontSize:9,color:"rgba(240,240,250,.3)"}}>Be the first to vote — tell your friends!</div>}
+          {community && <div style={{fontSize:9,color:"rgba(240,240,250,.25)",textAlign:"center",marginTop:5}}>{community.total} StreamHub fan{community.total!==1?"s":""} predicted</div>}
+        </>
+      )}
+
+      {/* Result */}
+      {myPick && evt.isOver && predCorrect !== null && (
+        <div style={{
+          background:predCorrect?"rgba(16,185,129,.08)":"rgba(239,68,68,.06)",
+          border:`1.5px solid ${predCorrect?"rgba(16,185,129,.3)":"rgba(239,68,68,.2)"}`,
+          borderRadius:10,padding:"8px 10px",
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+        }}>
+          <div>
+            <div style={{fontSize:11,fontWeight:800,color:predCorrect?"#10B981":"#ef4444"}}>
+              {predCorrect?"✅ You called it!":"❌ Better luck next game"}
+            </div>
+            <div style={{fontSize:9,color:"rgba(240,240,250,.35)",marginTop:2}}>
+              Your pick: {teamName(myPick.pick)} · Result: {actualResult?teamName(actualResult):"—"}
+            </div>
+          </div>
+          {predCorrect && (()=>{
+            const s=getPredStats();
+            const m=[...PRED_MILESTONES].reverse().find(x=>s.streak>=x.n);
+            return m?<div style={{textAlign:"center"}}><div style={{fontSize:20}}>{m.icon}</div><div style={{fontSize:8,fontWeight:800,color:"#10B981"}}>{m.label}</div></div>:null;
+          })()}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GameCard({ evt, isLive, isOver, favTeam, onSelect, user, showToast, onPredResult }) {
   const [showReminder, setShowReminder] = useState(false);
   const hasTeams = evt.home?.name && evt.away?.name;
   const favArr = Array.isArray(favTeam) ? favTeam : (favTeam ? [favTeam] : []);
@@ -1088,14 +1180,14 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
             <>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                  {evt.away.logo ? <img loading="lazy" src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>}
+                  {evt.away.logo ? <img src={evt.away.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.away.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.away.abbr?.slice(0,3)}</div>}
                   <span style={{fontSize:13,fontWeight:evt.away.winner?800:600,opacity:isOver&&!evt.away.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.away.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.away.name}</span>
                 </div>
                 {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.away.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.away.score}</span>}
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0,flex:1}}>
-                  {evt.home.logo ? <img loading="lazy" src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>}
+                  {evt.home.logo ? <img src={evt.home.logo} alt="" style={{width:22,height:22,objectFit:"contain",flexShrink:0}}/> : <div style={{width:22,height:22,borderRadius:4,background:`#${evt.home.color}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",flexShrink:0}}>{evt.home.abbr?.slice(0,3)}</div>}
                   <span style={{fontSize:13,fontWeight:evt.home.winner?800:600,opacity:isOver&&!evt.home.winner?0.7:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:evt.home.name===favTeam?"var(--gold)":"var(--text)"}}>{evt.home.name}</span>
                 </div>
                 {(isLive||isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,color:evt.home.winner?"var(--gold)":"var(--text)",flexShrink:0,marginLeft:6}}>{evt.home.score}</span>}
@@ -1142,6 +1234,9 @@ function GameCard({ evt, isLive, isOver, favTeam, onSelect }) {
           )}
         </div>
       )}
+
+      {/* 🔮 Prediction Poll */}
+      <PredictionPoll evt={evt} user={user} showToast={showToast} onResult={onPredResult}/>
     </div>
   );
 }
@@ -1165,13 +1260,13 @@ function ScheduleGameRow({ evt, isLast }) {
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:4}}>
         <div style={{flex:1,minWidth:0}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            {evt.away.logo && <img loading="lazy" src={evt.away.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
+            {evt.away.logo && <img src={evt.away.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
             <span style={{fontSize:14,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.away.name||evt.name}</span>
             {(evt.isLive||evt.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:evt.away.winner?"var(--gold)":"var(--text)",marginLeft:"auto",flexShrink:0}}>{evt.away.score}</span>}
           </div>
           {evt.home.name && (
             <div style={{display:"flex",alignItems:"center",gap:8}}>
-              {evt.home.logo && <img loading="lazy" src={evt.home.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
+              {evt.home.logo && <img src={evt.home.logo} alt="" style={{width:20,height:20,objectFit:"contain",flexShrink:0}}/>}
               <span style={{fontSize:14,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{evt.home.name}</span>
               {(evt.isLive||evt.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:evt.home.winner?"var(--gold)":"var(--text)",marginLeft:"auto",flexShrink:0}}>{evt.home.score}</span>}
             </div>
@@ -1482,7 +1577,7 @@ function SportMovieBridge({ activeSport, onSelect }) {
             style={{flexShrink:0,width:88,cursor:"pointer",transition:"transform .2s"}}
             onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
             onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-            <img loading="lazy" src={`https://image.tmdb.org/t/p/w185${m.poster_path}`} alt={m.title||m.name}
+            <img src={`https://image.tmdb.org/t/p/w185${m.poster_path}`} alt={m.title||m.name}
               style={{width:88,height:132,objectFit:"cover",borderRadius:10,display:"block",marginBottom:5}}
               onError={e=>e.target.style.display="none"}/>
             <div style={{fontSize:10,fontWeight:700,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
@@ -1702,7 +1797,7 @@ function TeamNextGameSearch({ favoriteTeams }) {
             <div style={{flex:1,minWidth:160}}>
               {[result.away,result.home].map((t,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:i===0?6:0}}>
-                  {t.logo&&<img loading="lazy" src={t.logo} alt="" style={{width:24,height:24,objectFit:"contain"}}/>}
+                  {t.logo&&<img src={t.logo} alt="" style={{width:24,height:24,objectFit:"contain"}}/>}
                   <span style={{fontWeight:700,fontSize:14,flex:1}}>{t.name}</span>
                   {(result.isLive||result.isOver)&&<span style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,color:t.winner?"var(--gold)":"var(--text)"}}>{t.score}</span>}
                 </div>
@@ -1795,7 +1890,7 @@ function SportCategoryGrid({ onSearch, favoriteTeams }) {
                   return (
                     <div key={name} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,padding:"2px 6px 2px 4px"}}>
                       {logo
-                        ? <img loading="lazy" src={logo} alt={name} style={{width:14,height:14,objectFit:"contain",borderRadius:"50%"}} onError={e=>e.target.style.display="none"}/>
+                        ? <img src={logo} alt={name} style={{width:14,height:14,objectFit:"contain",borderRadius:"50%"}} onError={e=>e.target.style.display="none"}/>
                         : <span style={{fontSize:10}}>⭐</span>
                       }
                       <span style={{fontSize:9,fontWeight:700,color:"var(--gold)",whiteSpace:"nowrap",maxWidth:60,overflow:"hidden",textOverflow:"ellipsis"}}>{name}</span>
@@ -2107,7 +2202,7 @@ function DailyPickBanner({ movie, onSelect, onShare }) {
     <div style={{margin:"0 14px 16px",borderRadius:16,overflow:"hidden",background:"linear-gradient(135deg,rgba(139,92,246,.2),rgba(6,182,212,.12))",border:"1px solid rgba(139,92,246,.35)",position:"relative",cursor:"pointer"}}
       onClick={()=>onSelect(movie)}>
       <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.3)"}}/>
-      {poster&&<img loading="lazy" src={poster} alt="" style={{position:"absolute",right:0,top:0,height:"100%",width:120,objectFit:"cover",maskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)",WebkitMaskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)"}}/>}
+      {poster&&<img src={poster} alt="" style={{position:"absolute",right:0,top:0,height:"100%",width:120,objectFit:"cover",maskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)",WebkitMaskImage:"linear-gradient(to left,rgba(0,0,0,.6),transparent)"}}/>}
       <div style={{position:"relative",padding:"14px 16px 14px"}}>
         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
           <div style={{background:"var(--purple)",borderRadius:99,padding:"3px 10px",fontSize:9,fontWeight:900,color:"#fff",letterSpacing:.8}}>🎯 TODAY'S PICK — DAY {dayOfYear}</div>
@@ -2444,7 +2539,7 @@ Pick something AVAILABLE on one of their services that fits the time and day. Re
               {/* Movie card */}
               <div style={{display:"flex",gap:14,marginBottom:16}}>
                 {pick.movie?.poster_path
-                  ? <img loading="lazy" src={`https://image.tmdb.org/t/p/w185${pick.movie.poster_path}`} alt={pick.title} style={{width:90,height:135,objectFit:"cover",borderRadius:12,flexShrink:0,boxShadow:"0 8px 24px rgba(0,0,0,.5)"}}/>
+                  ? <img src={`https://image.tmdb.org/t/p/w185${pick.movie.poster_path}`} alt={pick.title} style={{width:90,height:135,objectFit:"cover",borderRadius:12,flexShrink:0,boxShadow:"0 8px 24px rgba(0,0,0,.5)"}}/>
                   : <div style={{width:90,height:135,borderRadius:12,background:"rgba(139,92,246,.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>🎬</div>
                 }
                 <div style={{flex:1,minWidth:0}}>
@@ -2723,7 +2818,7 @@ function StreakAvatar({ streak, profile, user, size=80 }) {
       {/* Avatar circle */}
       <div style={{position:"absolute",inset:0,borderRadius:"50%",overflow:"hidden",zIndex:1,background:"var(--surface)"}}>
         {profile?.avatar_url
-          ? <img loading="lazy" src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+          ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
           : <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${cfg.ring},rgba(26,16,48,.9))`,fontFamily:"var(--font-head)",fontWeight:900,fontSize:fs,color:"#fff"}}>{initials}</div>
         }
       </div>
@@ -3107,7 +3202,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
                       <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{cursor:"pointer",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",background:"var(--card)",transition:"transform .2s"}}
                         onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
                         onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-                        {poster ? <img loading="lazy" src={poster} alt="" style={{width:"100%",height:110,objectFit:"cover"}}/> : <div style={{height:110,background:`linear-gradient(135deg,#1a1a2e,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
+                        {poster ? <img src={poster} alt="" style={{width:"100%",height:110,objectFit:"cover"}}/> : <div style={{height:110,background:`linear-gradient(135deg,#1a1a2e,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
                         <div style={{padding:"6px 8px"}}>
                           <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
                           <div style={{fontSize:10,color:"var(--gold)"}}>★ {m.vote_average?.toFixed(1)||"—"}</div>
@@ -3282,7 +3377,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
             />
           ) : (
             <>
-              {poster && <img loading="lazy" src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
+              {poster && <img src={poster} alt="" style={{width:"100%",height:"100%",objectFit:"cover",opacity:.4}} />}
               <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,var(--surface) 0%,transparent 60%)"}} />
               {trailerKey && (
                 <button onClick={()=>setShowTrailer(true)}
@@ -3391,7 +3486,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(16,185,129,.2)";e.currentTarget.style.borderColor="rgba(16,185,129,.5)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(16,185,129,.1)";e.currentTarget.style.borderColor="rgba(16,185,129,.25)";}}>
                             <div style={{width:20,height:20,borderRadius:5,overflow:"hidden",flexShrink:0}}>
-                              {p.logo_path && <img loading="lazy" src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                              {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
                             </div>
                             {p.provider_name}
                             <span style={{fontSize:10,opacity:.6}}>▶</span>
@@ -3411,7 +3506,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,.08)";}}>
-                            {p.logo_path && <img loading="lazy" src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
                             <span style={{fontSize:10,opacity:.6}}>▶</span>
                           </a>
@@ -3430,7 +3525,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(139,92,246,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(139,92,246,.08)";}}>
-                            {p.logo_path && <img loading="lazy" src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
                           </a>
                         ))}
@@ -3448,7 +3543,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                             style={{display:"flex",alignItems:"center",gap:6,background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.2)",borderRadius:10,padding:"6px 12px",fontSize:12,fontWeight:700,textDecoration:"none",color:"var(--text)",cursor:"pointer",transition:"all .2s"}}
                             onMouseEnter={e=>{e.currentTarget.style.background="rgba(245,158,11,.18)";}}
                             onMouseLeave={e=>{e.currentTarget.style.background="rgba(245,158,11,.08)";}}>
-                            {p.logo_path && <img loading="lazy" src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
+                            {p.logo_path && <img src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} alt={p.provider_name} style={{width:20,height:20,borderRadius:4,objectFit:"cover"}}/>}
                             {p.provider_name}
                             <span style={{fontSize:10,opacity:.6}}>▶</span>
                           </a>
@@ -3494,7 +3589,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                           style={{background:"var(--card)",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",cursor:"pointer",transition:"all .2s"}}
                           onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(245,158,11,.4)";}}
                           onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
-                          {sp ? <img loading="lazy" src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>
+                          {sp ? <img src={sp} alt="" style={{width:"100%",height:100,objectFit:"cover"}}/>
                                : <div style={{height:100,background:`linear-gradient(135deg,${sgr[0]},${sgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(sm.title||sm.name||"").slice(0,2)}</div>}
                           <div style={{padding:"6px 8px"}}>
                             <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{sm.title||sm.name||""}</div>
@@ -3519,7 +3614,7 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
                       return (
                         <div key={c.id} style={{textAlign:"center"}}>
                           <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 8px",overflow:"hidden",background:`linear-gradient(135deg,${cgr[0]},${cgr[1]})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>
-                            {c.profile_path ? <img loading="lazy" src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                            {c.profile_path ? <img src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                                             : <span style={{opacity:.4}}>{(c.name||"").slice(0,2)}</span>}
                           </div>
                           <div style={{fontSize:12,fontWeight:700,marginBottom:2}}>{c.name||""}</div>
@@ -3882,7 +3977,7 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[], pr
                 const urgent = m.daysLeft <= 7;
                 return (
                   <div key={m.id} style={{background:"var(--card)",borderRadius:12,overflow:"hidden",border:`1px solid ${urgent?"rgba(239,68,68,.4)":"var(--border)"}`}}>
-                    {poster ? <img loading="lazy" src={poster} alt="" style={{width:"100%",height:140,objectFit:"cover"}}/> : <div style={{height:140,background:"linear-gradient(135deg,#1a0a0a,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
+                    {poster ? <img src={poster} alt="" style={{width:"100%",height:140,objectFit:"cover"}}/> : <div style={{height:140,background:"linear-gradient(135deg,#1a0a0a,#ef4444)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
                     <div style={{padding:"8px 10px"}}>
                       <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:12,marginBottom:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
                       <div style={{fontSize:11,color:urgent?"var(--danger)":"var(--muted)",fontWeight:urgent?700:400}}>
@@ -3962,7 +4057,7 @@ function WatchHistoryModal({ onClose, user, tier, onUpgrade }) {
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
                   {history.map(h=>(
                     <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,.03)",borderRadius:10,padding:"10px 12px",border:"1px solid var(--border)"}}>
-                      {h.movie_poster ? <img loading="lazy" src={`${TMDB_IMG}${h.movie_poster}`} alt="" style={{width:40,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}}/> : <div style={{width:40,height:56,background:"var(--card)",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🎬</div>}
+                      {h.movie_poster ? <img src={`${TMDB_IMG}${h.movie_poster}`} alt="" style={{width:40,height:56,objectFit:"cover",borderRadius:6,flexShrink:0}}/> : <div style={{width:40,height:56,background:"var(--card)",borderRadius:6,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🎬</div>}
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.movie_title}</div>
                         <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{h.movie_type==="tv"?"📡 TV Show":"🎬 Movie"} · Watched {new Date(h.watched_at).toLocaleDateString()}</div>
@@ -4632,7 +4727,7 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
                     onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.03)";e.currentTarget.style.borderColor="rgba(6,182,212,.5)";}}
                     onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.borderColor="var(--border)";}}>
                     <div style={{height:180,position:"relative",background:`linear-gradient(135deg,${gr[0]},${gr[1]})`}}>
-                      {poster && <img loading="lazy" src={poster} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
+                      {poster && <img src={poster} alt={title} style={{width:"100%",height:"100%",objectFit:"cover"}}/>}
                       <div style={{position:"absolute",top:6,left:6,background:item.mediaType==="tv"?"rgba(139,92,246,.9)":"rgba(245,158,11,.9)",borderRadius:6,padding:"2px 7px",fontSize:9,fontWeight:900,color:item.mediaType==="tv"?"#fff":"#000"}}>
                         {item.mediaType==="tv"?"TV":"MOVIE"}
                       </div>
@@ -4675,7 +4770,7 @@ function InstallPrompt({ onDismiss }) {
     }}>
       <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer"}}>✕</button>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-        <img loading="lazy" src="/icons/icon-72x72.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0}} />
+        <img src="/icons/icon-72x72.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0}} />
         <div>
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:2}}>Add to Home Screen</div>
           <div style={{fontSize:12,color:"rgba(240,240,250,.5)"}}>Get the full app experience — free</div>
@@ -4902,7 +4997,7 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
         textAlign:"center", animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
       }}>
         {/* Logo */}
-        <img loading="lazy" src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
           style={{height:80,width:"auto",objectFit:"contain",marginBottom:20,filter:"drop-shadow(0 0 20px rgba(245,158,11,.5))"}} />
 
         {/* Limit reached badge */}
@@ -4970,7 +5065,7 @@ function SignupPrompt({ onSignup, onDismiss, searchesUsed }) {
 
       {/* Header */}
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-        <img loading="lazy" src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
+        <img src="/logo-clean.png" alt="" onError={e=>e.target.style.display="none"}
           style={{height:44,width:"auto",objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))"}} />
         <div>
           <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Join free — it's worth it</div>
@@ -5389,6 +5484,10 @@ export default function StreamHub() {
   const [showNewReleases, setShowNewReleases] = useState(false);
   const [showCostCalc, setShowCostCalc] = useState(false);
   const [showWatchTonight, setShowWatchTonight] = useState(false);
+  const [predCelebration, setPredCelebration] = useState(null); // {correct,streak,points,milestone}
+  const handlePredResult = (result) => {
+    if (result.correct) setPredCelebration(result);
+  };
 
   const [favoriteTeams, setFavoriteTeams] = useState(() => {
     try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); }
@@ -5399,7 +5498,7 @@ export default function StreamHub() {
     const v = teams?.[sport]; if (!v) return [];
     return Array.isArray(v) ? v : [v]; // backward compat
   };
-  const toggleFavoriteTeam = useCallback((sport, teamName) => {
+  const toggleFavoriteTeam = (sport, teamName) => {
     setFavoriteTeams(prev => {
       const updated = { ...prev };
       if (teamName === "_clear") { delete updated[sport]; }
@@ -5410,7 +5509,7 @@ export default function StreamHub() {
           : [...arr, teamName];            // add
         if (updated[sport].length===0) delete updated[sport];
       }
-      // Save to localStorage immediately — works for all users
+      // Save to localStorage immediately
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
       // Sync to Supabase in background if logged in
       supabase.auth.getSession().then(({data:{session}})=>{
@@ -5419,20 +5518,17 @@ export default function StreamHub() {
             .update({ favorite_teams: updated })
             .eq("id", session.user.id)
             .catch(()=>{});
-        } else if (teamName !== "_clear" && Object.keys(updated).length === 1 && !prev[sport]) {
-          // First team added while not logged in — nudge to sign up for cross-device sync
-          showToast("⭐ Team saved! Sign in to sync across all your devices.");
         }
       });
       return updated;
     });
-  }, []);
+  };
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [shareContent, setShareContent] = useState(null); // {title,text,url}
   const [streak] = useState(()=>getStreak());
 
-  const handleShareMovie = useCallback((movie, context="") => {
+  const handleShareMovie = (movie, context="") => {
     const title = movie.title||movie.name||"";
     const text = context==="mood"
       ? `🎭 AI Mood Search just found me the perfect match: "${title}" — try it on The StreamHub!`
@@ -5440,7 +5536,7 @@ export default function StreamHub() {
         ? `⭐ Just rated "${title}" on The StreamHub — check it out!`
         : `📺 Watching "${title}" — found it on The StreamHub, the AI streaming assistant!`;
     setShareContent({title, text, url:"https://thestreamhub.app"});
-  }, []);
+  };
   const [watchHistory, setWatchHistory] = useState([]);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [showSearchLimit, setShowSearchLimit] = useState(false);
@@ -5529,18 +5625,8 @@ export default function StreamHub() {
     // Load profile
     let { data:prof } = await supabase.from("profiles").select("*").eq("id",u.id).single();
     if (!prof) {
-      // Carry over any favorite teams set before signup
-      const localFt = (() => { try { return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}"); } catch { return {}; } })();
-      const hasFt = Object.keys(localFt).length > 0;
-      await supabase.from("profiles").insert({
-        id: u.id,
-        username: u.email.split("@")[0],
-        tier: "free",
-        setup_done: false,
-        ...(hasFt ? { favorite_teams: localFt } : {}),
-      });
-      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false,
-               ...(hasFt ? { favorite_teams: localFt } : {}) };
+      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false });
+      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false };
     }
     setProfile(prof);
     setTier(prof.tier||"free");
@@ -5554,26 +5640,16 @@ export default function StreamHub() {
       } catch(e) {}
     }
 
-    // Load favorite teams — merge localStorage (set before login) with cloud
-    try {
-      const localFt = JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}");
-      const cloudFtRaw = prof.favorite_teams;
-      const cloudFt = cloudFtRaw
-        ? (typeof cloudFtRaw === "string" ? JSON.parse(cloudFtRaw) : cloudFtRaw)
-        : {};
-      const hasLocal = Object.keys(localFt).length > 0;
-      const hasCloud = Object.keys(cloudFt).length > 0;
-      if (hasCloud || hasLocal) {
-        // Merge: cloud wins on conflict, but keep any local-only entries
-        const merged = { ...localFt, ...cloudFt };
-        setFavoriteTeams(merged);
-        localStorage.setItem("streamhub_fav_teams", JSON.stringify(merged));
-        // If local had entries that cloud didn't, upload the merged result
-        if (hasLocal) {
-          supabase.from("profiles").update({ favorite_teams: merged }).eq("id", u.id).catch(()=>{});
+    // Load favorite teams from Supabase (overrides localStorage — cloud wins)
+    if (prof.favorite_teams) {
+      try {
+        const ft = typeof prof.favorite_teams === "string" ? JSON.parse(prof.favorite_teams) : prof.favorite_teams;
+        if (ft && typeof ft === "object") {
+          setFavoriteTeams(ft);
+          localStorage.setItem("streamhub_fav_teams", JSON.stringify(ft));
         }
-      }
-    } catch(e) {}
+      } catch(e) {}
+    }
 
     // Hide setup if user already completed it
     if (prof.setup_done) {
@@ -5743,21 +5819,21 @@ export default function StreamHub() {
     }
   }, []);
 
-  const handleSelectMovie = useCallback((movie) => {
+  const handleSelectMovie = (movie) => {
     if (!movie) return;
     setSelectedMovie(movie);
-  }, []);
+  };
 
-  const handleSportSearch = useCallback((query) => {
+  const handleSportSearch = (query) => {
     setSearch(query);
     setView("sports");
-  }, []);
+  };
 
-  const handleSetView = useCallback((v) => { setView(v); track("tab_change", { tab: v }); }, []);
+  const handleSetView = (v) => { setView(v); track("tab_change", { tab: v }); };
 
-  const handleRate = useCallback((movieId, val) => {
+  const handleRate = (movieId, val) => {
     setUserRatings(p=>({...p,[movieId]:val}));
-  }, []);
+  };
 
   const markAsWatched = async (movie) => {
     if (!user) return showToast("Sign in to track history! 👤");
@@ -5784,10 +5860,10 @@ export default function StreamHub() {
     ? movies.filter(m=>watchlist.includes(m.id))
     : movies;
 
-  const filtered = useMemo(() => displayMovies.filter(m => !filterPlat || m.providers?.includes(filterPlat)), [displayMovies, filterPlat]);
+  const filtered = displayMovies.filter(m => !filterPlat || m.providers?.includes(filterPlat));
 
-  const subscribed = useMemo(() => SERVICES.filter(s=>userSubs.includes(s.id)), [userSubs]);
-  const unsubscribed = useMemo(() => SERVICES.filter(s=>!userSubs.includes(s.id)), [userSubs]);
+  const subscribed = SERVICES.filter(s=>userSubs.includes(s.id));
+  const unsubscribed = SERVICES.filter(s=>!userSubs.includes(s.id));
 
   // ─── MOBILE LAYOUT ──────────────────────────────────────────────────────────
   if (isMobile) return (
@@ -5834,7 +5910,7 @@ export default function StreamHub() {
                 transition:"all .3s",
               }}>
                 {user && profile?.avatar_url
-                  ? <img loading="lazy" src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
                 }
               </button>
@@ -6024,6 +6100,7 @@ export default function StreamHub() {
           <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
             {!search.trim() ? (
               <>
+                <PredictionStatsBar/>
                 <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
@@ -6033,7 +6110,7 @@ export default function StreamHub() {
                 <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:14}}>← Back to Sports</button>
                 {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
-                  : <><LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/><SportMovieBridge activeSport={search} onSelect={handleSelectMovie}/></>}
+                  : <><LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam} user={user} showToast={showToast} onPredResult={handlePredResult}/><SportMovieBridge activeSport={search} onSelect={handleSelectMovie}/></>}
               </>
             )}
           </div>
@@ -6082,6 +6159,7 @@ export default function StreamHub() {
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
       <CookieConsent/>
       <Analytics />
     </>
@@ -6102,7 +6180,7 @@ export default function StreamHub() {
                 style={{background:view==="home"&&!search?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                 🏠
               </button>
-              <img loading="lazy" src="/logo-clean.png" alt="StreamHub" onClick={()=>{setView("home");setSearch("");}}
+              <img src="/logo-clean.png" alt="StreamHub" onClick={()=>{setView("home");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{height:36,width:"auto",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}}/>
             </div>
@@ -6134,7 +6212,7 @@ export default function StreamHub() {
                 transition:"all .3s",
               }}>
                 {user && profile?.avatar_url
-                  ? <img loading="lazy" src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
                 }
               </button>
@@ -6163,7 +6241,7 @@ export default function StreamHub() {
             <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(139,92,246,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
             <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
             {/* Left glowing logo — absolutely centered vertically */}
-            <img loading="lazy" src="/logo-clean.png" alt="" style={{
+            <img src="/logo-clean.png" alt="" style={{
               position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
               height:72, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
@@ -6213,7 +6291,7 @@ export default function StreamHub() {
 
             </div>
             {/* Right glowing logo — absolutely centered vertically */}
-            <img loading="lazy" src="/logo-clean.png" alt="" style={{
+            <img src="/logo-clean.png" alt="" style={{
               position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
               height:72, width:"auto", objectFit:"contain",
               filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
@@ -6293,7 +6371,8 @@ export default function StreamHub() {
             <div>
               {!search.trim() ? (
                 <>
-                  <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
+                  <PredictionStatsBar/>
+                <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
                 </>
@@ -6302,7 +6381,7 @@ export default function StreamHub() {
                   <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports</button>
                   {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
-                    : <><LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/><SportMovieBridge activeSport={search} onSelect={handleSelectMovie}/></>}
+                    : <><LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam} user={user} showToast={showToast} onPredResult={handlePredResult}/><SportMovieBridge activeSport={search} onSelect={handleSelectMovie}/></>}
                 </>
               )}
             </div>
@@ -6384,6 +6463,7 @@ export default function StreamHub() {
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
       <CookieConsent/>
       <Analytics />
     </>
@@ -6442,7 +6522,7 @@ export default function StreamHub() {
                 transition:"all .3s",
               }}>
                 {user && profile?.avatar_url
-                  ? <img loading="lazy" src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                  ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
                   : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
                 }
               </button>
@@ -6476,7 +6556,7 @@ export default function StreamHub() {
               <div style={{position:"absolute",bottom:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
               <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:100,background:"rgba(6,182,212,.07)",filter:"blur(60px)",pointerEvents:"none"}}/>
               {/* Left glowing logo */}
-              <img loading="lazy" src="/logo-clean.png" alt="" style={{
+              <img src="/logo-clean.png" alt="" style={{
                 height:90, width:"auto", objectFit:"contain", flexShrink:0,
                 filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
                 animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
@@ -6514,7 +6594,7 @@ export default function StreamHub() {
 
               </div>
               {/* Right glowing logo */}
-              <img loading="lazy" src="/logo-clean.png" alt="" style={{
+              <img src="/logo-clean.png" alt="" style={{
                 height:90, width:"auto", objectFit:"contain", flexShrink:0,
                 filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
                 animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
@@ -6624,7 +6704,8 @@ export default function StreamHub() {
               <div>
                 {!search.trim() ? (
                   <>
-                    <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
+                    <PredictionStatsBar/>
+                <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
                   </>
@@ -6633,7 +6714,7 @@ export default function StreamHub() {
                     <button onClick={()=>setSearch("")} style={{display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:99,color:"var(--muted)",padding:"5px 12px",fontSize:12,cursor:"pointer",marginBottom:16}}>← Back to Sports Hub</button>
                     {search==="soccer_hub" ? <SoccerHub onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                       : search.toLowerCase().includes("olympic") ? <OlympicsPlaceholder/>
-                      : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam}/>}
+                      : <LiveSportsSection sportQuery={search} favoriteTeams={favoriteTeams} onToggleFavorite={toggleFavoriteTeam} user={user} showToast={showToast} onPredResult={handlePredResult}/>}
                   </>
                 )}
               </div>
@@ -6762,7 +6843,7 @@ export default function StreamHub() {
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img loading="lazy" src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
+                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
                     <span style={{color:"#F59E0B"}}>The Stream</span>
@@ -6802,6 +6883,7 @@ export default function StreamHub() {
       {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
+      {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
       <CookieConsent/>
       <Analytics />
     </>
