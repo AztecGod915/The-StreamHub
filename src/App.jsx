@@ -1234,45 +1234,47 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
 
       {/* Result */}
       {myPick && evt.isOver && predCorrect !== null && (
-        <div style={{
-          background:predCorrect?"rgba(16,185,129,.08)":"rgba(239,68,68,.06)",
-          border:`1.5px solid ${predCorrect?"rgba(16,185,129,.3)":"rgba(239,68,68,.2)"}`,
-          borderRadius:10,padding:"8px 10px",
-          display:"flex",alignItems:"center",justifyContent:"space-between",
-        }}>
-          <div>
-            <div style={{fontSize:11,fontWeight:800,color:predCorrect?"#10B981":"#ef4444"}}>
-              {predCorrect?"✅ You called it!":"❌ Better luck next game"}
+        <>
+          <div style={{
+            background:predCorrect?"rgba(16,185,129,.08)":"rgba(239,68,68,.06)",
+            border:`1.5px solid ${predCorrect?"rgba(16,185,129,.3)":"rgba(239,68,68,.2)"}`,
+            borderRadius:10,padding:"8px 10px",
+            display:"flex",alignItems:"center",justifyContent:"space-between",
+          }}>
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:predCorrect?"#10B981":"#ef4444"}}>
+                {predCorrect?"✅ You called it!":"❌ Better luck next game"}
+              </div>
+              <div style={{fontSize:9,color:"rgba(240,240,250,.35)",marginTop:2}}>
+                Your pick: {teamName(myPick.pick)} · Result: {actualResult?teamName(actualResult):"—"}
+              </div>
             </div>
-            <div style={{fontSize:9,color:"rgba(240,240,250,.35)",marginTop:2}}>
-              Your pick: {teamName(myPick.pick)} · Result: {actualResult?teamName(actualResult):"—"}
-            </div>
+            {predCorrect && (()=>{
+              const s=getPredStats();
+              const m=[...PRED_MILESTONES].reverse().find(x=>s.streak>=x.n);
+              return m?<div style={{textAlign:"center"}}><div style={{fontSize:20}}>{m.icon}</div><div style={{fontSize:8,fontWeight:800,color:"#10B981"}}>{m.label}</div></div>:null;
+            })()}
           </div>
-          {predCorrect && (()=>{
-            const s=getPredStats();
-            const m=[...PRED_MILESTONES].reverse().find(x=>s.streak>=x.n);
-            return m?<div style={{textAlign:"center"}}><div style={{fontSize:20}}>{m.icon}</div><div style={{fontSize:8,fontWeight:800,color:"#10B981"}}>{m.label}</div></div>:null;
-          })()}
-        </div>
-        {/* Share result button */}
-        <button onClick={e=>{
-          e.stopPropagation();
-          const txt = predCorrect
-            ? `✅ I predicted ${teamName(myPick.pick)} wins and I was right! 🔮 Predict tonight's games on The StreamHub → thestreamhub.app`
-            : `❌ I predicted ${teamName(myPick.pick)} but got it wrong this time. Still on ${getPredStats().streak} 🔥 → thestreamhub.app`;
-          if(navigator.share){navigator.share({text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
-          else{navigator.clipboard.writeText(txt).then(()=>showToast?.("📋 Copied! Share with friends.")).catch(()=>{});}
-        }} style={{
-          width:"100%",marginTop:7,
-          background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",
-          borderRadius:8,padding:"6px 0",fontSize:10,fontWeight:700,
-          color:"rgba(240,240,250,.5)",cursor:"pointer",
-          display:"flex",alignItems:"center",justifyContent:"center",gap:5,
-        }}
-        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.1)"}
-        onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.05)"}>
-          📤 Share your prediction
-        </button>
+          {/* Share result button */}
+          <button onClick={e=>{
+            e.stopPropagation();
+            const txt = predCorrect
+              ? `✅ I predicted ${teamName(myPick.pick)} wins and I was right! 🔮 Predict tonight's games on The StreamHub → thestreamhub.app`
+              : `❌ I predicted ${teamName(myPick.pick)} but got it wrong this time. Still on ${getPredStats().streak} 🔥 → thestreamhub.app`;
+            if(navigator.share){navigator.share({text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
+            else{navigator.clipboard.writeText(txt).then(()=>showToast?.("📋 Copied! Share with friends.")).catch(()=>{});}
+          }} style={{
+            width:"100%",marginTop:7,
+            background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",
+            borderRadius:8,padding:"6px 0",fontSize:10,fontWeight:700,
+            color:"rgba(240,240,250,.5)",cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+          }}
+          onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.1)"}
+          onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.05)"}>
+            📤 Share your prediction
+          </button>
+        </>
       )}
     </div>
   );
