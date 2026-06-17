@@ -632,7 +632,8 @@ function GameDetailModal({ evt, onClose }) {
           )}
 
           {/* Watch button */}
-          <a href={broadcastLink||"#"} onClick={e=>{if(!broadcastLink){e.preventDefault();}}} target="_blank" rel="noopener noreferrer"
+          <a href={broadcastLink||`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live+stream`}
+            target="_blank" rel="noopener noreferrer"
             style={{
               display:"block", textAlign:"center",
               background: evt.isLive
@@ -648,16 +649,36 @@ function GameDetailModal({ evt, onClose }) {
               boxShadow: evt.isLive ? "0 8px 24px rgba(239,68,68,.4)" : "none",
               marginBottom:10,
             }}>
-            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay / Highlights" : `📺 Where to Watch →`}
+            {evt.isLive ? "▶ Watch Live Now" : evt.isOver ? "📺 Watch Replay / Highlights" : "📺 Where to Watch →"}
           </a>
 
-          {!evt.broadcastLink && (
-            <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live`}
-              target="_blank" rel="noopener noreferrer"
-              style={{display:"block",textAlign:"center",fontSize:12,color:"var(--muted)",textDecoration:"underline",marginBottom:6}}>
-              Search all streaming options →
-            </a>
-          )}
+          {/* Streaming service badges */}
+          {(()=>{
+            const streamers = getSportStreamers(evt._sportDisplay||"");
+            if (!streamers.length) return null;
+            return (
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:10,color:"var(--muted)",textAlign:"center",marginBottom:6,letterSpacing:.5,textTransform:"uppercase"}}>
+                  {evt.broadcast ? "Also available on" : "Usually available on"}
+                </div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center"}}>
+                  {streamers.map(s=>(
+                    <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
+                      style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.12)",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,color:"#fff",textDecoration:"none"}}
+                      onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.14)"}
+                      onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.06)"}>
+                      <span style={{fontSize:13}}>{s.icon}</span><span>{s.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+          <a href={`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(evt.shortName||evt.name||"")}+live+stream`}
+            target="_blank" rel="noopener noreferrer"
+            style={{display:"block",textAlign:"center",fontSize:11,color:"var(--muted)",textDecoration:"underline",marginBottom:6,opacity:.7}}>
+            Search all options on Google →
+          </a>
         </div>
         <div style={{height:20}}/>
       </div>
@@ -666,30 +687,130 @@ function GameDetailModal({ evt, onClose }) {
 }
 
 // ─── BROADCAST LINK MAPPER ───────────────────────────────────────────────────
+// ─── SPORTS STREAMING MAP ────────────────────────────────────────────────────
+const SPORTS_STREAM_MAP = {
+  "NFL": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
+    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "NBA": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Max",         url:"https://www.max.com/",               color:"#002BE7", icon:"M"  },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "MLB": [
+    { name:"MLB.TV",      url:"https://www.mlb.tv/",               color:"#002D72", icon:"⚾"  },
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
+    { name:"Apple TV+",   url:"https://tv.apple.com/",              color:"#555555", icon:"🍎" },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+  ],
+  "NHL": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Max",         url:"https://www.max.com/",               color:"#002BE7", icon:"M"  },
+    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+  ],
+  "FIFA World Cup 2026": [
+    { name:"Fox Sports",  url:"https://www.foxsports.com/",         color:"#003087", icon:"🦊" },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
+    { name:"Sling TV",    url:"https://www.sling.com/",             color:"#0097D4", icon:"S"  },
+  ],
+  "Premier League": [
+    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "La Liga": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "Bundesliga": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "Serie A": [
+    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "Ligue 1": [
+    { name:"beIN Sports", url:"https://www.beinsports.com/",        color:"#E4002B", icon:"b"  },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "Champions League": [
+    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
+    { name:"CBS Sports",  url:"https://www.cbssports.com/",         color:"#003087", icon:"CBS"},
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+  "Europa League": [
+    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
+    { name:"CBS Sports",  url:"https://www.cbssports.com/",         color:"#003087", icon:"CBS"},
+  ],
+  "MLS": [
+    { name:"Apple TV+",   url:"https://tv.apple.com/",              color:"#555555", icon:"🍎" },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+  ],
+  "UFC": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+  ],
+  "Formula 1": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Hulu",        url:"https://www.hulu.com/",              color:"#1CE783", icon:"H"  },
+    { name:"YouTube TV",  url:"https://tv.youtube.com/",            color:"#FF0000", icon:"▶"  },
+  ],
+  "College Football": [
+    { name:"ESPN+",       url:"https://plus.espn.com/",            color:"#E8002D", icon:"E+" },
+    { name:"Peacock",     url:"https://www.peacocktv.com/",         color:"#000000", icon:"🦚" },
+    { name:"Paramount+",  url:"https://www.paramountplus.com/",     color:"#0064FF", icon:"P+" },
+    { name:"Fubo",        url:"https://www.fubo.tv/",               color:"#FA4616", icon:"F"  },
+  ],
+};
+function getSportStreamers(sportDisplay) {
+  if (!sportDisplay) return [];
+  if (SPORTS_STREAM_MAP[sportDisplay]) return SPORTS_STREAM_MAP[sportDisplay];
+  for (const [key, val] of Object.entries(SPORTS_STREAM_MAP)) {
+    if (sportDisplay.includes(key)||key.includes(sportDisplay)) return val;
+  }
+  return [];
+}
+
 function getBroadcastLink(broadcast) {
   if (!broadcast) return "";
   const b = broadcast.toUpperCase();
-  // Use root domain URLs — platform deep paths often block external navigation
-  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD")) return "https://plus.espn.com/";
-  if (b.includes("ESPN2") || b.includes("ESPN")) return "https://www.espn.com/watch/";
+  if (b.includes("ESPN+") || b.includes("ESPN UNLMTD") || b.includes("ESPNPLUS")) return "https://plus.espn.com/";
+  if (b.includes("ESPN2")) return "https://www.espn.com/watch/";
+  if (b.includes("ESPNU")) return "https://www.espn.com/watch/";
+  if (b.includes("ESPN")) return "https://www.espn.com/watch/";
   if (b.includes("MLB.TV")) return "https://www.mlb.tv/";
   if (b.includes("NFL+") || b.includes("NFL NETWORK")) return "https://www.nfl.com/";
   if (b.includes("NBA TV") || b.includes("NBA LEAGUE")) return "https://www.nba.com/";
   if (b.includes("HULU")) return "https://www.hulu.com/";
   if (b.includes("ABC")) return "https://abc.com/";
   if (b.includes("PEACOCK")) return "https://www.peacocktv.com/";
-  if (b.includes("NBC")) return "https://www.nbc.com/";
+  if (b.includes("NBC SPORTS") || b.includes("NBCSN") || b.includes("NBC")) return "https://www.nbc.com/";
   if (b.includes("PARAMOUNT")) return "https://www.paramountplus.com/";
-  if (b.includes("CBS")) return "https://www.cbssports.com/";
-  if (b.includes("FOX") || b.includes("FS1") || b.includes("FS2")) return "https://www.foxsports.com/";
+  if (b.includes("CBS SPORTS") || b.includes("CBS")) return "https://www.cbssports.com/";
+  if (b.includes("FS1") || b.includes("FS2") || b.includes("FOX SPORTS") || b.includes("FOX")) return "https://www.foxsports.com/";
   if (b.includes("TNT") || b.includes("TBS") || b.includes("TRUETV") || b.includes("MAX")) return "https://www.max.com/";
   if (b.includes("PRIME") || b.includes("AMAZON")) return "https://www.amazon.com/video/";
-  if (b.includes("APPLE")) return "https://tv.apple.com/";
+  if (b.includes("APPLE TV") || b.includes("APPLE")) return "https://tv.apple.com/";
   if (b.includes("NETFLIX")) return "https://www.netflix.com/";
   if (b.includes("DAZN")) return "https://www.dazn.com/";
-  if (b.includes("YOUTUBE TV")) return "https://tv.youtube.com/";
+  if (b.includes("YOUTUBE TV") || b.includes("YOUTUBETV")) return "https://tv.youtube.com/";
+  if (b.includes("YOUTUBE")) return "https://www.youtube.com/";
   if (b.includes("FUBO")) return "https://www.fubo.tv/";
   if (b.includes("DISNEY")) return "https://www.disneyplus.com/";
+  if (b.includes("SLING")) return "https://www.sling.com/";
+  if (b.includes("BEIN")) return "https://www.beinsports.com/";
+  if (b.includes("TENNIS CHANNEL")) return "https://www.tennischannel.com/";
+  if (b.includes("GOLF CHANNEL")) return "https://www.golfchannel.com/";
   return "";
 }
 
@@ -756,6 +877,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
       away: { name:away?.team?.shortDisplayName||away?.team?.displayName||"", abbr:away?.team?.abbreviation||"", score:away?.score??"-", logo:away?.team?.logo||"", color:away?.team?.color||"333", winner:away?.winner },
       broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
       broadcastLink: getBroadcastLink(comp?.broadcasts?.[0]?.names?.join(", ")||""),
+      _sportDisplay: sportRef.current?.display||"",
       venue: comp?.venue?.fullName||"",
       city: comp?.venue?.address?.city||"",
       isTitleFight: (evt.name||"").toLowerCase().includes("championship")||(evt.name||"").toLowerCase().includes("title"),
@@ -1132,6 +1254,25 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
             return m?<div style={{textAlign:"center"}}><div style={{fontSize:20}}>{m.icon}</div><div style={{fontSize:8,fontWeight:800,color:"#10B981"}}>{m.label}</div></div>:null;
           })()}
         </div>
+        {/* Share result button */}
+        <button onClick={e=>{
+          e.stopPropagation();
+          const txt = predCorrect
+            ? `✅ I predicted ${teamName(myPick.pick)} wins and I was right! 🔮 Predict tonight's games on The StreamHub → thestreamhub.app`
+            : `❌ I predicted ${teamName(myPick.pick)} but got it wrong this time. Still on ${getPredStats().streak} 🔥 → thestreamhub.app`;
+          if(navigator.share){navigator.share({text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
+          else{navigator.clipboard.writeText(txt).then(()=>showToast?.("📋 Copied! Share with friends.")).catch(()=>{});}
+        }} style={{
+          width:"100%",marginTop:7,
+          background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",
+          borderRadius:8,padding:"6px 0",fontSize:10,fontWeight:700,
+          color:"rgba(240,240,250,.5)",cursor:"pointer",
+          display:"flex",alignItems:"center",justifyContent:"center",gap:5,
+        }}
+        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.1)"}
+        onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,.05)"}>
+          📤 Share your prediction
+        </button>
       )}
     </div>
   );
@@ -5498,31 +5639,28 @@ export default function StreamHub() {
     const v = teams?.[sport]; if (!v) return [];
     return Array.isArray(v) ? v : [v]; // backward compat
   };
-  const toggleFavoriteTeam = (sport, teamName) => {
+  const toggleFavoriteTeam = useCallback((sport, teamName) => {
     setFavoriteTeams(prev => {
       const updated = { ...prev };
       if (teamName === "_clear") { delete updated[sport]; }
       else {
         const arr = getFavArr(prev, sport);
         updated[sport] = arr.includes(teamName)
-          ? arr.filter(n=>n!==teamName)   // remove
-          : [...arr, teamName];            // add
+          ? arr.filter(n=>n!==teamName)
+          : [...arr, teamName];
         if (updated[sport].length===0) delete updated[sport];
       }
-      // Save to localStorage immediately
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
-      // Sync to Supabase in background if logged in
       supabase.auth.getSession().then(({data:{session}})=>{
         if (session?.user) {
-          supabase.from("profiles")
-            .update({ favorite_teams: updated })
-            .eq("id", session.user.id)
-            .catch(()=>{});
+          supabase.from("profiles").update({favorite_teams:updated}).eq("id",session.user.id).catch(()=>{});
+        } else if (teamName !== "_clear" && Object.keys(updated).length===1 && !prev[sport]) {
+          showToast("⭐ Team saved! Sign in to sync across all your devices.");
         }
       });
       return updated;
     });
-  };
+  }, []);
   const [showMoodSearch, setShowMoodSearch] = useState(false);
   const [showPersonalizedRecs, setShowPersonalizedRecs] = useState(false);
   const [shareContent, setShareContent] = useState(null); // {title,text,url}
@@ -5625,8 +5763,10 @@ export default function StreamHub() {
     // Load profile
     let { data:prof } = await supabase.from("profiles").select("*").eq("id",u.id).single();
     if (!prof) {
-      await supabase.from("profiles").insert({ id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false });
-      prof = { id:u.id, username:u.email.split("@")[0], tier:"free", setup_done:false };
+      const localFt=(()=>{try{return JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}");}catch{return{};}})();
+      const hasFt=Object.keys(localFt).length>0;
+      await supabase.from("profiles").insert({id:u.id,username:u.email.split("@")[0],tier:"free",setup_done:false,...(hasFt?{favorite_teams:localFt}:{})});
+      prof={id:u.id,username:u.email.split("@")[0],tier:"free",setup_done:false,...(hasFt?{favorite_teams:localFt}:{})};
     }
     setProfile(prof);
     setTier(prof.tier||"free");
@@ -5640,16 +5780,20 @@ export default function StreamHub() {
       } catch(e) {}
     }
 
-    // Load favorite teams from Supabase (overrides localStorage — cloud wins)
-    if (prof.favorite_teams) {
-      try {
-        const ft = typeof prof.favorite_teams === "string" ? JSON.parse(prof.favorite_teams) : prof.favorite_teams;
-        if (ft && typeof ft === "object") {
-          setFavoriteTeams(ft);
-          localStorage.setItem("streamhub_fav_teams", JSON.stringify(ft));
-        }
-      } catch(e) {}
-    }
+    // Load favorite teams — merge localStorage (pre-login) with cloud
+    try {
+      const localFt = JSON.parse(localStorage.getItem("streamhub_fav_teams")||"{}");
+      const cloudFtRaw = prof.favorite_teams;
+      const cloudFt = cloudFtRaw ? (typeof cloudFtRaw==="string"?JSON.parse(cloudFtRaw):cloudFtRaw) : {};
+      const hasLocal = Object.keys(localFt).length>0;
+      const hasCloud = Object.keys(cloudFt).length>0;
+      if (hasCloud||hasLocal) {
+        const merged = {...localFt,...cloudFt};
+        setFavoriteTeams(merged);
+        localStorage.setItem("streamhub_fav_teams",JSON.stringify(merged));
+        if (hasLocal) supabase.from("profiles").update({favorite_teams:merged}).eq("id",u.id).catch(()=>{});
+      }
+    } catch(e) {}
 
     // Hide setup if user already completed it
     if (prof.setup_done) {
