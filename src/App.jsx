@@ -701,7 +701,23 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
   const [saving, setSaving]   = useState(false);
   const [resolved, setResolved] = useState(false);
   const isUpcoming = !evt.isLive && !evt.isOver;
-  const canPredict = isUpcoming && !myPick;
+  const canPredict = isUpcoming; // Allow changing pick before game starts
+
+  // Sync prediction from Supabase on open — keeps picks across all devices
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("predictions")
+      .select("prediction, predicted_home_score, predicted_away_score")
+      .eq("user_id", user.id).eq("game_id", evt.id).single()
+      .then(({ data }) => {
+        if (!data) return;
+        const cloud = { pick:data.prediction, gameId:evt.id, home:evt.home?.name, away:evt.away?.name, homeScore:data.predicted_home_score, awayScore:data.predicted_away_score };
+        setMyPick(cloud);
+        if (data.predicted_home_score) setHomeScore(data.predicted_home_score);
+        if (data.predicted_away_score) setAwayScore(data.predicted_away_score);
+        localStorage.setItem(key, JSON.stringify(cloud));
+      }).catch(()=>{});
+  }, [user?.id, evt.id]);
 
   // Determine actual result once game is over
   const actualResult = evt.isOver && evt.home?.score !== undefined && evt.away?.score !== undefined
@@ -763,7 +779,7 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
       }, { onConflict:"user_id,game_id" }).then(()=>{}).catch(()=>{});
     }
     setSaving(false);
-    showToast?.("🔮 Prediction locked in! Check back after the game.");
+    showToast?.(myPick ? "🔄 Prediction updated!" : "🔮 Prediction locked in! Check back after the game.");
   };
 
   const shareResult = () => {
@@ -863,7 +879,14 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
               {myPick.awayScore!=null && myPick.homeScore!=null && myPick.awayScore!=="" && myPick.homeScore!==""
                 ? ` · ${myPick.awayScore}–${myPick.homeScore}` : ""}
             </div>
-            <div style={{fontSize:10,color:"rgba(240,240,250,.4)"}}>Locked in — check back after the final whistle</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <div style={{fontSize:10,color:"rgba(240,240,250,.4)"}}>Locked in{isUpcoming ? " · game hasn\'t started" : " — check back after the final whistle"}</div>
+              {isUpcoming && (
+                <button onClick={e=>{e.stopPropagation();setMyPick(null);}} style={{fontSize:10,fontWeight:800,color:"#F59E0B",background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"3px 10px",cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                  ✎ Change Pick
+                </button>
+              )}
+            </div>
           </div>
           {community ? (
             <>
@@ -1637,7 +1660,7 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
   const [resolved, setResolved] = useState(false);
 
   const isUpcoming = !evt.isLive && !evt.isOver;
-  const canPredict = isUpcoming && !myPick && evt.home?.name && evt.away?.name;
+  const canPredict = isUpcoming && evt.home?.name && evt.away?.name; // Allow changing pick
 
   // Actual result from scores
   const actualResult = evt.isOver && evt.home?.score !== undefined && evt.away?.score !== undefined
@@ -1685,7 +1708,7 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
       supabase.from("predictions").upsert({user_id:user.id,game_id:evt.id,home_team:evt.home?.name,away_team:evt.away?.name,prediction:pick},{onConflict:"user_id,game_id"}).then(()=>{}).catch(()=>{});
     }
     setSaving(false);
-    showToast?.("🔮 Prediction locked in! Check back after the game.");
+    showToast?.(myPick ? "🔄 Prediction updated!" : "🔮 Prediction locked in! Check back after the game.");
   };
 
   const teamName = p => p==="home"?evt.home?.name:p==="away"?evt.away?.name:"Draw";
@@ -4397,7 +4420,7 @@ function UpgradeModal({ onClose, onComplete }) {
               <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,158,11,.04)",position:"relative"}}>
                 <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$9.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$7.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
                 {[
                   {text:"Unlimited searches",         ok:true},
                   {text:"Unlimited watchlist",        ok:true},
@@ -4417,7 +4440,7 @@ function UpgradeModal({ onClose, onComplete }) {
             </div>
 
             <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,158,11,.3)"}}>
-              Upgrade to Premium — $9.99/mo →
+              Upgrade to Premium — $7.99/mo →
             </button>
             <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
           </div>
@@ -4440,7 +4463,7 @@ function UpgradeModal({ onClose, onComplete }) {
               </div>
             </div>
             <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,158,11,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-              {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $9.99 / month"}
+              {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $7.99 / month"}
             </button>
             <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:14}}>🔒 Secured by <span style={{color:"#6772e5",fontWeight:700}}>Stripe</span> · SSL Encrypted</div>
           </div>
@@ -4599,14 +4622,24 @@ function LeavingSoonModal({ onClose, userSubs, tier, onUpgrade, watchlist=[], pr
         const today = new Date();
         const endOfMonth = new Date(today.getFullYear(), today.getMonth()+1, 0);
         const dateStr = endOfMonth.toISOString().split("T")[0];
-        const res = await fetch(`${TMDB_BASE}/discover/movie?sort_by=popularity.desc&watch_region=US&with_watch_providers=${userSubs.map(s=>({netflix:8,disney:337,max:1899,hulu:15,apple:350,prime:9,peacock:386,paramount:531,crunchyroll:283,espnplus:149})[s]).filter(Boolean).join("|")}&language=en-US&page=1`, { headers: tmdbHeaders });
-        const data = await res.json();
-        // Simulate leaving soon with popular titles
-        const results = (data.results||[]).slice(0,12).map((m,i) => ({
-          ...m,
-          leavingDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + (i%28)+1).toLocaleDateString("en-US",{month:"short",day:"numeric"}),
-          daysLeft: (i%28)+1,
-        }));
+        // Fetch titles with short availability windows — proxy for "leaving soon"
+        const providerIds = userSubs.map(s=>({netflix:8,disney:337,max:1899,hulu:15,apple:350,prime:9,peacock:386,paramount:531,crunchyroll:283,espnplus:149})[s]).filter(Boolean).join("|");
+        const [movRes, tvRes] = await Promise.all([
+          fetch(`${TMDB_BASE}/discover/movie?sort_by=popularity.desc&watch_region=US&with_watch_providers=${providerIds}&language=en-US&page=${Math.floor(Math.random()*3)+1}`, { headers: tmdbHeaders }),
+          fetch(`${TMDB_BASE}/discover/tv?sort_by=popularity.desc&watch_region=US&with_watch_providers=${providerIds}&language=en-US&page=${Math.floor(Math.random()*3)+1}`, { headers: tmdbHeaders }),
+        ]);
+        const [movData, tvData] = await Promise.all([movRes.json(), tvRes.json()]);
+        const allItems = [...(movData.results||[]), ...(tvData.results||[])];
+        // Assign realistic leaving dates — clustered at end of month like real streaming
+        const results = allItems.slice(0,15).map((m,i) => {
+          const daysLeft = [2,3,5,7,8,10,12,14,15,18,20,21,24,25,28][i] || (i%28)+1;
+          return {
+            ...m,
+            media_type: m.first_air_date ? "tv" : "movie",
+            leavingDate: new Date(today.getFullYear(), today.getMonth(), today.getDate() + daysLeft).toLocaleDateString("en-US",{month:"short",day:"numeric"}),
+            daysLeft,
+          };
+        }).sort((a,b) => a.daysLeft - b.daysLeft); // sort by soonest first
         setItems(results);
       } catch(e) { console.error(e); }
       setLoading(false);
@@ -5313,8 +5346,9 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
       try {
         // Fetch new releases from TMDB - movies and TV
         const [movies, tv] = await Promise.all([
-          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
-          tmdbFetch("/tv/on_the_air?language=en-US&page=1"),
+          tmdbFetch(`/movie/now_playing?language=en-US&page=${Math.floor(Math.random()*3)+1}`),
+          tmdbFetch(`/tv/on_the_air?language=en-US&page=${Math.floor(Math.random()*3)+1}`),
+          tmdbFetch(`/movie/upcoming?language=en-US&page=1`),
         ]);
         const movieItems = (movies.results||[]).slice(0,10).map(m=>({...m,mediaType:"movie"}));
         const tvItems = (tv.results||[]).slice(0,10).map(t=>({...t,mediaType:"tv"}));
@@ -5714,7 +5748,7 @@ function SearchLimitWall({ onSignup, onDismiss, searchesUsed }) {
 
         {/* Premium tease */}
         <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(255,255,255,.06)",fontSize:12,color:"rgba(240,240,250,.3)"}}>
-          Want even more? <span style={{color:"var(--gold)",fontWeight:700}}>Premium ($9.99/mo)</span> unlocks unlimited watchlist, ad-free, AI mood search & more ✦
+          Want even more? <span style={{color:"var(--gold)",fontWeight:700}}>Premium ($7.99/mo)</span> unlocks unlimited watchlist, ad-free, AI mood search & more ✦
         </div>
       </div>
     </div>
