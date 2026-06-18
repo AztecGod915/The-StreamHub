@@ -735,11 +735,11 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
     if (predCorrect) {
       const newStreak = old.streak + 1;
       const pts = getPointsForStreak(newStreak);
-      savePredStats({ streak:newStreak, best:Math.max(old.best,newStreak), total:old.total+1, correct:old.correct+1, points:old.points+pts });
+      savePredStats({ streak:newStreak, best:Math.max(old.best,newStreak), total:old.total+1, correct:old.correct+1, points:old.points+pts }, user?.id);
       const milestone = [...PRED_MILESTONES].reverse().find(m => newStreak === m.n);
       onPredResult?.({ correct:true, streak:newStreak, points:pts, milestone });
     } else {
-      savePredStats({ ...old, streak:0, total:old.total+1 });
+      savePredStats({ ...old, streak:0, total:old.total+1 }, user?.id);
       onPredResult?.({ correct:false, streak:0, points:0 });
     }
   }, [evt.isOver, predCorrect, resolved]);
@@ -1304,8 +1304,165 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
 }
 
 // ─── PREDICTION STATS BAR ────────────────────────────────────────────────────
-function PredictionStatsBar() {
+
+// ─── PREDICTION LEADERBOARD MODAL ────────────────────────────────────────────
+function PredictionLeaderboardModal({ onClose, user }) {
+  const [leaders, setLeaders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("points"); // points | streak | accuracy
+
+  useEffect(() => {
+    setLoading(true);
+    supabase.from("profiles")
+      .select("username, pred_points, pred_streak, pred_best, pred_total, pred_correct, avatar_url")
+      .gt("pred_total", 0)
+      .order(tab === "points" ? "pred_points" : tab === "streak" ? "pred_best" : "pred_correct", { ascending: false })
+      .limit(20)
+      .then(({ data }) => {
+        setLeaders((data || []).map(p => ({
+          ...p,
+          accuracy: p.pred_total > 0 ? Math.round((p.pred_correct || 0) / p.pred_total * 100) : 0,
+        })));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [tab]);
+
+  const myUsername = user?.user_metadata?.username || user?.email?.split("@")[0] || "";
+
+  const medals = ["🥇","🥈","🥉"];
+  const milestoneFor = pts => {
+    if (pts >= 200) return { icon:"🐐", label:"GOAT" };
+    if (pts >= 120) return { icon:"👑", label:"Oracle" };
+    if (pts >= 75)  return { icon:"🧠", label:"Big Brain" };
+    if (pts >= 50)  return { icon:"⚡", label:"Electric" };
+    if (pts >= 30)  return { icon:"🔥", label:"On Fire" };
+    if (pts >= 10)  return { icon:"🎯", label:"First Blood" };
+    return null;
+  };
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1400,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:56,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(10px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:480,border:"1px solid rgba(139,92,246,.35)",boxShadow:"0 20px 60px rgba(0,0,0,.7)",overflow:"hidden"}}>
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,rgba(139,92,246,.25),rgba(99,102,241,.15))",padding:"18px 20px 14px",borderBottom:"1px solid rgba(139,92,246,.2)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,background:"linear-gradient(90deg,#C4B5FD,#818CF8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+                🏆 Prediction Leaderboard
+              </div>
+              <div style={{fontSize:11,color:"rgba(240,240,250,.4)",marginTop:3}}>Top StreamHub predictors this World Cup</div>
+            </div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+          </div>
+          {/* Tab switcher */}
+          <div style={{display:"flex",gap:6,marginTop:12}}>
+            {[
+              { id:"points",   label:"⭐ Points"   },
+              { id:"streak",   label:"🔥 Best Streak" },
+              { id:"accuracy", label:"🎯 Accuracy" },
+            ].map(t=>(
+              <button key={t.id} onClick={()=>setTab(t.id)}
+                style={{
+                  flex:1,padding:"6px 4px",borderRadius:8,fontSize:10,fontWeight:800,
+                  background:tab===t.id?"rgba(139,92,246,.35)":"rgba(255,255,255,.05)",
+                  border:`1px solid ${tab===t.id?"rgba(139,92,246,.6)":"rgba(255,255,255,.08)"}`,
+                  color:tab===t.id?"#C4B5FD":"rgba(240,240,250,.4)",cursor:"pointer",
+                  transition:"all .15s",
+                }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Leaderboard list */}
+        <div style={{maxHeight:"60vh",overflowY:"auto"}}>
+          {loading ? (
+            <div style={{padding:24,display:"flex",flexDirection:"column",gap:8}}>
+              {[1,2,3,4,5].map(i=><div key={i} className="skeleton" style={{height:52,borderRadius:10}}/>)}
+            </div>
+          ) : leaders.length === 0 ? (
+            <div style={{padding:"40px 20px",textAlign:"center",color:"var(--muted)"}}>
+              <div style={{fontSize:32,marginBottom:8}}>🔮</div>
+              <div style={{fontWeight:700,marginBottom:4}}>No predictions yet</div>
+              <div style={{fontSize:12}}>Be the first on the board!</div>
+            </div>
+          ) : (
+            <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:6}}>
+              {leaders.map((p, idx) => {
+                const isMe = p.username === myUsername;
+                const m = milestoneFor(p.pred_points || 0);
+                const mainVal = tab === "points" ? `${p.pred_points || 0} pts`
+                              : tab === "streak" ? `${p.pred_best || 0} 🔥`
+                              : `${p.accuracy}%`;
+                return (
+                  <div key={p.username} style={{
+                    display:"flex",alignItems:"center",gap:10,
+                    background:isMe?"rgba(139,92,246,.18)":"rgba(255,255,255,.03)",
+                    border:`1px solid ${isMe?"rgba(139,92,246,.5)":"rgba(255,255,255,.06)"}`,
+                    borderRadius:12,padding:"10px 12px",
+                    boxShadow:isMe?"0 0 12px rgba(139,92,246,.2)":"none",
+                  }}>
+                    {/* Rank */}
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,width:28,textAlign:"center",flexShrink:0}}>
+                      {idx < 3 ? medals[idx] : <span style={{fontSize:13,color:"var(--muted)"}}>{idx+1}</span>}
+                    </div>
+                    {/* Avatar */}
+                    <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(139,92,246,.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#C4B5FD",flexShrink:0,overflow:"hidden"}}>
+                      {p.avatar_url
+                        ? <img src={p.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} loading="lazy"/>
+                        : (p.username?.[0]||"?").toUpperCase()}
+                    </div>
+                    {/* Name + badge */}
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:5}}>
+                        <div style={{fontWeight:800,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:isMe?"#C4B5FD":"var(--text)"}}>
+                          {p.username || "Anonymous"}
+                          {isMe && <span style={{fontSize:10,color:"rgba(196,181,253,.6)",marginLeft:4}}>(you)</span>}
+                        </div>
+                        {m && <span style={{fontSize:12}}>{m.icon}</span>}
+                      </div>
+                      <div style={{fontSize:10,color:"rgba(240,240,250,.35)",marginTop:1}}>
+                        {p.pred_correct || 0}/{p.pred_total || 0} correct · {p.accuracy}% acc
+                      </div>
+                    </div>
+                    {/* Score */}
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,color:idx===0?"var(--gold)":idx===1?"#C0C0C0":idx===2?"#CD7F32":"#C4B5FD",flexShrink:0}}>
+                      {mainVal}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer — share prompt */}
+        <div style={{padding:"12px 16px",borderTop:"1px solid rgba(255,255,255,.06)",background:"rgba(0,0,0,.2)"}}>
+          <button onClick={()=>{
+            const me = leaders.find(l=>l.username===myUsername);
+            const txt = me
+              ? `🔮 I'm #${leaders.indexOf(me)+1} on the StreamHub Prediction Leaderboard with ${me.pred_points} pts & ${me.accuracy}% accuracy! Can you beat me? → thestreamhub.app`
+              : `🔮 Think you can predict the World Cup? I'm on the StreamHub leaderboard — come compete! → thestreamhub.app`;
+            if(navigator.share){navigator.share({text:txt,url:"https://thestreamhub.app"}).catch(()=>{});}
+            else{navigator.clipboard.writeText(txt).then(()=>{}).catch(()=>{});}
+          }} style={{
+            width:"100%",background:"rgba(139,92,246,.15)",border:"1px solid rgba(139,92,246,.3)",
+            borderRadius:10,padding:"9px 0",fontSize:12,fontWeight:700,color:"#C4B5FD",
+            cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+          }}>
+            📤 Share your ranking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PredictionStatsBar({ user }) {
   const s = getPredStats();
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   if (s.total === 0) return (
     <div style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
@@ -1343,7 +1500,10 @@ function PredictionStatsBar() {
           🔮 Your Predictions
           {milestone && <span style={{fontSize:16}}>{milestone.icon}</span>}
         </div>
-        {milestone && <div style={{fontSize:10,fontWeight:800,color:"#C4B5FD",background:"rgba(139,92,246,.15)",borderRadius:99,padding:"2px 8px"}}>{milestone.label}</div>}
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          {milestone && <div style={{fontSize:10,fontWeight:800,color:"#C4B5FD",background:"rgba(139,92,246,.15)",borderRadius:99,padding:"2px 8px"}}>{milestone.label}</div>}
+          <button onClick={()=>setShowLeaderboard(true)} style={{fontSize:10,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",borderRadius:8,padding:"2px 8px",cursor:"pointer"}}>🏆 Leaderboard</button>
+        </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
         {[
@@ -1358,6 +1518,7 @@ function PredictionStatsBar() {
           </div>
         ))}
       </div>
+      {showLeaderboard && <PredictionLeaderboardModal onClose={()=>setShowLeaderboard(false)} user={user}/>}
     </div>
   );
 }
@@ -1375,7 +1536,19 @@ const getPredStats = () => {
   try { return JSON.parse(localStorage.getItem("sh_pred_stats") || '{"streak":0,"best":0,"total":0,"correct":0,"points":0}'); }
   catch { return {streak:0,best:0,total:0,correct:0,points:0}; }
 };
-const savePredStats = s => localStorage.setItem("sh_pred_stats", JSON.stringify(s));
+const savePredStats = (s, userId) => {
+  localStorage.setItem("sh_pred_stats", JSON.stringify(s));
+  // Sync to Supabase profiles if logged in
+  if (userId) {
+    supabase.from("profiles").update({
+      pred_streak: s.streak,
+      pred_best:   s.best,
+      pred_points: s.points,
+      pred_total:  s.total,
+      pred_correct:s.correct,
+    }).eq("id", userId).catch(()=>{});
+  }
+};
 const getPointsForStreak = n => n>=10?35:n>=7?25:n>=5?20:n>=3?15:10;
 
 function PredictionCelebrationModal({ streak, points, milestone, onClose }) {
@@ -1448,11 +1621,11 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
       const newStreak = old.streak + 1;
       const pts = getPointsForStreak(newStreak);
       const next = {streak:newStreak,best:Math.max(old.best,newStreak),total:old.total+1,correct:old.correct+1,points:old.points+pts};
-      savePredStats(next);
+      savePredStats(next, user?.id);
       const milestone = [...PRED_MILESTONES].reverse().find(m=>newStreak===m.n);
       onResult?.({correct:true, streak:newStreak, points:pts, milestone});
     } else {
-      savePredStats({...old,streak:0,total:old.total+1});
+      savePredStats({...old,streak:0,total:old.total+1}, user?.id);
       onResult?.({correct:false, streak:0, points:0});
     }
   }, [evt.isOver, predCorrect, resolved]);
@@ -6067,6 +6240,21 @@ export default function StreamHub() {
     }
     setProfile(prof);
     setTier(prof.tier||"free");
+    // Load prediction stats from profile (cloud wins over localStorage)
+    if (prof.pred_total > 0) {
+      const cloudStats = {
+        streak:  prof.pred_streak  || 0,
+        best:    prof.pred_best    || 0,
+        points:  prof.pred_points  || 0,
+        total:   prof.pred_total   || 0,
+        correct: prof.pred_correct || 0,
+      };
+      const localStats = (() => { try { return JSON.parse(localStorage.getItem("sh_pred_stats") || "{}"); } catch { return {}; } })();
+      // Take whichever has more points (cloud or local)
+      if ((cloudStats.points || 0) >= (localStats.points || 0)) {
+        localStorage.setItem("sh_pred_stats", JSON.stringify(cloudStats));
+      }
+    }
 
     // Load subscriptions from profile
     if (prof.subscriptions) {
@@ -6541,7 +6729,7 @@ export default function StreamHub() {
           <div style={{padding:"12px 14px",overflowY:"auto",flex:1}}>
             {!search.trim() ? (
               <>
-                <PredictionStatsBar/>
+                <PredictionStatsBar user={user}/>
                 <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                 <SportsStreamingGuide onSearch={handleSportSearch}/>
@@ -6812,7 +7000,7 @@ export default function StreamHub() {
             <div>
               {!search.trim() ? (
                 <>
-                  <PredictionStatsBar/>
+                  <PredictionStatsBar user={user}/>
                 <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                   <SportsStreamingGuide onSearch={handleSportSearch}/>
@@ -7145,7 +7333,7 @@ export default function StreamHub() {
               <div>
                 {!search.trim() ? (
                   <>
-                    <PredictionStatsBar/>
+                    <PredictionStatsBar user={user}/>
                 <TeamNextGameSearch favoriteTeams={favoriteTeams}/>
                 <SportCategoryGrid onSearch={handleSportSearch} favoriteTeams={favoriteTeams}/>
                     <SportsStreamingGuide onSearch={handleSportSearch}/>
