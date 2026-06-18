@@ -1,12 +1,8 @@
 {
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/:path*",     "destination": "/index.html" }
-  ],
   "crons": [
     {
-      "path": "/api/notify",
-      "schedule": "0 14 * * 0"
+      "path": "/api/notify-teams",
+      "schedule": "0 12 * * *"
     }
   ]
 }
