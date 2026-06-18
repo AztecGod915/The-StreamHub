@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TMDB_IMG } from "../../lib/tmdb.js";
 import { SERVICES } from "../../data/constants.js";
-import { safeGR } from "../shared/Logo.jsx";
+import { Logo,  safeGR } from "../shared/Logo.jsx";
 import { ServiceBadge } from "../shared/ServiceBadge.jsx";
 function MovieCard({ movie, watchlist, userRatings, userSubs, onSelect, onToggleWatchlist }) {
   const [hov, setHov] = useState(false);

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "../../lib/supabase.js";
-import { getStreak, getStreakEmoji } from "../shared/ShareModal.jsx";
+import { ShareModal,  getStreak, getStreakEmoji } from "../shared/ShareModal.jsx";
 import { ServiceBadge } from "../shared/ServiceBadge.jsx";
 import { StarPicker } from "../shared/StarPicker.jsx";
 import { SERVICES } from "../../data/constants.js";
-import { tmdbFetch } from "../../lib/tmdb.js";
+import { TMDB_IMG,  tmdbFetch } from "../../lib/tmdb.js";
+import { Logo } from "../shared/Logo.jsx";
 function StreakAvatar({ streak, profile, user, size=80 }) {
   const lvl = streak>=30?"legend":streak>=14?"champion":streak>=7?"warrior":streak>=3?"loyal":"newcomer";
   const cfg = {

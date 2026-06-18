@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { getPlatformLink } from "../../lib/utils.js";
+import { SERVICES } from "../../data/constants.js";
 const APP_SCHEMES = {
   netflix:     { ios:"nflx://",                          android:"intent://www.netflix.com#Intent;scheme=https;package=com.netflix.mediaclient;end" },
   disney:      { ios:"disneyplus://",                    android:"intent://www.disneyplus.com#Intent;scheme=https;package=com.disney.disneyplus;end" },

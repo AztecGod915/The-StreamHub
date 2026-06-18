@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "../../lib/supabase.js";
+import { getPlatformLink } from "../../lib/utils.js";
 import { TMDB_BASE, TMDB_IMG, tmdbHeaders, tmdbFetch } from "../../lib/tmdb.js";
 import { SERVICES } from "../../data/constants.js";
 import { ServiceBadge } from "../shared/ServiceBadge.jsx";
 import { StarPicker } from "../shared/StarPicker.jsx";
 import { WatchButton } from "./WatchButton.jsx";
-import { safeGR } from "../shared/Logo.jsx";
+import { Logo,  safeGR } from "../shared/Logo.jsx";
 function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onToggleWatchlist, showToast, onSelectSimilar }) {
   const [tab, setTab] = useState("overview");
   const [reviews, setReviews] = useState([]);

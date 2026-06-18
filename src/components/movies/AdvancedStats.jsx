@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TMDB_BASE, TMDB_IMG, tmdbHeaders } from "../../lib/tmdb.js";
 import { SERVICES } from "../../data/constants.js";
+import { track } from "../../lib/utils.js";
 function AdvancedStats({ user, watchlist, userRatings, watchHistory, onOpenHistory, onOpenWatchlist }) {
   const currentYear = new Date().getFullYear();
   const thisYear = watchHistory.filter(h => new Date(h.watched_at).getFullYear() === currentYear);

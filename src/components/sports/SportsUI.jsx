@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { SERVICES, SPORTS_GUIDE } from "../../data/constants.js";
 import { SPORT_CARDS } from "./SportsHub.jsx";
+import { getTeamLogo } from "../../data/sportsData.js";
 function SportCategoryGrid({ onSearch, favoriteTeams }) {
   return (
     <div style={{marginBottom:20}}>

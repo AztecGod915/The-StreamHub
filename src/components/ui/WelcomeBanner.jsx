@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Logo } from "../shared/Logo.jsx";
 function WelcomeBanner() {
   return (
     <div style={{padding:"12px 14px 4px"}}>

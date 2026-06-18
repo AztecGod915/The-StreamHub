@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TMDB_BASE, TMDB_IMG, tmdbHeaders } from "../../lib/tmdb.js";
 import { SERVICES } from "../../data/constants.js";
 import { tmdbFetch } from "../../lib/tmdb.js";
+import { Logo,  safeGR } from "../shared/Logo.jsx";
 function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }) {
   const [releases, setReleases] = useState([]);
   const [loading, setLoading] = useState(true);
