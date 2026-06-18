@@ -342,30 +342,8 @@ function getTeamsForSport(sportDisplay, events, espnTeams) {
 
 function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) {
   const [search, setSearch] = useState("");
-  const [searchPlaceholder, setSearchPlaceholder] = useState("Search by title, genre or mood…");
 
-  useEffect(() => {
-    const placeholders = [
-      "Search by title, genre or mood…",
-      "Try 'Zero Dark Thirty'…",
-      "Try 'something scary but not gory'…",
-      "Try 'cozy rainy day movie'…",
-      "Search 'Premier League' for live scores…",
-      "Try 'mind-bending sci-fi'…",
-      "Search 'leaving Netflix' for expiring titles…",
-      "Try 'fun date night comedy'…",
-      "Search any team — Lakers, Cowboys, Arsenal…",
-      "Try 'feel-good uplifting story'…",
-    ];
-    let idx = 0;
-    const interval = setInterval(() => {
-      if (!search) {
-        idx = (idx + 1) % placeholders.length;
-        setSearchPlaceholder(placeholders[idx]);
-      }
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [search]);
+
 
   const [espnTeams, setEspnTeams] = useState([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
@@ -6297,6 +6275,30 @@ export default function StreamHub() {
   // ── App state ──
   const [view, setView] = useState("home");
   const [search, setSearch] = useState("");
+  const [searchPlaceholder, setSearchPlaceholder] = useState("Search by title, genre or mood…");
+
+  useEffect(() => {
+    const placeholders = [
+      "Search by title, genre or mood…",
+      "Try 'Zero Dark Thirty'…",
+      "Try 'something scary but not gory'…",
+      "Try 'cozy rainy day movie'…",
+      "Search 'Premier League' for live scores…",
+      "Try 'mind-bending sci-fi'…",
+      "Search 'leaving Netflix' for expiring titles…",
+      "Try 'fun date night comedy'…",
+      "Search any team — Lakers, Cowboys, Arsenal…",
+      "Try 'feel-good uplifting story'…",
+    ];
+    let idx = 0;
+    const interval = setInterval(() => {
+      if (!search) {
+        idx = (idx + 1) % placeholders.length;
+        setSearchPlaceholder(placeholders[idx]);
+      }
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [search]);
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
