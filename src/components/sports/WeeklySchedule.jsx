@@ -84,12 +84,13 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
     if (!sport) { setLoading(false); return; }
-    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard${
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard${
   sport.path.includes('fifa.world')
     ? '?limit=200&dates=20260611-20260719'
     : '?limit=100'
-}`)
-      .then(r=>r.json())
+}`;
+    fetch(url)
+      .then(r=>{ if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data=>{
         const evts = (data.events||[]).map(evt=>{
           const comp = evt.competitions?.[0];
@@ -119,7 +120,7 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
         setGrouped(g);
         setLoading(false);
       })
-      .catch(()=>setLoading(false));
+      .catch((err)=>{ console.error("WeeklySchedule fetch failed:", err); setLoading(false); });
   },[sportQuery]);
 
   const upcoming = events.filter(e=>!e.isOver).length;

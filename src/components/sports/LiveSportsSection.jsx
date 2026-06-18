@@ -81,7 +81,9 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
     if (!sport) return;
     if (!silent) setLoading(true);
     try {
-      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`);
+      // World Cup needs a date range to get any games (not just today)
+      const dateParam = sport.path.includes('fifa.world') ? '?dates=20260611-20260719&limit=200' : '';
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard${dateParam}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const evts = parseEvents(data);
