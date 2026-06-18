@@ -84,7 +84,11 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
     if (!sport) { setLoading(false); return; }
-    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`)
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard${
+  sport.path.includes('fifa.world')
+    ? '?limit=200&dates=20260611-20260719'
+    : '?limit=100'
+}`)
       .then(r=>r.json())
       .then(data=>{
         const evts = (data.events||[]).map(evt=>{
