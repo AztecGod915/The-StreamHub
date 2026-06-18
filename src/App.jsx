@@ -1090,6 +1090,50 @@ function getBroadcastLink(broadcast) {
   return "";
 }
 
+
+// ─── LIVE UPDATE BADGE ────────────────────────────────────────────────────────
+function LiveUpdateBadge({ lastUpdated, isPolling }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const secsAgo = lastUpdated ? Math.floor((Date.now() - lastUpdated.getTime()) / 1000) : null;
+  const label = secsAgo === null ? null
+    : secsAgo < 5   ? "Just updated"
+    : secsAgo < 60  ? `${secsAgo}s ago`
+    : secsAgo < 3600 ? `${Math.floor(secsAgo/60)}m ago`
+    : lastUpdated.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+
+  if (!label) return null;
+
+  const isRecent = secsAgo !== null && secsAgo < 10;
+
+  return (
+    <div style={{
+      display:"flex", alignItems:"center", gap:4,
+      fontSize:10, fontWeight:700,
+      color: isPolling ? "#10B981" : "rgba(240,240,250,.35)",
+      background: isPolling ? "rgba(16,185,129,.08)" : "rgba(255,255,255,.04)",
+      border: `1px solid ${isPolling ? "rgba(16,185,129,.2)" : "rgba(255,255,255,.06)"}`,
+      borderRadius:99, padding:"2px 8px",
+      transition:"color .3s, background .3s",
+    }}>
+      {isPolling && (
+        <div style={{
+          width:5, height:5, borderRadius:"50%",
+          background:"#10B981",
+          animation: isRecent ? "liveDot 0.8s infinite" : "pulse 2s infinite",
+          boxShadow: isRecent ? "0 0 6px #10B981" : "none",
+          flexShrink:0,
+        }}/>
+      )}
+      {isPolling ? `↻ ${label}` : `⏸ ${label}`}
+    </div>
+  );
+}
+
 function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, showToast, onPredResult }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1243,7 +1287,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
           <button onClick={()=>setShowTeamPicker(true)} style={{background:"rgba(245,158,11,.1)",border:"1px solid rgba(245,158,11,.25)",borderRadius:99,color:"var(--gold)",padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
             {favTeam?"⭐ Change Team":"⭐ Follow a Team"}
           </button>
-          {lastUpdated && <div style={{fontSize:10,color:"var(--muted)"}}>Updated {lastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</div>}
+          {lastUpdated && <LiveUpdateBadge lastUpdated={lastUpdated} isPolling={isPolling}/>}
           <button onClick={()=>setShowFullSchedule(true)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>📅 All Games</button>
           <button onClick={()=>doFetch(false)} style={{background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",borderRadius:8,color:"var(--sports)",padding:"4px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>↻</button>
         </div>
