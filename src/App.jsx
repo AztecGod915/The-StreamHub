@@ -749,8 +749,8 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
   const makePick = async (pick) => {
     if (!canPredict || saving) return;
     setSaving(true);
-    const hs = homeScore.trim() || null;
-    const as = awayScore.trim() || null;
+    const hs = String(homeScore ?? "").trim() || null;
+    const as = String(awayScore ?? "").trim() || null;
     const pred = { pick, gameId:evt.id, home:evt.home?.name, away:evt.away?.name, homeScore:hs, awayScore:as };
     localStorage.setItem(key, JSON.stringify(pred));
     setMyPick(pred);
@@ -760,7 +760,7 @@ function GamePrediction({ evt, user, showToast, onPredResult }) {
         home_team: evt.home?.name, away_team: evt.away?.name,
         prediction: pick,
         predicted_home_score: hs, predicted_away_score: as,
-      }, { onConflict:"user_id,game_id" }).catch(()=>{});
+      }, { onConflict:"user_id,game_id" }).then(()=>{}).catch(()=>{});
     }
     setSaving(false);
     showToast?.("🔮 Prediction locked in! Check back after the game.");
@@ -1539,14 +1539,14 @@ const getPredStats = () => {
 const savePredStats = (s, userId) => {
   localStorage.setItem("sh_pred_stats", JSON.stringify(s));
   // Sync to Supabase profiles if logged in
-  if (userId) {
+  if (userId && typeof userId === "string") {
     supabase.from("profiles").update({
-      pred_streak: s.streak,
-      pred_best:   s.best,
-      pred_points: s.points,
-      pred_total:  s.total,
-      pred_correct:s.correct,
-    }).eq("id", userId).catch(()=>{});
+      pred_streak:  s.streak  || 0,
+      pred_best:    s.best    || 0,
+      pred_points:  s.points  || 0,
+      pred_total:   s.total   || 0,
+      pred_correct: s.correct || 0,
+    }).eq("id", userId).then(() => {}).catch(() => {});
   }
 };
 const getPointsForStreak = n => n>=10?35:n>=7?25:n>=5?20:n>=3?15:10;
@@ -1605,7 +1605,8 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
   useEffect(() => {
     if (!myPick) return;
     supabase.from("predictions").select("prediction").eq("game_id", evt.id)
-      .then(({data}) => {
+      .then(({data, error}) => {
+        if (error) return;
         if (!data?.length) return;
         const t=data.length, c=data.reduce((a,p)=>{a[p.prediction]=(a[p.prediction]||0)+1;return a;},{});
         setCommunity({home:Math.round((c.home||0)/t*100),draw:Math.round((c.draw||0)/t*100),away:Math.round((c.away||0)/t*100),total:t});
@@ -1637,7 +1638,7 @@ function PredictionPoll({ evt, user, showToast, onResult }) {
     localStorage.setItem(key, JSON.stringify(pred));
     setMyPick(pred);
     if (user) {
-      supabase.from("predictions").upsert({user_id:user.id,game_id:evt.id,home_team:evt.home?.name,away_team:evt.away?.name,prediction:pick},{onConflict:"user_id,game_id"}).catch(()=>{});
+      supabase.from("predictions").upsert({user_id:user.id,game_id:evt.id,home_team:evt.home?.name,away_team:evt.away?.name,prediction:pick},{onConflict:"user_id,game_id"}).then(()=>{}).catch(()=>{});
     }
     setSaving(false);
     showToast?.("🔮 Prediction locked in! Check back after the game.");
@@ -6123,7 +6124,7 @@ export default function StreamHub() {
       localStorage.setItem("streamhub_fav_teams", JSON.stringify(updated));
       supabase.auth.getSession().then(({data:{session}})=>{
         if (session?.user) {
-          supabase.from("profiles").update({favorite_teams:updated}).eq("id",session.user.id).catch(()=>{});
+          supabase.from("profiles").update({favorite_teams:updated}).eq("id", session.user.id).then(()=>{}).catch(()=>{});
         } else if (teamName !== "_clear" && Object.keys(updated).length===1 && !prev[sport]) {
           showToast("⭐ Team saved! Sign in to sync across all your devices.");
         }
@@ -6276,7 +6277,7 @@ export default function StreamHub() {
         const merged = {...localFt,...cloudFt};
         setFavoriteTeams(merged);
         localStorage.setItem("streamhub_fav_teams",JSON.stringify(merged));
-        if (hasLocal) supabase.from("profiles").update({favorite_teams:merged}).eq("id",u.id).catch(()=>{});
+        if (hasLocal) supabase.from("profiles").update({favorite_teams:merged}).eq("id", u.id).then(()=>{}).catch(()=>{});
       }
     } catch(e) {}
 
