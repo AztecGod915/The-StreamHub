@@ -344,7 +344,6 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
   const [search, setSearch] = useState("");
   const [searchPlaceholder, setSearchPlaceholder] = useState("Search by title, genre or mood…");
 
-  // Rotate search placeholder to teach users what the app can do
   useEffect(() => {
     const placeholders = [
       "Search by title, genre or mood…",
@@ -367,6 +366,7 @@ function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) 
     }, 3500);
     return () => clearInterval(interval);
   }, [search]);
+
   const [espnTeams, setEspnTeams] = useState([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
 
@@ -6842,7 +6842,7 @@ export default function StreamHub() {
             <span style={{position:"absolute",left:26,top:"50%",transform:"translateY(-60%)",color:"var(--gold)",fontSize:16}}>🔍</span>
             <input
               value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder="Search any team…"
               style={{
                 width:"100%", background:"rgba(255,255,255,.1)",
                 border:"1.5px solid rgba(245,158,11,.4)",
