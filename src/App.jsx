@@ -3102,6 +3102,16 @@ function WatchTonightModal({ onClose, user, tier, userSubs, watchlist, userRatin
     const day = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
     const isWeekend = [0,6].includes(new Date().getDay());
     const services = (userSubs||[]).map(id=>SERVICES.find(s=>s.id===id)?.name).filter(Boolean);
+    // Build list of recently picked titles to avoid repeats
+    const recentPicks = (() => {
+      try { return JSON.parse(localStorage.getItem("sh_watch_tonight_picks") || "[]"); } catch { return []; }
+    })();
+    // Random seed so AI varies its suggestions
+    const seeds = ["hidden gem","acclaimed but underrated","crowd favorite","critically divisive","cult classic","award winner","recent release","timeless classic"];
+    const seed = seeds[Math.floor(Math.random() * seeds.length)];
+    const randomGenres = ["thriller","comedy","drama","action","sci-fi","documentary","horror","romance","mystery","animation"];
+    const genreHint = randomGenres[Math.floor(Math.random() * randomGenres.length)];
+
     const prompt = `You are a personal streaming assistant. Pick ONE perfect movie or show for this user to watch right now.
 
 User profile:
@@ -3110,6 +3120,8 @@ User profile:
 - Watchlist size: ${(watchlist||[]).length} saved titles
 - Ratings given: ${Object.keys(userRatings||{}).length}
 
+IMPORTANT: Pick something different every time. Focus on ${seed} titles. Today lean toward ${genreHint}.
+${recentPicks.length ? `DO NOT suggest any of these recently picked titles: ${recentPicks.slice(0,5).join(", ")}` : ""}
 Pick something AVAILABLE on one of their services that fits the time and day. Respond ONLY with this JSON (no markdown, no backticks):
 {"title":"Movie Name","year":2023,"type":"movie","service":"Netflix","reason":"One sentence why this is perfect for right now","duration":"1h 52m","vibe":"gripping thriller"}`;
     try {
@@ -3138,6 +3150,10 @@ Pick something AVAILABLE on one of their services that fits the time and day. Re
         return !parsed.year || Math.abs(y-parsed.year)<=1;
       }) || sr.results?.[0];
       if (tier!=="premium") localStorage.setItem(FREE_KEY,"1");
+      // Remember this pick to avoid repeating it
+      const picks = (() => { try { return JSON.parse(localStorage.getItem("sh_watch_tonight_picks")||"[]"); } catch { return []; } })();
+      const updated = [parsed.title, ...picks.filter(p=>p!==parsed.title)].slice(0,10);
+      localStorage.setItem("sh_watch_tonight_picks", JSON.stringify(updated));
       setPick({...parsed, movie:found||null});
     } catch(e) {
       console.error("Watch Tonight error:", e);
@@ -6041,9 +6057,17 @@ const GENRE_MAP = {
 
 const isGenreSearch = (q) => {
   const lower = q.toLowerCase().trim();
+  const words = lower.split(/\s+/);
   // Exact match first
   if (GENRE_MAP[lower]) return GENRE_MAP[lower];
-  // Partial match — check if any key is contained in the query
+  // Only do genre/mood matching for SHORT queries (≤4 words)
+  // Long queries like "Zero Dark Thirty" are almost certainly title searches
+  if (words.length > 4) return null;
+  // For short queries, check if query is mostly genre words (not a title)
+  // A title has capitalized proper nouns — treat as title if it looks like one
+  const hasProperNouns = /[A-Z][a-z]/.test(q.trim());
+  if (hasProperNouns && words.length >= 3) return null;
+  // Partial match — check if any genre key is contained in the query
   for (const [key, val] of Object.entries(GENRE_MAP)) {
     if (lower.includes(key)) return val;
   }
@@ -6368,12 +6392,15 @@ export default function StreamHub() {
   useEffect(() => {
     const loadFeatured = async () => {
       try {
-        const [trendData, newData, topData, animeData, sportsData] = await Promise.all([
-          tmdbFetch("/trending/all/week?language=en-US&page=1"),
-          tmdbFetch("/movie/now_playing?language=en-US&page=1"),
-          tmdbFetch("/movie/top_rated?language=en-US&page=1"),
-          tmdbFetch("/discover/tv?with_keywords=210024&sort_by=popularity.desc&language=en-US&page=1"),
-          tmdbFetch("/discover/movie?with_genres=99&with_keywords=6075|1284|2702&sort_by=popularity.desc&language=en-US&page=1"),
+        // Randomize pages so content rotates — keeps the app feeling fresh
+        const rp = (max=3) => Math.floor(Math.random() * max) + 1;
+        const [trendData, newData, topData, animeData, tvData, docData] = await Promise.all([
+          tmdbFetch(`/trending/all/week?language=en-US&page=${rp(3)}`),
+          tmdbFetch(`/movie/now_playing?language=en-US&page=${rp(3)}`),
+          tmdbFetch(`/movie/top_rated?language=en-US&page=${rp(5)}`),
+          tmdbFetch(`/discover/tv?with_keywords=210024&sort_by=popularity.desc&language=en-US&page=${rp(3)}`),
+          tmdbFetch(`/tv/popular?language=en-US&page=${rp(5)}`),
+          tmdbFetch(`/discover/movie?with_genres=99&sort_by=vote_average.desc&vote_count.gte=100&language=en-US&page=${rp(3)}`),
         ]);
         const addProviders = async (items, category) => {
           return Promise.all((items||[]).slice(0,20).map(async m => {
@@ -6382,14 +6409,15 @@ export default function StreamHub() {
             catch { return {...m,providers:[],category}; }
           }));
         };
-        const [trending,newReleases,topRated,anime,sports] = await Promise.all([
+        const [trending,newReleases,topRated,anime,tvShows,docs] = await Promise.all([
           addProviders(trendData.results,"trending"),
           addProviders(newData.results,"movies"),
           addProviders(topData.results,"movies"),
           addProviders(animeData.results,"anime"),
-          addProviders(sportsData.results,"sports"),
+          addProviders(tvData.results,"tv"),
+          addProviders(docData.results,"movies"),
         ]);
-        setFeaturedRows({ trending, newReleases, topRated, anime, sports });
+        setFeaturedRows({ trending, newReleases, topRated, anime, tvShows, docs });
       } catch(e) { console.error(e); }
     };
     loadFeatured();
@@ -6447,9 +6475,16 @@ export default function StreamHub() {
           const results = await doGenreSearch(genreConfig);
           setSearchResults(results);
         } else {
-          // Title search
-          const data = await tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=1`);
-          const results = (data.results||[]).filter(r=>r.media_type!=="person").slice(0,20);
+          // Title search — fetch 2 pages for better coverage
+          const [p1, p2] = await Promise.all([
+            tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=1&include_adult=false`),
+            tmdbFetch(`/search/multi?query=${encodeURIComponent(search)}&language=en-US&page=2&include_adult=false`),
+          ]);
+          const combined = [...(p1.results||[]), ...(p2.results||[])];
+          const seen = new Set();
+          const results = combined
+            .filter(r => r.media_type !== "person" && !seen.has(r.id) && seen.add(r.id))
+            .slice(0, 30);
           const withProviders = await Promise.all(results.map(async m => {
             const type = m.media_type==="tv" ? "tv" : "movie";
             try {
@@ -6554,7 +6589,8 @@ export default function StreamHub() {
     ? movies.filter(m=>watchlist.includes(m.id))
     : movies;
 
-  const filtered = displayMovies.filter(m => !filterPlat || m.providers?.includes(filterPlat));
+  // Disable platform filter during active search — don't hide results just because ZDT isn't on Netflix
+  const filtered = displayMovies.filter(m => !filterPlat || search.trim() || m.providers?.includes(filterPlat));
 
   const subscribed = SERVICES.filter(s=>userSubs.includes(s.id));
   const unsubscribed = SERVICES.filter(s=>!userSubs.includes(s.id));
@@ -6746,7 +6782,7 @@ export default function StreamHub() {
             {[
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
               {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),      color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
-              {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",  onClick:()=>setShowPersonalizedRecs(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
+              {icon:"🆕", label:"New Releases", sub:"Movies & shows out this week",        onClick:()=>setShowNewReleases(true), color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
               {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",    onClick:()=>setShowLeavingSoon(true),       color:"#EF4444",grad:"rgba(239,68,68,.1)"},
             ].map(item=>(
               <button key={item.label} onClick={item.onClick}
@@ -7031,7 +7067,7 @@ export default function StreamHub() {
               {[
                 {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
                 {icon:"🌙", label:"Watch Tonight",sub:"AI picks one perfect thing right now",  onClick:()=>setShowWatchTonight(true),color:"#8B5CF6",grad:"rgba(139,92,246,.12)"},
-                {icon:"✦", label:"For You",      sub:"Personalized picks from your taste",         onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
+                {icon:"🆕", label:"New Releases", sub:"Movies & shows out this week",               onClick:()=>setShowNewReleases(true),color:"#F59E0B",grad:"rgba(245,158,11,.1)"},
                 {icon:"🚨", label:"Leaving Soon", sub:"Titles leaving your services soon",          onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.1)"},
               ].map(item=>(
                 <button key={item.label} onClick={item.onClick}
@@ -7390,7 +7426,8 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  {(featuredRows.tvShows||[]).length>0&&<FeaturedRow title="📺 Popular TV" icon="📺" movies={featuredRows.tvShows} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="#06B6D4"/>}
+                  <FeaturedRow title="🏆 Docs & Sports" icon="🏆" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
@@ -7463,7 +7500,7 @@ export default function StreamHub() {
                 {[
                   {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
                   {icon:"🌙",label:"Watch Tonight",sub:"AI picks one perfect thing right now",onClick:()=>setShowWatchTonight(true),color:"#8B5CF6",grad:"rgba(139,92,246,.1)"},
-                  {icon:"✦",label:"For You",      sub:"Personalized picks from your ratings & watchlist",onClick:()=>setShowPersonalizedRecs(true),color:"#F59E0B",grad:"rgba(245,158,11,.08)"},
+                  {icon:"🆕",label:"New Releases",sub:"Movies & shows out this week",onClick:()=>setShowNewReleases(true),color:"#F59E0B",grad:"rgba(245,158,11,.08)"},
                   {icon:"🚨",label:"Leaving Soon", sub:"Titles leaving your services this month",onClick:()=>setShowLeavingSoon(true),color:"#EF4444",grad:"rgba(239,68,68,.07)"},
                 ].map(item=>(
                   <button key={item.label} onClick={item.onClick}
