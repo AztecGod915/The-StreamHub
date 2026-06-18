@@ -159,7 +159,6 @@ function getTeamsForSport(sportDisplay, events, espnTeams) {
   return [...new Set([...events.map(e=>e.home?.name),...events.map(e=>e.away?.name)])].filter(Boolean).sort().map(n=>({name:n,flag:"🏅"}));
 }
 
-
 const TEAM_SPORT_MAP = [
   {label:"⚽ Soccer / World Cup", path:"soccer/fifa.world", fullTournament:true},
   {label:"⚽ Premier League",     path:"soccer/eng.1"},
