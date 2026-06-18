@@ -5412,8 +5412,19 @@ function NewReleasesModal({ onClose, user, tier, userSubs, onSelect, onUpgrade }
 }
 
 // ─── PWA INSTALL PROMPT ───────────────────────────────────────────────────────
-function InstallPrompt({ onDismiss }) {
+function InstallPrompt({ onDismiss, deferredPrompt }) {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const canNativeInstall = !!deferredPrompt;
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      onDismiss();
+    }
+  };
+
   return (
     <div style={{
       position:"fixed", bottom:88, left:"50%", transform:"translateX(-50%)",
@@ -5421,24 +5432,34 @@ function InstallPrompt({ onDismiss }) {
       background:"linear-gradient(135deg,rgba(9,7,15,.98),rgba(12,8,28,.98))",
       border:"1px solid rgba(139,92,246,.4)",
       borderRadius:18, padding:"16px 18px",
-      boxShadow:"0 20px 60px rgba(0,0,0,.8)",
+      boxShadow:"0 20px 60px rgba(0,0,0,.8), 0 0 40px rgba(139,92,246,.15)",
       animation:"fadeUp .4s cubic-bezier(.22,1,.36,1)",
     }}>
       <button onClick={onDismiss} style={{position:"absolute",top:10,right:12,background:"none",border:"none",color:"rgba(240,240,250,.3)",fontSize:16,cursor:"pointer"}}>✕</button>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-        <img src="/icons/icon-72x72.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0}} />
+        <img src="/logo-clean.png" alt="" style={{width:48,height:48,borderRadius:12,flexShrink:0,objectFit:"contain"}} loading="lazy"/>
         <div>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:2}}>Add to Home Screen</div>
-          <div style={{fontSize:12,color:"rgba(240,240,250,.5)"}}>Get the full app experience — free</div>
+          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:2}}>Install The StreamHub</div>
+          <div style={{fontSize:12,color:"rgba(240,240,250,.5)"}}>Free · Works offline · No app store needed</div>
         </div>
       </div>
-      {isIOS ? (
-        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
-          Tap <strong style={{color:"#fff"}}>Share</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub on your iPhone
+      {canNativeInstall ? (
+        <button onClick={handleInstall} style={{
+          width:"100%",background:"linear-gradient(135deg,#8B5CF6,#6366f1)",
+          border:"none",borderRadius:12,color:"#fff",
+          padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,
+          cursor:"pointer",boxShadow:"0 4px 16px rgba(139,92,246,.4)",
+          display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+        }}>
+          ⚡ Add to Home Screen
+        </button>
+      ) : isIOS ? (
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.8,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>Share ↑</strong> at the bottom of your browser → then tap <strong style={{color:"#fff"}}>"Add to Home Screen"</strong>
         </div>
       ) : (
-        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.7,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
-          Tap <strong style={{color:"#fff"}}>⋮ Menu</strong> → <strong style={{color:"#fff"}}>"Add to Home Screen"</strong> to install The StreamHub
+        <div style={{fontSize:12,color:"rgba(240,240,250,.6)",lineHeight:1.8,background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.2)",borderRadius:10,padding:"10px 12px"}}>
+          Tap <strong style={{color:"#fff"}}>⋮ Menu</strong> in your browser → then <strong style={{color:"#fff"}}>"Add to Home Screen"</strong>
         </div>
       )}
     </div>
@@ -6195,14 +6216,35 @@ export default function StreamHub() {
   const [showSearchLimit, setShowSearchLimit] = useState(false);
   const [searchesUsed, setSearchesUsed] = useState(getSearchCount());
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
 
-  // Show PWA install prompt after 60s on mobile
+  // PWA install prompt — uses native beforeinstallprompt on Android/Chrome,
+  // falls back to manual instructions on iOS after 90s
   useEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const dismissed = localStorage.getItem("streamhub_install_dismissed");
-    if (!isMobile || dismissed) return;
-    const timer = setTimeout(() => setShowInstallPrompt(true), 60000);
-    return () => clearTimeout(timer);
+    if (dismissed) return;
+
+    // Android/Chrome: capture the native install prompt
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+      // Show our banner after a short delay so user has settled in
+      setTimeout(() => setShowInstallPrompt(true), 8000);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+
+    // iOS: no beforeinstallprompt — show manual instructions after 90s
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isInStandaloneMode = window.navigator.standalone === true;
+    let timer;
+    if (isIOS && !isInStandaloneMode) {
+      timer = setTimeout(() => setShowInstallPrompt(true), 90000);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   // Show signup prompt after 30 seconds for non-logged-in users
@@ -6830,7 +6872,7 @@ export default function StreamHub() {
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
-      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
@@ -7134,7 +7176,7 @@ export default function StreamHub() {
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
-      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
@@ -7554,7 +7596,7 @@ export default function StreamHub() {
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
-      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
