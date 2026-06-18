@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "../../lib/supabase.js";
 import { getSportStreamers } from "./SportsStreaming.jsx";
+import { SOCCER_LEAGUES } from "./SportsHub.jsx";
 import { getPredStats, PRED_MILESTONES, getPointsForStreak, savePredStats } from "./Predictions.jsx";
 import { getTeamsForSport,  getTeamLogo } from "../../data/sportsData.js";
 function FavoriteTeamModal({ sport, events, favoriteTeams, onToggle, onClose }) {

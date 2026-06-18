@@ -81,11 +81,7 @@ function LiveSportsSection({ sportQuery, favoriteTeams, onToggleFavorite, user, 
     if (!sport) return;
     if (!silent) setLoading(true);
     try {
-      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard${
-      sport.path.includes('fifa.world')
-        ? '?limit=200&dates=20260611-20260719'
-        : '?limit=100'
-    }`);
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const evts = parseEvents(data);

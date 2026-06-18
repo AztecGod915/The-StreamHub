@@ -394,4 +394,7 @@ function TeamNextGameSearch({ favoriteTeams }) {
   );
 }
 
-export { OlympicsPlaceholder, SportMovieBridge, SoccerHub, TeamNextGameSearch, SPORT_CARDS };
+
+// ─── SPORTS × MOVIES BRIDGE ─────────────────────────────────────────────────
+
+export { OlympicsPlaceholder, SportMovieBridge, SoccerHub, TeamNextGameSearch, SPORT_CARDS, SOCCER_LEAGUES };
