@@ -6811,7 +6811,16 @@ export default function StreamHub() {
 
         {/* Mobile Premium Tools Strip */}
         <div style={{padding:"0 14px 16px"}}>
-          <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+          <button onClick={()=>setShowUpgrade(true)} style={{
+  display:"flex",alignItems:"center",justifyContent:"space-between",
+  width:"100%",background:"rgba(245,158,11,.08)",
+  border:"1px solid rgba(245,158,11,.25)",borderRadius:10,
+  padding:"7px 12px",marginBottom:10,cursor:"pointer",
+  fontFamily:"var(--font-head)",
+}}>
+  <span style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1.2}}>✦ PREMIUM TOOLS</span>
+  <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>$7.99/mo →</span>
+</button>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
               {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",     onClick:()=>setShowCostCalc(true),          color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -7096,7 +7105,16 @@ export default function StreamHub() {
                 <span style={{color:"rgba(16,185,129,.6)",fontSize:18}}>›</span>
               </div>
             </button>
-            <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:12,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+            <button onClick={()=>setShowUpgrade(true)} style={{
+  display:"flex",alignItems:"center",justifyContent:"space-between",
+  width:"100%",background:"rgba(245,158,11,.08)",
+  border:"1px solid rgba(245,158,11,.25)",borderRadius:10,
+  padding:"7px 12px",marginBottom:12,cursor:"pointer",
+  fontFamily:"var(--font-head)",
+}}>
+  <span style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1.2}}>✦ PREMIUM TOOLS</span>
+  <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>$7.99/mo →</span>
+</button>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
                 {icon:"💰", label:"Cost Report",  sub:"AI tells you what to keep or cut",          onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.1)"},
@@ -7529,7 +7547,16 @@ export default function StreamHub() {
               {/* Sports Hub Button */}
               {/* Mood Search & Sports Hub are featured below the banner — not duplicated here */}
               {view==="home"&&<>
-              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+              <button onClick={()=>setShowUpgrade(true)} style={{
+  display:"flex",alignItems:"center",justifyContent:"space-between",
+  width:"100%",background:"rgba(245,158,11,.08)",
+  border:"1px solid rgba(245,158,11,.25)",borderRadius:10,
+  padding:"7px 12px",marginBottom:10,cursor:"pointer",
+  fontFamily:"var(--font-head)",
+}}>
+  <span style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1.2}}>✦ PREMIUM TOOLS</span>
+  <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>$7.99/mo →</span>
+</button>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
                   {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
