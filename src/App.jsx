@@ -3728,13 +3728,10 @@ function StreakRewardsModal({ streak, onClose }) {
 }
 
 // ─── MANAGE SUBSCRIPTIONS PANEL ───────────────────────────────────────────────
-function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone, onSave }) {
+function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }) {
   const [localSubs, setLocalSubs] = useState(initialSubs);
   const toggleLocal = (id) => setLocalSubs(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
-  const handleDone = () => {
-    if (onSave) { onSave(localSubs); }
-    else { onToggle?.(localSubs); onDone?.(); }
-  };
+  const handleDone = () => { onToggle(localSubs); onDone(); };
 
   // Use price directly from SERVICES (already defined on each service object)
   const subList = SERVICES.filter(s=>localSubs.includes(s.id));
@@ -3905,7 +3902,7 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
           {showSubManager ? (
             <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:16}}>
               <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:12}}>My Streaming Services</div>
-              <SubscriptionManagerPanel userSubs={userSubs} onSave={async subs=>{await onEditSubs(subs);setShowSubManager(false);showToast("✓ Services saved!");}}/>
+              <SubscriptionManagerPanel userSubs={userSubs} onSave={subs=>{onEditSubs(subs);setShowSubManager(false);showToast("Services updated!");}}/>
             </div>
           ) : (
             <button onClick={()=>setShowSubManager(true)} style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",color:"var(--text)"}}>
@@ -7079,6 +7076,34 @@ export default function StreamHub() {
           </div>
         )}
 
+
+        {/* Mobile Footer */}
+        {view === "home" && !search.trim() && (
+          <div style={{
+            padding:"24px 20px 28px",
+            borderTop:"1px solid rgba(245,158,11,.15)",
+            background:"linear-gradient(180deg,rgba(9,7,15,0),rgba(9,7,15,.95))",
+            textAlign:"center",
+            marginBottom:4,
+          }}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:8}}>
+              <img src="/logo-clean.png" alt="" style={{height:28,width:"auto",filter:"drop-shadow(0 0 6px rgba(245,158,11,.4))"}} loading="lazy"/>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16}}>
+                <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
+              </div>
+            </div>
+            <div style={{fontSize:10,color:"rgba(240,240,250,.25)",letterSpacing:.5,marginBottom:10}}>
+              YOUR AI STREAMING ASSISTANT
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:6,marginBottom:12}}>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","ESPN+"].map(s=>(
+                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.2)",letterSpacing:.3}}>{s}</span>
+              ))}
+            </div>
+            <div style={{fontSize:10,color:"rgba(240,240,250,.2)"}}>© 2026 StreamHub · Not affiliated with any streaming service</div>
+          </div>
+        )}
+
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
@@ -7092,7 +7117,7 @@ export default function StreamHub() {
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={async (subs)=>{ if(subs&&Array.isArray(subs)){await handleSaveUserSubs(subs);} else {setShowProfile(false);setShowSetup(true);} }} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7379,6 +7404,34 @@ export default function StreamHub() {
 
         {/* Advanced Stats Section */}
 
+
+        {/* Tablet Footer */}
+        {view === "home" && !search.trim() && (
+          <div style={{
+            padding:"28px 32px",
+            borderTop:"1px solid rgba(245,158,11,.15)",
+            background:"linear-gradient(180deg,rgba(9,7,15,0),rgba(9,7,15,.95))",
+            display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,
+            marginBottom:4,
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <img src="/logo-clean.png" alt="" style={{height:32,width:"auto",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}} loading="lazy"/>
+              <div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:17}}>
+                  <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
+                </div>
+                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1}}>YOUR AI STREAMING ASSISTANT</div>
+              </div>
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime Video","Peacock","Crunchyroll","ESPN+","DAZN"].map(s=>(
+                <span key={s} style={{fontSize:10,color:"rgba(240,240,250,.2)",letterSpacing:.3}}>{s}</span>
+              ))}
+            </div>
+            <div style={{fontSize:10,color:"rgba(240,240,250,.2)"}}>© 2026 StreamHub · Not affiliated with any streaming service</div>
+          </div>
+        )}
+
         {/* Spacer so content scrolls above bottom nav */}
         <div style={{height:100}} />
 
@@ -7417,7 +7470,7 @@ export default function StreamHub() {
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={async (subs)=>{ if(subs&&Array.isArray(subs)){await handleSaveUserSubs(subs);} else {setShowProfile(false);setShowSetup(true);} }} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7799,7 +7852,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-            {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={async (subs)=>{ if(subs&&Array.isArray(subs)){await handleSaveUserSubs(subs);} else {setShowProfile(false);setShowSetup(true);} }} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+            {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
