@@ -3819,6 +3819,26 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
   const totalRatings = Object.keys(userRatings).length;
   const isPremium = tier === "premium";
   const predStats = (() => { try { return JSON.parse(localStorage.getItem("sh_pred_stats") || "{}"); } catch { return {}; } })();
+
+  // Load watchlist movies from TMDB — watchlist is array of movie IDs
+  useEffect(() => {
+    if (tab !== "watchlist" || wlMovies.length > 0) return;
+    if (!watchlist?.length) { setLoadingWl(false); return; }
+    setLoadingWl(true);
+    Promise.all(
+      watchlist.slice(0, 24).map(async id => {
+        try {
+          const mov = await tmdbFetch(`/movie/${id}?language=en-US`);
+          if (mov?.id) return mov;
+          return await tmdbFetch(`/tv/${id}?language=en-US`);
+        } catch { return null; }
+      })
+    ).then(results => {
+      setWlMovies(results.filter(Boolean));
+      setLoadingWl(false);
+    });
+  }, [tab]);
+
   const planLabel = planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium";
 
   const saveUsername = async () => {
@@ -7568,7 +7588,16 @@ export default function StreamHub() {
           {/* Right buttons */}
           <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0}}>
             {tier==="premium"
-              ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ PREMIUM</span>
+              ?<button onClick={()=>setShowProfile(true)} style={{
+                background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",
+                color:planType==="annual"?"#000":"#fff",
+                fontSize:11,fontWeight:800,padding:"5px 14px",borderRadius:99,
+                fontFamily:"var(--font-head)",border:"none",cursor:"pointer",
+                boxShadow:planType==="lifetime"?"0 0 12px rgba(16,185,129,.4)":planType==="annual"?"0 0 12px rgba(245,158,11,.4)":"0 0 12px rgba(139,92,246,.4)",
+                whiteSpace:"nowrap",
+              }}>
+                {planType==="lifetime"?"👑 Lifetime":planType==="annual"?"🌟 Annual":"💜 Monthly"}
+              </button>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.4)",whiteSpace:"nowrap",cursor:"pointer"}}>Upgrade ✦</button>
             }
             {!user
