@@ -3803,26 +3803,20 @@ const shareWatchlist = async (watchlist, username) => {
     navigator.clipboard.writeText(text).then(()=>{}).catch(()=>{});
   }
 };
-function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
+function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, streak=0, notifPermission, setNotifPermission, registerPush, onInvite }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
-  const [tab, setTab] = useState("overview");
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [showSubManager, setShowSubManager] = useState(false);
-  const [myReviews, setMyReviews] = useState([]);
   const [wlMovies, setWlMovies] = useState([]);
-  const [loadingWl, setLoadingWl] = useState(false);
-  const [loadingRev, setLoadingRev] = useState(false);
+  const [loadingWl, setLoadingWl] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url||null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const avatarLetter = username[0]?.toUpperCase()||"U";
-  const totalRatings = Object.keys(userRatings).length;
   const isPremium = tier === "premium";
-  const predStats = (() => { try { return JSON.parse(localStorage.getItem("sh_pred_stats") || "{}"); } catch { return {}; } })();
+  const planLabel = planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium";
 
-  // Load watchlist movies from TMDB — watchlist is array of movie IDs
+  // Load watchlist from TMDB on open
   useEffect(() => {
-    if (tab !== "watchlist" || wlMovies.length > 0) return;
     if (!watchlist?.length) { setLoadingWl(false); return; }
     setLoadingWl(true);
     Promise.all(
@@ -3837,9 +3831,7 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
       setWlMovies(results.filter(Boolean));
       setLoadingWl(false);
     });
-  }, [tab]);
-
-  const planLabel = planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium";
+  }, []);
 
   const saveUsername = async () => {
     const { error } = await supabase.from("profiles").update({ username }).eq("id", user.id);
@@ -3852,7 +3844,6 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
     if (file.size > 2 * 1024 * 1024) return showToast("Image must be under 2MB");
     setUploadingAvatar(true);
     try {
-      // Convert to base64 and store in profile
       const reader = new FileReader();
       reader.onload = async (ev) => {
         const base64 = ev.target.result;
@@ -3865,256 +3856,121 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
     } catch(e) { showToast("Failed to upload"); setUploadingAvatar(false); }
   };
 
-  // Load watchlist movies from TMDB (watchlist is array of IDs)
-  useEffect(() => {
-    if (tab !== "watchlist" || wlMovies.length > 0) return;
-    if (!watchlist?.length) { setLoadingWl(false); return; }
-    setLoadingWl(true);
-    Promise.all(watchlist.slice(0,24).map(async id => {
-      try {
-        const numId = typeof id === "object" ? id?.id || id?.movie_id : id;
-        const res = await tmdbFetch(`/movie/${numId}?language=en-US`).catch(() => tmdbFetch(`/tv/${numId}?language=en-US`));
-        return res?.id ? res : null;
-      } catch { return null; }
-    })).then(results => {
-      setWlMovies(results.filter(Boolean));
-      setLoadingWl(false);
-    });
-  }, [tab]);
-
-  // Load user's reviews
-  useEffect(() => {
-    if (tab !== "reviews" || myReviews.length > 0) return;
-    setLoadingRev(true);
-    supabase.from("reviews").select("*").eq("user_id", user.id).order("created_at",{ascending:false}).then(({data}) => {
-      setMyReviews(data||[]);
-      setLoadingRev(false);
-    });
-  }, [tab]);
-
-  const deleteReview = async (id) => {
-    await supabase.from("reviews").delete().eq("id", id);
-    setMyReviews(prev => prev.filter(r => r.id !== id));
-    showToast("Review deleted");
-  };
-
-  const tabs = ["overview"];
-
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:520,maxHeight:"90vh",border:"1px solid var(--border)",boxShadow:"0 40px 80px rgba(0,0,0,.8)",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:60,paddingBottom:20,paddingLeft:12,paddingRight:12,overflowY:"auto",backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:440,border:"1px solid rgba(139,92,246,.2)",boxShadow:"0 20px 60px rgba(0,0,0,.7)",overflow:"hidden"}}>
 
         {/* Header */}
-        <div style={{background:"linear-gradient(135deg,rgba(139,92,246,.3),rgba(245,158,11,.1))",padding:"24px 24px 20px",position:"relative",flexShrink:0}}>
-          <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"#fff",width:32,height:32,fontSize:16,cursor:"pointer"}}>✕</button>
+        <div style={{background:"linear-gradient(135deg,rgba(139,92,246,.3),rgba(245,158,11,.1))",padding:"24px 24px 20px",position:"relative"}}>
+          <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(0,0,0,.4)",border:"none",borderRadius:10,color:"var(--muted)",width:30,height:30,cursor:"pointer",fontSize:14}}>✕</button>
           <div style={{display:"flex",alignItems:"center",gap:16}}>
-            {/* Avatar with upload */}
-            {/* Streak avatar — ring glows with level */}
+            {/* Avatar */}
             <div style={{position:"relative",flexShrink:0}}>
-              <StreakAvatar streak={streak} profile={{...profile,avatar_url:avatarUrl}} user={user} size={80}/>
-              <label style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"var(--gold)",border:"2px solid var(--surface)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:10,boxShadow:"0 2px 8px rgba(0,0,0,.5)",zIndex:10}} title="Change profile picture">
+              <StreakAvatar streak={streak} profile={{...profile,avatar_url:avatarUrl}} user={user} size={72}/>
+              <label style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:11}}>
                 {uploadingAvatar?"⏳":"📷"}
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{display:"none"}}/>
               </label>
             </div>
-            <div>
+            <div style={{flex:1,minWidth:0}}>
               {editing
                 ? <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    <input value={username} onChange={e=>setUsername(e.target.value)} autoFocus style={{background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",borderRadius:8,color:"#fff",padding:"6px 10px",fontSize:15,fontFamily:"var(--font-head)",fontWeight:700,outline:"none",width:160}} />
-                    <button onClick={saveUsername} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"6px 12px",fontWeight:700,fontSize:12,cursor:"pointer"}}>Save</button>
+                    <input value={username} onChange={e=>setUsername(e.target.value)} autoFocus style={{background:"rgba(255,255,255,.1)",border:"1px solid var(--gold)",borderRadius:8,color:"#fff",padding:"4px 8px",fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,width:160}}/>
+                    <button onClick={saveUsername} style={{background:"var(--gold)",border:"none",borderRadius:8,color:"#000",padding:"4px 10px",fontWeight:700,cursor:"pointer",fontSize:12}}>Save</button>
                   </div>
-                : <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18}}>{username}</div>
-                    <button onClick={()=>setEditing(true)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:6,color:"var(--muted)",padding:"3px 8px",fontSize:11,cursor:"pointer"}}>✏️</button>
+                : <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{username}</div>
+                    <button onClick={()=>setEditing(true)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:6,color:"var(--muted)",padding:"2px 6px",cursor:"pointer",fontSize:11}}>✎</button>
                   </div>
               }
-              <div style={{fontSize:12,color:"rgba(255,255,255,.5)",marginTop:4}}>{user?.email}</div>
-              {tier==="premium"
-                ? <span style={{
-                    background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",
-                    color:planType==="annual"?"#000":"#fff",
-                    fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>{planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium"}</span>
-                : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
-              }
-              {streak>=1 && (
-                <button onClick={()=>setShowStreakModal(true)}
-                  style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"3px 10px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-flex",alignItems:"center",gap:4,marginTop:6,marginLeft:6,cursor:"pointer"}}>
-                  {getStreakEmoji(streak)} {streak} day streak →
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:16}}>
-            {[["♥",watchlist.length,"Watchlist"],["★",totalRatings,"Rated"],["🔮",predStats?.total||0,"Predictions"]].map(([icon,val,label])=>(
-              <div key={label}
-                style={{background:"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,.08)"}}>
-                <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,color:"var(--gold)"}}>{val}</div>
-                <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{label}</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.5)",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user?.email}</div>
+              <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                {isPremium
+                  ? <span style={{background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",color:planType==="annual"?"#000":"#fff",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99}}>{planLabel}</span>
+                  : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99}}>FREE</span>
+                }
+                {streak>=1&&<button onClick={()=>setShowStreakModal(true)} style={{background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.3)",color:"var(--gold)",fontSize:10,fontWeight:800,padding:"2px 10px",borderRadius:99,cursor:"pointer"}}>{streak}🔥 streak</button>}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* Tabs — hidden since only overview tab exists */}
-        <div style={{display:"none"}}>
-          {tabs.map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{flex:1,background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"12px 0",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>{t}</button>
-          ))}
-        </div>
+        {/* Content */}
+        <div style={{overflowY:"auto",maxHeight:"65vh",padding:"16px 20px",display:"flex",flexDirection:"column",gap:10}}>
 
-        {/* Tab content */}
-        <div style={{overflowY:"auto",flex:1,padding:20}}>
-
-          {/* Overview tab */}
-          {tab==="overview" && (
-            <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              {showSubManager ? (
-                <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:"16px"}}>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:12}}>📡 Manage Subscriptions</div>
-                  <SubscriptionManagerPanel
-                    userSubs={userSubs}
-                    onToggle={(newSubs)=>{/* subs managed locally in panel */}}
-                    onDone={()=>setShowSubManager(false)}
-                  />
-                </div>
-              ) : (
-                <button onClick={()=>setShowSubManager(true)}
-                  style={{background:"rgba(139,92,246,.08)",border:"1px solid rgba(139,92,246,.3)",borderRadius:12,color:"#C4B5FD",padding:"12px 16px",fontWeight:700,fontSize:14,textAlign:"left",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <span style={{fontSize:20}}>📡</span>
-                    <div>
-                      <div style={{fontWeight:800,color:"#fff"}}>Manage Subscriptions</div>
-                      <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Add or remove streaming services</div>
-                    </div>
-                  </div>
-                  <span style={{color:"var(--muted)",fontSize:16}}>›</span>
-                </button>
-              )}
-              {tier!=="premium" && <button onClick={()=>{onUpgrade();onClose();}} style={{background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:"12px 0",fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer"}}>Upgrade to Premium ✦</button>}
-
-              {/* Notification opt-in */}
-              <div style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 16px",marginTop:4}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
-                  <div>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:3}}>🔔 Game & Content Alerts</div>
-                    <div style={{fontSize:12,color:"var(--muted)"}}>
-                      {notifPermission==="granted"
-                        ? "✅ Notifications enabled — you'll get game alerts & weekly picks"
-                        : notifPermission==="denied"
-                          ? "❌ Blocked in browser settings — enable in site permissions"
-                          : "Get notified when your team plays & weekly streaming picks"}
-                    </div>
-                  </div>
-                  {notifPermission!=="granted" && notifPermission!=="denied" && (
-                    <button onClick={onRequestNotif}
-                      style={{background:"linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2))",border:"1px solid rgba(16,185,129,.4)",borderRadius:10,color:"var(--sports)",padding:"8px 14px",fontWeight:800,fontSize:12,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"var(--font-head)"}}>
-                      Enable
-                    </button>
-                  )}
-                </div>
+          {/* Subscription Manager */}
+          {showSubManager ? (
+            <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(139,92,246,.2)",borderRadius:14,padding:16}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,marginBottom:12}}>My Streaming Services</div>
+              <SubscriptionManagerPanel userSubs={userSubs} onSave={subs=>{onEditSubs(subs);setShowSubManager(false);showToast("Services updated!");}}/>
+            </div>
+          ) : (
+            <button onClick={()=>setShowSubManager(true)} style={{background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",color:"var(--text)"}}>
+              <div>
+                <div style={{fontWeight:700,fontSize:13}}>📺 My Streaming Services</div>
+                <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{userSubs.length>0?userSubs.join(", "):"No services added"}</div>
               </div>
-              <button onClick={()=>onInvite&&onInvite()} style={{
-                width:"100%",background:"linear-gradient(135deg,rgba(139,92,246,.15),rgba(99,102,241,.1))",
-                border:"1px solid rgba(139,92,246,.25)",borderRadius:10,padding:"9px 0",
-                color:"#C4B5FD",fontSize:12,fontWeight:800,cursor:"pointer",marginBottom:8,
-                display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-              }}>🎁 Invite Friends</button>
-              <button onClick={onSignOut} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,color:"var(--danger)",padding:"12px 0",fontWeight:600,fontSize:14,cursor:"pointer"}}>Sign Out</button>
+              <span style={{color:"var(--muted)",fontSize:12}}>›</span>
+            </button>
+          )}
+
+          {/* Notifications */}
+          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontWeight:700,fontSize:13}}>🔔 Game & Content Alerts</div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{notifPermission==="granted"?"Enabled — you'll get game alerts":"Get notified when your teams play"}</div>
+            </div>
+            {notifPermission==="granted"
+              ? <span style={{fontSize:11,color:"var(--sports)",fontWeight:700}}>✓ On</span>
+              : <button onClick={async()=>{const p=await Notification.requestPermission();setNotifPermission(p);if(p==="granted"){await registerPush(user.id);showToast("🔔 Alerts enabled!");}}} style={{background:"linear-gradient(135deg,#8B5CF6,#6366f1)",border:"none",borderRadius:8,color:"#fff",padding:"5px 12px",fontSize:11,fontWeight:800,cursor:"pointer"}}>Enable</button>
+            }
+          </div>
+
+          {/* Upgrade CTA for free users */}
+          {!isPremium && (
+            <button onClick={onUpgrade} style={{background:"linear-gradient(135deg,rgba(245,158,11,.15),rgba(139,92,246,.1))",border:"1px solid rgba(245,158,11,.3)",borderRadius:12,padding:"12px 14px",cursor:"pointer",textAlign:"left",width:"100%"}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,color:"var(--gold)",marginBottom:2}}>✦ Upgrade to Premium</div>
+              <div style={{fontSize:12,color:"rgba(240,240,250,.55)"}}>Watch Tonight, New Releases, Leaving Soon & more — from $4.99/mo</div>
+            </button>
+          )}
+
+          {/* Watchlist */}
+          {watchlist.length > 0 && (
+            <div style={{background:"rgba(255,255,255,.02)",border:"1px solid rgba(255,255,255,.06)",borderRadius:12,padding:"12px 14px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14}}>♥ Watchlist <span style={{color:"var(--muted)",fontSize:12,fontWeight:400}}>({watchlist.length})</span></div>
+                {wlMovies.length>0&&<button onClick={()=>{shareWatchlist(wlMovies,profile?.username);showToast("📋 Copied!");}} style={{fontSize:11,fontWeight:700,color:"#C4B5FD",background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.25)",borderRadius:8,padding:"3px 10px",cursor:"pointer"}}>📤 Share</button>}
+              </div>
+              {loadingWl
+                ? <div style={{textAlign:"center",padding:16,color:"var(--muted)",fontSize:12}}>Loading…</div>
+                : <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                    {wlMovies.map(m=>(
+                      <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{cursor:"pointer",borderRadius:8,overflow:"hidden",background:"rgba(255,255,255,.04)"}}
+                        onMouseEnter={e=>e.currentTarget.style.opacity=".8"}
+                        onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+                        {m.poster_path
+                          ? <img src={`${TMDB_IMG}${m.poster_path}`} alt="" style={{width:"100%",height:80,objectFit:"cover"}} loading="lazy"/>
+                          : <div style={{width:"100%",height:80,background:"rgba(139,92,246,.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🎬</div>}
+                        <div style={{padding:"4px 5px",fontSize:9,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
+                      </div>
+                    ))}
+                  </div>
+              }
             </div>
           )}
 
-          {/* Watchlist tab */}
-          {tab==="watchlist" && (
-            <div>
-              {loadingWl ? (
-                <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}>
-                  <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--gold)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your watchlist…
-                </div>
-              ) : watchlist.length === 0 ? (
-                <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>Your watchlist is empty. Tap ♡ on any title to save it!</div>
-              ) : (
-                <>
-                  {wlMovies.length > 0 && (
-                    <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
-                      <button onClick={()=>{
-                        shareWatchlist(wlMovies, profile?.username);
-                        showToast("📋 Watchlist copied!");
-                      }} style={{
-                        fontSize:11,fontWeight:700,color:"#C4B5FD",
-                        background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.25)",
-                        borderRadius:8,padding:"5px 12px",cursor:"pointer",
-                        display:"flex",alignItems:"center",gap:5,
-                      }}>
-                        📤 Share Watchlist
-                      </button>
-                    </div>
-                  )}
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-                  {wlMovies.map(m=>{
-                    const poster = m.poster_path ? `${TMDB_IMG}${m.poster_path}` : null;
-                    return (
-                      <div key={m.id} onClick={()=>{onSelectMovie(m);onClose();}} style={{cursor:"pointer",borderRadius:10,overflow:"hidden",border:"1px solid var(--border)",background:"var(--card)",transition:"transform .2s"}}
-                        onMouseEnter={e=>e.currentTarget.style.transform="scale(1.03)"}
-                        onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-                        {poster ? <img src={poster} alt="" style={{width:"100%",height:110,objectFit:"cover"}}/> : <div style={{height:110,background:`linear-gradient(135deg,#1a1a2e,#7c3aed)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,opacity:.3,fontFamily:"var(--font-head)",fontWeight:800}}>{(m.title||m.name||"").slice(0,2)}</div>}
-                        <div style={{padding:"6px 8px"}}>
-                          <div style={{fontSize:11,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{m.title||m.name}</div>
-                          <div style={{fontSize:10,color:"var(--gold)"}}>★ {m.vote_average?.toFixed(1)||"—"}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {/* Invite Friends */}
+          <button onClick={()=>onInvite&&onInvite()} style={{width:"100%",background:"linear-gradient(135deg,rgba(139,92,246,.15),rgba(99,102,241,.1))",border:"1px solid rgba(139,92,246,.25)",borderRadius:12,padding:"9px 0",color:"#C4B5FD",fontSize:12,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+            🎁 Invite Friends
+          </button>
 
-          {/* Reviews tab */}
-          {tab==="reviews" && (
-            <div>
-              {/* Community reviews header */}
-              {reviews.length > 0 && (
-                <div style={{marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
-                    Community Reviews
-                    {communityRating && <span style={{color:"#C4B5FD",marginLeft:8,fontSize:13}}>✦ {communityRating.avg} avg · {communityRating.count} rating{communityRating.count!==1?"s":""}</span>}
-                  </div>
-                </div>
-              )}
-              {loadingRev ? (
-                <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:"40px 0",gap:10,color:"var(--muted)"}}>
-                  <span style={{display:"inline-block",width:20,height:20,border:"2px solid var(--purple)",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Loading your reviews…
-                </div>
-              ) : myReviews.length === 0 ? (
-                <div style={{textAlign:"center",color:"var(--muted)",padding:"40px 0",fontSize:14}}>You haven't written any reviews yet. Open any title and share your thoughts!</div>
-              ) : (
-                <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  {myReviews.map(rv=>(
-                    <div key={rv.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid var(--border)",borderRadius:12,padding:14}}>
-                      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8,gap:10}}>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,marginBottom:2}}>{rv.title}</div>
-                          <div style={{fontSize:11,color:"var(--muted)"}}>{new Date(rv.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-                          <span style={{background:"var(--gold-dim)",color:"var(--gold)",borderRadius:6,padding:"2px 8px",fontSize:12,fontWeight:700}}>★ {rv.rating}</span>
-                          <button onClick={()=>deleteReview(rv.id)} style={{background:"none",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"var(--danger)",padding:"3px 8px",fontSize:11,cursor:"pointer"}}>Delete</button>
-                        </div>
-                      </div>
-                      <div style={{fontSize:13,color:"rgba(240,240,250,.75)",lineHeight:1.6}}>{rv.content}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Sign Out */}
+          <button onClick={onSignOut} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,color:"var(--danger)",padding:"10px 0",fontWeight:600,fontSize:13,cursor:"pointer",width:"100%"}}>Sign Out</button>
+
         </div>
+
       </div>
-    {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
+      {showStreakModal && <StreakRewardsModal streak={streak} onClose={()=>setShowStreakModal(false)}/>}
     </div>
   );
 }
