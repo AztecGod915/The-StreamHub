@@ -6506,7 +6506,19 @@ export default function StreamHub() {
     setProfile(prof);
     setTier(prof.tier||"free");
     if (prof.plan_type) setPlanType(prof.plan_type);
-    else if (prof.tier === "premium") setPlanType("monthly"); // existing users default to monthly
+    else if (prof.tier === "premium") setPlanType("monthly");
+    // Load subscriptions from profile (cloud wins over localStorage)
+    if (prof.subscriptions) {
+      try {
+        const cloudSubs = typeof prof.subscriptions === "string"
+          ? JSON.parse(prof.subscriptions)
+          : prof.subscriptions;
+        if (Array.isArray(cloudSubs) && cloudSubs.length > 0) {
+          setUserSubs(cloudSubs);
+          localStorage.setItem("streamhub_subs", JSON.stringify(cloudSubs));
+        }
+      } catch(e) {}
+    }
     // Load prediction stats from profile (cloud wins over localStorage)
     if (prof.pred_total > 0) {
       const cloudStats = {
@@ -6763,8 +6775,23 @@ export default function StreamHub() {
   };
 
   // ── Display movies ──
+  // Fetch watchlist movies from TMDB when on watchlist tab
+  const [watchlistMovies, setWatchlistMovies] = useState([]);
+  const [loadingWatchlist, setLoadingWatchlist] = useState(false);
+  useEffect(() => {
+    if (view !== "watchlist" || !watchlist.length) { setWatchlistMovies([]); return; }
+    setLoadingWatchlist(true);
+    Promise.all(watchlist.slice(0,30).map(async id => {
+      try {
+        const m = await tmdbFetch(`/movie/${id}?language=en-US`);
+        if (m?.id) return m;
+        return await tmdbFetch(`/tv/${id}?language=en-US`);
+      } catch { return null; }
+    })).then(r => { setWatchlistMovies(r.filter(Boolean)); setLoadingWatchlist(false); });
+  }, [view, watchlist.length]);
+
   const displayMovies = search.trim() ? searchResults : view==="watchlist"
-    ? movies.filter(m=>watchlist.includes(m.id))
+    ? watchlistMovies
     : movies;
 
   // Disable platform filter during active search — don't hide results just because ZDT isn't on Netflix
