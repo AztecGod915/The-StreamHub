@@ -4536,7 +4536,7 @@ function UpgradeModal({ onClose, onComplete }) {
                 {[
                   {text:"10 searches/day",        ok:true},
                   {text:"Watchlist (50 titles)",   ok:true},
-                  {text:"3 Mood Search/day",        ok:true},
+                  {text:"🎭 Mood Search (unlimited)",  ok:true},
                   {text:"Ratings & reviews",        ok:true},
                   {text:"Watch trailers",           ok:true},
                   {text:"1 Free Cost Report",       ok:true},
@@ -4559,8 +4559,7 @@ function UpgradeModal({ onClose, onComplete }) {
                 {[
                   {text:"Unlimited searches",              ok:true},
                   {text:"Unlimited watchlist",             ok:true},
-                  {text:"Unlimited Mood Search",           ok:true},
-                  {text:"Ratings & reviews",               ok:true},
+                                    {text:"Ratings & reviews",               ok:true},
                   {text:"Watch trailers",                  ok:true},
                   {text:"🌙 Watch Tonight AI picks",       ok:true},
                   {text:"🆕 New Releases",                 ok:true},
@@ -5291,7 +5290,7 @@ function MoodSearchModal({ onClose, tier, onUpgrade, onResults }) {
       const parsed = JSON.parse(clean);
       if (!parsed.items?.length) throw new Error("No results returned");
       setResult(parsed);
-      if (tier !== "premium") incrementMoodSearchCount();
+      // Mood Search is free for all users - no tracking needed
     } catch(e) {
       console.error("Mood search error:", e);
       setResult({ error: e.message, items:[] });
@@ -6844,7 +6843,7 @@ export default function StreamHub() {
             <span style={{position:"absolute",left:26,top:"50%",transform:"translateY(-60%)",color:"var(--gold)",fontSize:16}}>🔍</span>
             <input
               value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder="Search any team…"
+              placeholder={searchPlaceholder}
               style={{
                 width:"100%", background:"rgba(255,255,255,.1)",
                 border:"1.5px solid rgba(245,158,11,.4)",
@@ -6858,68 +6857,7 @@ export default function StreamHub() {
 
         </div>
 
-        {/* WelcomeBanner for new users — above brand banner */}
-        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
-
-        {/* 🎭 AI BRAND BANNER — mobile, right under search bar */}
-        {!search.trim() && view==="home" && (
-          <div style={{
-            margin:"4px 14px 16px",
-            borderRadius:20,
-            overflow:"hidden",
-            position:"relative",
-            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
-            border:"1px solid rgba(139,92,246,.35)",
-            boxShadow:"0 8px 40px rgba(139,92,246,.25), inset 0 1px 0 rgba(255,255,255,.06)",
-            padding:"18px 16px 16px",
-            textAlign:"center",
-          }}>
-            {/* glow blobs */}
-            <div style={{position:"absolute",top:-30,left:-30,width:120,height:120,borderRadius:"50%",background:"rgba(139,92,246,.25)",filter:"blur(40px)",pointerEvents:"none"}}/>
-            <div style={{position:"absolute",bottom:-30,right:-30,width:120,height:120,borderRadius:"50%",background:"rgba(255,107,157,.2)",filter:"blur(40px)",pointerEvents:"none"}}/>
-            <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:160,height:80,borderRadius:"50%",background:"rgba(6,182,212,.12)",filter:"blur(30px)",pointerEvents:"none"}}/>
-            {/* tagline */}
-            <div style={{
-              fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:20, letterSpacing:"-.02em", marginBottom:12,
-              background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
-              backgroundSize:"200% auto",
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-              animation:"gradientShift 3s linear infinite",
-              position:"relative",
-            }}>Your AI Streaming Assistant</div>
-            {/* pills */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:5,position:"relative",width:"100%"}}>
-              {[
-                {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
-              ].map((item,i)=>(
-                <div key={item.word} style={{display:"flex",alignItems:"center",gap:5}}>
-                  <div style={{
-                    background:item.bg, borderRadius:99,
-                    padding:"7px 11px",
-                    fontFamily:"var(--font-head)", fontWeight:900,
-                    fontSize:11, letterSpacing:1.5, color:"#000",
-                    boxShadow:`0 0 14px ${item.glow}, 0 0 28px ${item.glow}66`,
-                    whiteSpace:"nowrap",
-                  }}>{item.word}</div>
-                  {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:12,fontWeight:700}}>—</span>}
-                </div>
-              ))}
-            </div>
-            {/* Mood Search CTA with usage info */}
-            <button onClick={()=>setShowMoodSearch(true)}
-              style={{marginTop:12,background:"rgba(139,92,246,.2)",border:"1px solid rgba(139,92,246,.5)",borderRadius:12,color:"#c4b5fd",padding:"10px 16px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-              <span>🎭 Try Mood Search — describe any vibe</span>
-              <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 8px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
-                "🎭 Free for everyone"
-              </span>
-            </button>
-
-          </div>
-        )}
-
+        
         {/* Search status */}
         {search.trim() && (
           <div style={{padding:"12px 14px 0",fontSize:13,color:"var(--muted)"}}>
@@ -7157,82 +7095,6 @@ export default function StreamHub() {
         </header>
 
         {/* Tablet Hero with Trailer */}
-        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
-
-        {/* 🎭 AI BRAND BANNER — tablet, above hero */}
-        {view==="home"&&!search.trim()&&(
-          <div style={{
-            margin:"12px 20px 0",
-            borderRadius:24,
-            overflow:"hidden",
-            position:"relative",
-            background:"linear-gradient(135deg,#0d0520 0%,#12053a 40%,#0a1628 100%)",
-            border:"1px solid rgba(139,92,246,.35)",
-            boxShadow:"0 12px 60px rgba(139,92,246,.3), inset 0 1px 0 rgba(255,255,255,.07)",
-            padding:"22px 106px",
-          }}>
-            {/* glow blobs */}
-            <div style={{position:"absolute",top:-40,left:-40,width:200,height:200,borderRadius:"50%",background:"rgba(139,92,246,.2)",filter:"blur(60px)",pointerEvents:"none"}}/>
-            <div style={{position:"absolute",bottom:-40,right:-40,width:200,height:200,borderRadius:"50%",background:"rgba(255,107,157,.15)",filter:"blur(60px)",pointerEvents:"none"}}/>
-            {/* Left glowing logo — absolutely centered vertically */}
-            <img src="/logo-clean.png" alt="" style={{
-              position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
-              height:72, width:"auto", objectFit:"contain",
-              filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
-              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-            }}/>
-            {/* Center content */}
-            <div style={{textAlign:"center"}}>
-              <div style={{
-                fontFamily:"var(--font-head)", fontWeight:800,
-                fontSize:22, letterSpacing:"-.02em", marginBottom:12, lineHeight:1.2,
-                background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
-                backgroundSize:"200% auto",
-                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-                animation:"gradientShift 3s linear infinite",
-              }}>Your AI Streaming Assistant</div>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"nowrap"}}>
-                {[
-                  {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                  {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                  {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
-                ].map((item,i)=>(
-                  <div key={item.word} style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{
-                      background:item.bg, borderRadius:99,
-                      padding:"8px 16px",
-                      fontFamily:"var(--font-head)", fontWeight:900,
-                      fontSize:12, letterSpacing:2, color:"#000",
-                      boxShadow:`0 0 16px ${item.glow}, 0 0 32px ${item.glow}55`,
-                      whiteSpace:"nowrap",
-                    }}>{item.word}</div>
-                    {i<2 && <span style={{color:"rgba(255,255,255,.35)",fontSize:14,fontWeight:700}}>—</span>}
-                  </div>
-                ))}
-              </div>
-              {/* Mood Search CTA with usage info — centered */}
-              <div style={{display:"flex",justifyContent:"center",marginTop:10,pointerEvents:"all"}}>
-                <button onClick={()=>setShowMoodSearch(true)}
-                  style={{background:"rgba(139,92,246,.2)",border:"1px solid rgba(139,92,246,.5)",borderRadius:12,color:"#c4b5fd",padding:"9px 18px",fontSize:11,fontWeight:700,fontFamily:"var(--font-head)",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:12,transition:"all .2s"}}
-                  onMouseEnter={e=>e.currentTarget.style.background="rgba(139,92,246,.35)"}
-                  onMouseLeave={e=>e.currentTarget.style.background="rgba(139,92,246,.2)"}>
-                  <span>🎭 Try Mood Search — describe any vibe</span>
-                  <span style={{background:"rgba(255,255,255,.08)",borderRadius:8,padding:"3px 10px",fontSize:10,fontWeight:600,color:"rgba(196,181,253,.7)",whiteSpace:"nowrap"}}>
-                    "🎭 Free"
-                  </span>
-                </button>
-              </div>
-
-            </div>
-            {/* Right glowing logo — absolutely centered vertically */}
-            <img src="/logo-clean.png" alt="" style={{
-              position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
-              height:72, width:"auto", objectFit:"contain",
-              filter:"drop-shadow(0 0 18px rgba(245,158,11,.8)) drop-shadow(0 0 36px rgba(139,92,246,.6))",
-              animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.4s ease-in-out infinite",
-            }}/>
-          </div>
-        )}
 
         {/* Tablet Hero with Trailer */}
 
@@ -7473,78 +7335,6 @@ export default function StreamHub() {
           </div>
         </header>
 
-        {/* 🎭 AI BRAND BANNER — full width, above all three columns */}
-        {view==="home"&&!search.trim()&&(
-          <div style={{
-            margin:"0",
-            padding:"0 24px 0",
-            maxWidth:1440,
-            marginLeft:"auto",
-            marginRight:"auto",
-          }}>
-            {!user && <WelcomeBanner />}
-            <div style={{
-              borderRadius:24,
-              overflow:"hidden",
-              position:"relative",
-              background:"linear-gradient(135deg,#0d0520 0%,#12053a 45%,#0a1628 100%)",
-              border:"1px solid rgba(139,92,246,.4)",
-              boxShadow:"0 12px 60px rgba(139,92,246,.3), inset 0 1px 0 rgba(255,255,255,.08)",
-              padding:"24px 32px",
-              display:"flex", alignItems:"center", justifyContent:"space-between",
-              marginBottom:20,
-            }}>
-              {/* glow blobs */}
-              <div style={{position:"absolute",top:-60,left:-60,width:260,height:260,borderRadius:"50%",background:"rgba(139,92,246,.18)",filter:"blur(80px)",pointerEvents:"none"}}/>
-              <div style={{position:"absolute",bottom:-60,right:-60,width:260,height:260,borderRadius:"50%",background:"rgba(255,107,157,.14)",filter:"blur(80px)",pointerEvents:"none"}}/>
-              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:400,height:100,background:"rgba(6,182,212,.07)",filter:"blur(60px)",pointerEvents:"none"}}/>
-              {/* Left glowing logo */}
-              <img src="/logo-clean.png" alt="" style={{
-                height:90, width:"auto", objectFit:"contain", flexShrink:0,
-                filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
-                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
-              }}/>
-              {/* Center content — absolutely centered in the banner */}
-              <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",textAlign:"center",width:"60%",pointerEvents:"none"}}>
-                <div style={{
-                  fontFamily:"var(--font-head)", fontWeight:800,
-                  fontSize:30, letterSpacing:"-.02em", marginBottom:14,
-                  background:"linear-gradient(90deg,#C4B5FD,#E9D5FF,#F59E0B,#C4B5FD)",
-                  backgroundSize:"200% auto",
-                  WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-                  animation:"gradientShift 3s linear infinite",
-                  whiteSpace:"nowrap",
-                }}>Your AI Streaming Assistant</div>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:12,pointerEvents:"all"}}>
-                  {[
-                    {word:"SEARCH", bg:"#F59E0B", glow:"rgba(245,158,11,.7)"},
-                    {word:"FIND",   bg:"#8B5CF6", glow:"rgba(139,92,246,.7)"},
-                    {word:"ENJOY",  bg:"#FFFFFF", glow:"rgba(255,255,255,.6)"},
-                  ].map((item,i)=>(
-                    <div key={item.word} style={{display:"flex",alignItems:"center",gap:12}}>
-                      <div style={{
-                        background:item.bg, borderRadius:99,
-                        padding:"10px 26px",
-                        fontFamily:"var(--font-head)", fontWeight:900,
-                        fontSize:14, letterSpacing:3, color:"#000",
-                        boxShadow:`0 0 20px ${item.glow}, 0 0 40px ${item.glow}55`,
-                        whiteSpace:"nowrap",
-                      }}>{item.word}</div>
-                      {i<2 && <span style={{color:"rgba(255,255,255,.3)",fontSize:20,fontWeight:700}}>—</span>}
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-              {/* Right glowing logo */}
-              <img src="/logo-clean.png" alt="" style={{
-                height:90, width:"auto", objectFit:"contain", flexShrink:0,
-                filter:"drop-shadow(0 0 20px rgba(245,158,11,.9)) drop-shadow(0 0 40px rgba(139,92,246,.7))",
-                animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3.6s ease-in-out infinite",
-              }}/>
-            </div>
-          </div>
-        )}
 
         {/* ── MOOD SEARCH + SPORTS HUB — featured cards below banner, desktop only ── */}
         {view==="home"&&!search.trim()&&(
@@ -7744,68 +7534,25 @@ export default function StreamHub() {
         </div>
 
         {/* Footer */}
-        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)"}}>
-        {/* Advanced Stats Section */}
-
-          {/* Footer hero tagline */}
-          <div style={{
-            padding:"48px 40px 32px",
-            background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)",
-            textAlign:"center",position:"relative",
-          }}>
-            <div style={{
-              fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:"clamp(24px,3vw,42px)",
-              letterSpacing:"-.01em", marginBottom:10,
-              background:"linear-gradient(90deg,#F59E0B,#ffffff,#8B5CF6,#C4B5FD,#F59E0B)",
-              backgroundSize:"300% auto",
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-              animation:"gradientShift 4s linear infinite",
-            }}>Your AI Streaming Assistant</div>
-            <div style={{
-              fontSize:12, letterSpacing:4, marginBottom:36,
-              color:"rgba(240,240,250,.55)", display:"inline-block",
-              background:"rgba(255,255,255,.05)",
-              padding:"6px 20px", borderRadius:99,
-              border:"1px solid rgba(255,255,255,.1)",
-            }}>THE STREAMHUB</div>
-
-            {/* Word pills */}
-            <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
-              {[
-                {word:"SEARCH", color:"#000",    bg:"#F59E0B",  shadow:"rgba(245,158,11,.6)"},
-                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"FIND",   color:"#fff",    bg:"#8B5CF6",  shadow:"rgba(139,92,246,.5)"},
-                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"ENJOY",  color:"#000",    bg:"#FFFFFF",  shadow:"rgba(255,255,255,.4)"},
-              ].map((p,i)=>(
-                <span key={i} style={{
-                  fontFamily:"var(--font-head)", fontWeight:800,
-                  fontSize: p.word==="·" ? 28 : 20,
-                  color:p.color, letterSpacing: p.word==="·" ? 0 : 4,
-                  background:p.bg, borderRadius:99,
-                  padding: p.word==="·" ? "0 8px" : "10px 32px",
-                  display:"inline-flex", alignItems:"center",
-                  boxShadow: p.shadow!=="none" ? `0 0 28px ${p.shadow}, 0 4px 12px rgba(0,0,0,.4)` : "none",
-                  animation: p.word!=="·" ? `badgePop 3s ease-in-out infinite` : "none",
-                  animationDelay:`${i*0.4}s`,
-                }}>{p.word}</span>
-              ))}
+        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)",background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)"}}>
+          {/* Footer */}
+          <div style={{padding:"32px 40px 20px",textAlign:"center"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:"clamp(18px,2vw,28px)",marginBottom:8,background:"linear-gradient(90deg,#F59E0B,#8B5CF6)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+              Your AI Streaming Assistant
             </div>
-
-            {/* Bottom bar */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
+            <div style={{fontSize:12,color:"rgba(240,240,250,.4)",letterSpacing:3,marginBottom:24}}>THE STREAMHUB</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
-                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}} style={{height:52,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))",cursor:"pointer"}} />
+                <img src="/logo-clean.png" alt="The StreamHub" onClick={()=>{setView("home");setSearch("");window.scrollTo(0,0);}} style={{height:36,width:"auto",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}}/>
                 <div>
                   <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15}}>
                     <span style={{color:"#F59E0B"}}>The Stream</span>
                     <span style={{color:"#8B5CF6"}}>Hub</span>
                   </div>
-                  <div style={{fontSize:10,color:"var(--gold)",letterSpacing:1,fontFamily:"var(--font-head)",fontWeight:700}}>YOUR AI STREAMING ASSISTANT</div>
+                  <div style={{fontSize:10,color:"var(--gold)",letterSpacing:1,fontFamily:"var(--font-head)"}}>AI STREAMING ASSISTANT</div>
                 </div>
               </div>
-              <div style={{fontSize:11,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service.</div>
+              <div style={{fontSize:11,color:"var(--muted)"}}>© 2025 StreamHub · Not affiliated with any streaming service</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
                 {["Netflix","Disney+","Max","Hulu","Crunchyroll","ESPN+","DAZN"].map(n=>(
                   <span key={n} style={{fontSize:10,color:"rgba(240,240,250,.2)",letterSpacing:.5}}>{n}</span>
