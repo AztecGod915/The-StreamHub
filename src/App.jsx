@@ -3818,6 +3818,7 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
   const avatarLetter = username[0]?.toUpperCase()||"U";
   const totalRatings = Object.keys(userRatings).length;
   const isPremium = tier === "premium";
+  const predStats = (() => { try { return JSON.parse(localStorage.getItem("sh_pred_stats") || "{}"); } catch { return {}; } })();
   const planLabel = planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium";
 
   const saveUsername = async () => {
@@ -3844,15 +3845,22 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
     } catch(e) { showToast("Failed to upload"); setUploadingAvatar(false); }
   };
 
-  // Load watchlist — watchlist is already an array of movie objects
+  // Load watchlist movies from TMDB (watchlist is array of IDs)
   useEffect(() => {
-    if (tab !== "watchlist") return;
-    // watchlist prop contains full movie objects — use directly
-    if (watchlist?.length > 0) {
-      setWlMovies(watchlist.slice(0, 30));
-    }
-    setLoadingWl(false);
-  }, [tab, watchlist]);
+    if (tab !== "watchlist" || wlMovies.length > 0) return;
+    if (!watchlist?.length) { setLoadingWl(false); return; }
+    setLoadingWl(true);
+    Promise.all(watchlist.slice(0,24).map(async id => {
+      try {
+        const numId = typeof id === "object" ? id?.id || id?.movie_id : id;
+        const res = await tmdbFetch(`/movie/${numId}?language=en-US`).catch(() => tmdbFetch(`/tv/${numId}?language=en-US`));
+        return res?.id ? res : null;
+      } catch { return null; }
+    })).then(results => {
+      setWlMovies(results.filter(Boolean));
+      setLoadingWl(false);
+    });
+  }, [tab]);
 
   // Load user's reviews
   useEffect(() => {
@@ -3902,7 +3910,10 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
               }
               <div style={{fontSize:12,color:"rgba(255,255,255,.5)",marginTop:4}}>{user?.email}</div>
               {tier==="premium"
-                ? <span style={{background:"var(--gold)",color:"#000",fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>✦ PREMIUM</span>
+                ? <span style={{
+                    background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",
+                    color:planType==="annual"?"#000":"#fff",
+                    fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:99,fontFamily:"var(--font-head)",display:"inline-block",marginTop:6}}>{planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium"}</span>
                 : <span style={{background:"rgba(255,255,255,.1)",color:"var(--muted)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:99,display:"inline-block",marginTop:6}}>FREE</span>
               }
               {streak>=1 && (
@@ -3916,19 +3927,19 @@ function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, u
 
           {/* Stats row */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:16}}>
-            {[["♥",watchlist.length,"Watchlist","watchlist"],["✍",myReviews.length||"—","Reviews","reviews"],["★",totalRatings,"Rated",null]].map(([icon,val,label,t])=>(
-              <button key={label} onClick={()=>t&&setTab(t)}
-                style={{background:tab===t?"rgba(245,158,11,.12)":"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:`1px solid ${tab===t?"rgba(245,158,11,.3)":"rgba(255,255,255,.08)"}`,cursor:t?"pointer":"default",transition:"all .2s"}}>
+            {[["♥",watchlist.length,"Watchlist"],["★",totalRatings,"Rated"],["🔮",predStats?.total||0,"Predictions"]].map(([icon,val,label])=>(
+              <div key={label}
+                style={{background:"rgba(255,255,255,.06)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid rgba(255,255,255,.08)"}}>
                 <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
                 <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:18,color:"var(--gold)"}}>{val}</div>
                 <div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{label}</div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div style={{display:"flex",borderBottom:"1px solid var(--border)",flexShrink:0}}>
+        {/* Tabs — hidden since only overview tab exists */}
+        <div style={{display:"none"}}>
           {tabs.map(t=>(
             <button key={t} onClick={()=>setTab(t)} style={{flex:1,background:"none",border:"none",color:tab===t?"var(--gold)":"var(--muted)",fontFamily:"var(--font-head)",fontWeight:700,fontSize:13,padding:"12px 0",borderBottom:tab===t?"2px solid var(--gold)":"2px solid transparent",marginBottom:-1,transition:"all .2s",textTransform:"capitalize",cursor:"pointer"}}>{t}</button>
           ))}
@@ -6619,6 +6630,7 @@ export default function StreamHub() {
     setProfile(prof);
     setTier(prof.tier||"free");
     if (prof.plan_type) setPlanType(prof.plan_type);
+    else if (prof.tier === "premium") setPlanType("monthly"); // existing users default to monthly
     // Load prediction stats from profile (cloud wins over localStorage)
     if (prof.pred_total > 0) {
       const cloudStats = {
