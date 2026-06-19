@@ -4505,110 +4505,181 @@ function MovieModal({ movie, watchlist, userRatings, user, onClose, onRate, onTo
 
 // ─── UPGRADE MODAL ────────────────────────────────────────────────────────────
 function UpgradeModal({ onClose, onComplete }) {
-  const [step,setStep]=useState("plans");
-  const [card,setCard]=useState({name:"",number:"",expiry:"",cvc:""});
-  const [loading,setLoading]=useState(false);
-  const fmtCard=v=>v.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
-  const fmtExp=v=>{const d=v.replace(/\D/g,"").slice(0,4);return d.length>2?d.slice(0,2)+"/"+d.slice(2):d;};
-  const inp={background:"rgba(255,255,255,.06)",border:"1px solid var(--border)",borderRadius:10,color:"var(--text)",padding:"11px 14px",width:"100%",fontSize:14,outline:"none",fontFamily:"var(--font-body)"};
-  const handlePay=()=>{
-    window.location.href="https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00";
+  const [selectedPlan, setSelectedPlan] = useState("annual");
+  const [loading, setLoading] = useState(false);
+
+  const plans = [
+    {
+      id: "monthly",
+      label: "Monthly",
+      price: "$4.99",
+      sub: "per month",
+      badge: null,
+      color: "#8B5CF6",
+      desc: "Cancel anytime",
+    },
+    {
+      id: "annual",
+      label: "Annual",
+      price: "$24.99",
+      sub: "per year",
+      badge: "BEST VALUE",
+      color: "#F59E0B",
+      desc: "Save 58% · $2.08/mo",
+    },
+    {
+      id: "lifetime",
+      label: "Lifetime",
+      price: "$19.99",
+      sub: "one-time",
+      badge: "OWN IT",
+      color: "#10B981",
+      desc: "Pay once, use forever",
+    },
+  ];
+
+  const handleUpgrade = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selectedPlan }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        // Fallback to direct Stripe link
+        window.location.href = "https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00";
+      }
+    } catch {
+      window.location.href = "https://buy.stripe.com/6oU4gzenZcUsbLd16w7EQ00";
+    }
+    setLoading(false);
   };
+
+  const selected = plans.find(p => p.id === selectedPlan);
+
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
-      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:20,width:"100%",maxWidth:520,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 40px 80px rgba(0,0,0,.8)"}}>
-        {step==="plans"&&(
-          <div style={{padding:28}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-              <div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22}}>Upgrade to Premium</div>
-                <div style={{fontSize:13,color:"var(--muted)",marginTop:2}}>Unlock the full streaming experience</div>
-              </div>
-              <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",fontSize:20,cursor:"pointer"}}>✕</button>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px 16px",backdropFilter:"blur(10px)",animation:"fadeIn .2s",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} className="fadeUp" style={{background:"var(--surface)",borderRadius:22,width:"100%",maxWidth:480,border:"1px solid rgba(245,158,11,.3)",boxShadow:"0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(245,158,11,.08)",overflow:"hidden"}}>
+
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,rgba(245,158,11,.15),rgba(139,92,246,.1))",padding:"24px 24px 20px",borderBottom:"1px solid rgba(255,255,255,.06)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:22,marginBottom:2}}>Upgrade to Premium</div>
+              <div style={{fontSize:13,color:"var(--muted)"}}>Unlock the full streaming experience</div>
             </div>
-
-            {/* Comparison */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
-              {/* Free */}
-              <div style={{border:"1px solid var(--border)",borderRadius:14,padding:16}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Free Account</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--muted)",marginBottom:14}}>$0</div>
-                {[
-                  {text:"10 searches/day",        ok:true},
-                  {text:"Watchlist (50 titles)",   ok:true},
-                  {text:"🎭 Mood Search (unlimited)",  ok:true},
-                  {text:"Ratings & reviews",        ok:true},
-                  {text:"Watch trailers",           ok:true},
-                  {text:"1 Free Cost Report",       ok:true},
-                  {text:"Watch Tonight",            ok:false},
-                  {text:"New Releases",             ok:false},
-                  {text:"Leaving Soon alerts",      ok:false},
-                  {text:"Unlimited Cost Reports",   ok:false},
-                ].map((f,i)=>(
-                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,color:f.ok?"var(--text)":"var(--muted)",marginBottom:7,opacity:f.ok?1:.5}}>
-                    <span style={{color:f.ok?"var(--sports)":"rgba(255,255,255,.2)",fontSize:13}}>{f.ok?"✓":"✕"}</span>{f.text}
-                  </div>
-                ))}
-              </div>
-
-              {/* Premium */}
-              <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:16,background:"rgba(245,158,11,.04)",position:"relative"}}>
-                <div style={{position:"absolute",top:-11,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 12px",borderRadius:99,fontFamily:"var(--font-head)",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:16,marginBottom:2}}>Premium</div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:24,color:"var(--gold)",marginBottom:14}}>$7.99<span style={{fontSize:13,fontWeight:400,color:"var(--muted)"}}>/mo</span></div>
-                {[
-                  {text:"Unlimited searches",              ok:true},
-                  {text:"Unlimited watchlist",             ok:true},
-                                    {text:"Ratings & reviews",               ok:true},
-                  {text:"Watch trailers",                  ok:true},
-                  {text:"🌙 Watch Tonight AI picks",       ok:true},
-                  {text:"🆕 New Releases",                 ok:true},
-                  {text:"🚨 Leaving Soon alerts",          ok:true},
-                  {text:"💰 Unlimited Cost Reports",       ok:true},
-                  {text:"📺 Watch History & Stats",        ok:true},
-                ].map((f,i)=>(
-                  <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:12,marginBottom:7,color:"var(--text)"}}>
-                    <span style={{color:"var(--gold)",fontSize:13}}>✓</span>{f.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button onClick={()=>setStep("pay")} style={{width:"100%",background:"linear-gradient(135deg,var(--gold),#f59e0b)",border:"none",borderRadius:12,color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,cursor:"pointer",boxShadow:"0 8px 24px rgba(245,158,11,.3)"}}>
-              Upgrade to Premium — $7.99/mo →
-            </button>
-            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>Cancel anytime · No hidden fees · Secured by Stripe</div>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,.08)",border:"none",borderRadius:10,color:"var(--muted)",width:32,height:32,fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
-        )}
-        {step==="pay"&&(
-          <div style={{padding:28}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:22}}>
-              <button onClick={()=>setStep("plans")} style={{background:"rgba(255,255,255,.07)",border:"none",borderRadius:8,color:"var(--text)",width:32,height:32,fontSize:16}}>←</button>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:20}}>Payment Details</div>
+        </div>
+
+        <div style={{padding:"20px 24px 24px"}}>
+
+          {/* Feature comparison - compact */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+            {/* Free */}
+            <div style={{border:"1px solid var(--border)",borderRadius:14,padding:14}}>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,marginBottom:2}}>Free Account</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--muted)",marginBottom:10}}>$0</div>
+              {[
+                {text:"10 searches/day",ok:true},
+                {text:"Watchlist (50 titles)",ok:true},
+                {text:"🎭 Mood Search",ok:true},
+                {text:"1 Free Cost Report",ok:true},
+                {text:"Watch Tonight",ok:false},
+                {text:"New Releases",ok:false},
+                {text:"Leaving Soon",ok:false},
+              ].map((f,i)=>(
+                <div key={i} style={{display:"flex",gap:6,alignItems:"center",fontSize:11,color:f.ok?"var(--text)":"var(--muted)",marginBottom:4}}>
+                  <span style={{color:f.ok?"var(--sports)":"rgba(255,255,255,.2)",fontSize:11,flexShrink:0}}>{f.ok?"✓":"✕"}</span>{f.text}
+                </div>
+              ))}
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:20}}>
-              <input value={card.name} onChange={e=>setCard({...card,name:e.target.value})} placeholder="Cardholder name" style={inp} />
-              <div style={{position:"relative"}}>
-                <input value={card.number} onChange={e=>setCard({...card,number:fmtCard(e.target.value)})} placeholder="1234 5678 9012 3456" style={{...inp,paddingRight:48}} />
-                <span style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",fontSize:18}}>💳</span>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <input value={card.expiry} onChange={e=>setCard({...card,expiry:fmtExp(e.target.value)})} placeholder="MM / YY" style={inp} />
-                <input value={card.cvc} onChange={e=>setCard({...card,cvc:e.target.value.replace(/\D/g,"").slice(0,3)})} placeholder="CVC" style={inp} />
-              </div>
+
+            {/* Premium */}
+            <div style={{border:"2px solid var(--gold)",borderRadius:14,padding:14,background:"rgba(245,158,11,.04)",position:"relative"}}>
+              <div style={{position:"absolute",top:-10,left:"50%",transform:"translateX(-50%)",background:"var(--gold)",borderRadius:99,padding:"2px 10px",fontSize:9,fontWeight:900,color:"#000",whiteSpace:"nowrap"}}>✦ BEST VALUE</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:14,marginBottom:2}}>Premium</div>
+              <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:22,color:"var(--gold)",marginBottom:10}}>from $4.99<span style={{fontSize:11,fontWeight:600,color:"var(--muted)"}}>/mo</span></div>
+              {[
+                {text:"Unlimited searches",ok:true},
+                {text:"Unlimited watchlist",ok:true},
+                {text:"🎭 Mood Search",ok:true},
+                {text:"🌙 Watch Tonight",ok:true},
+                {text:"🆕 New Releases",ok:true},
+                {text:"🚨 Leaving Soon",ok:true},
+                {text:"💰 Unlimited Cost Reports",ok:true},
+              ].map((f,i)=>(
+                <div key={i} style={{display:"flex",gap:6,alignItems:"center",fontSize:11,color:"var(--text)",marginBottom:4}}>
+                  <span style={{color:"var(--sports)",fontSize:11,flexShrink:0}}>✓</span>{f.text}
+                </div>
+              ))}
             </div>
-            <button onClick={handlePay} disabled={loading} style={{width:"100%",background:loading?"rgba(245,158,11,.5)":"var(--gold)",border:"none",borderRadius:"var(--radius)",color:"#000",padding:14,fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-              {loading?<><span style={{display:"inline-block",width:18,height:18,border:"2px solid #000",borderTopColor:"transparent",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>Processing…</>:"Pay $7.99 / month"}
-            </button>
-            <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:14}}>🔒 Secured by <span style={{color:"#6772e5",fontWeight:700}}>Stripe</span> · SSL Encrypted</div>
           </div>
-        )}
+
+          {/* Plan selector */}
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--muted)",marginBottom:10,letterSpacing:.5}}>CHOOSE YOUR PLAN</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {plans.map(plan=>(
+                <button key={plan.id} onClick={()=>setSelectedPlan(plan.id)} style={{
+                  display:"flex",alignItems:"center",justifyContent:"space-between",
+                  padding:"12px 14px",borderRadius:12,cursor:"pointer",
+                  background:selectedPlan===plan.id?`rgba(${plan.id==="annual"?"245,158,11":plan.id==="lifetime"?"16,185,129":"139,92,246"},.1)`:"rgba(255,255,255,.03)",
+                  border:`2px solid ${selectedPlan===plan.id?plan.color:"rgba(255,255,255,.08)"}`,
+                  transition:"all .15s",textAlign:"left",
+                }}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{
+                      width:18,height:18,borderRadius:"50%",border:`2px solid ${selectedPlan===plan.id?plan.color:"rgba(255,255,255,.2)"}`,
+                      background:selectedPlan===plan.id?plan.color:"transparent",flexShrink:0,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                    }}>
+                      {selectedPlan===plan.id&&<div style={{width:6,height:6,borderRadius:"50%",background:"#000"}}/>}
+                    </div>
+                    <div>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontWeight:800,fontSize:14,color:"var(--text)"}}>{plan.label}</span>
+                        {plan.badge&&<span style={{fontSize:9,fontWeight:900,background:plan.color,color:plan.id==="annual"?"#000":"#fff",borderRadius:4,padding:"1px 5px"}}>{plan.badge}</span>}
+                      </div>
+                      <div style={{fontSize:11,color:"var(--muted)"}}>{plan.desc}</div>
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,color:selectedPlan===plan.id?plan.color:"var(--text)"}}>{plan.price}</div>
+                    <div style={{fontSize:10,color:"var(--muted)"}}>{plan.sub}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button onClick={handleUpgrade} disabled={loading} style={{
+            width:"100%",background:`linear-gradient(135deg,${selected.color},${selected.id==="annual"?"#8B5CF6":selected.id==="lifetime"?"#06B6D4":"#6366f1"})`,
+            border:"none",borderRadius:14,color:selected.id==="annual"?"#000":"#fff",
+            padding:"14px 0",fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,
+            cursor:loading?"not-allowed":"pointer",
+            boxShadow:`0 4px 20px ${selected.color}66`,
+            opacity:loading?.7:1,transition:"opacity .2s",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+          }}>
+            {loading?"Processing…":`Get ${selected.label} — ${selected.price} →`}
+          </button>
+
+          <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",marginTop:10}}>
+            Cancel anytime · No hidden fees · Secured by Stripe
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── SETUP MODAL ──────────────────────────────────────────────────────────────
+
 function SetupModal({ userSubs, onSave, onClose, isFirst }) {
   const [selected, setSelected] = useState(new Set(userSubs));
   const toggle = id => setSelected(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
