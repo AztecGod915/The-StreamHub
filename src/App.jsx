@@ -7474,7 +7474,7 @@ export default function StreamHub() {
         </header>
 
         {/* 🎭 AI BRAND BANNER — full width, above all three columns */}
-        {!user && view==="home"&&!search.trim()&&(
+        {view==="home"&&!search.trim()&&(
           <div style={{
             margin:"0",
             padding:"0 24px 0",
@@ -7734,55 +7734,8 @@ export default function StreamHub() {
         </div>
 
         {/* Footer */}
-        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)"}}>
-        {/* Advanced Stats Section */}
-
-          {/* Footer hero tagline */}
-          <div style={{
-            padding:"48px 40px 32px",
-            background:"linear-gradient(180deg,rgba(10,8,24,0.98) 0%,rgba(12,8,28,1) 100%)",
-            textAlign:"center",position:"relative",
-          }}>
-            <div style={{
-              fontFamily:"var(--font-head)", fontWeight:800,
-              fontSize:"clamp(24px,3vw,42px)",
-              letterSpacing:"-.01em", marginBottom:10,
-              background:"linear-gradient(90deg,#F59E0B,#ffffff,#8B5CF6,#C4B5FD,#F59E0B)",
-              backgroundSize:"300% auto",
-              WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
-              animation:"gradientShift 4s linear infinite",
-            }}>Your AI Streaming Assistant</div>
-            <div style={{
-              fontSize:12, letterSpacing:4, marginBottom:36,
-              color:"rgba(240,240,250,.55)", display:"inline-block",
-              background:"rgba(255,255,255,.05)",
-              padding:"6px 20px", borderRadius:99,
-              border:"1px solid rgba(255,255,255,.1)",
-            }}>THE STREAMHUB</div>
-
-            {/* Word pills */}
-            <div style={{display:"flex",justifyContent:"center",gap:12,flexWrap:"wrap",marginBottom:36}}>
-              {[
-                {word:"SEARCH", color:"#000",    bg:"#F59E0B",  shadow:"rgba(245,158,11,.6)"},
-                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"FIND",   color:"#fff",    bg:"#8B5CF6",  shadow:"rgba(139,92,246,.5)"},
-                {word:"·",      color:"rgba(240,240,250,.4)", bg:"transparent", shadow:"none"},
-                {word:"ENJOY",  color:"#000",    bg:"#FFFFFF",  shadow:"rgba(255,255,255,.4)"},
-              ].map((p,i)=>(
-                <span key={i} style={{
-                  fontFamily:"var(--font-head)", fontWeight:800,
-                  fontSize: p.word==="·" ? 28 : 20,
-                  color:p.color, letterSpacing: p.word==="·" ? 0 : 4,
-                  background:p.bg, borderRadius:99,
-                  padding: p.word==="·" ? "0 8px" : "10px 32px",
-                  display:"inline-flex", alignItems:"center",
-                  boxShadow: p.shadow!=="none" ? `0 0 28px ${p.shadow}, 0 4px 12px rgba(0,0,0,.4)` : "none",
-                  animation: p.word!=="·" ? `badgePop 3s ease-in-out infinite` : "none",
-                  animationDelay:`${i*0.4}s`,
-                }}>{p.word}</span>
-              ))}
-            </div>
-
+        <div style={{position:"relative",overflow:"hidden",borderTop:"2px solid rgba(245,158,11,.2)",background:"linear-gradient(180deg,rgba(10,8,24,0.98),rgba(12,8,28,1))"}}>
+          <div style={{padding:"20px 40px"}}>
             {/* Bottom bar */}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,paddingTop:24,borderTop:"1px solid rgba(255,255,255,.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:14}}>
