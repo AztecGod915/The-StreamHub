@@ -3803,7 +3803,7 @@ const shareWatchlist = async (watchlist, username) => {
     navigator.clipboard.writeText(text).then(()=>{}).catch(()=>{});
   }
 };
-function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
+function ProfileModal({ user, profile, tier, planType, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
@@ -3818,6 +3818,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
   const avatarLetter = username[0]?.toUpperCase()||"U";
   const totalRatings = Object.keys(userRatings).length;
   const isPremium = tier === "premium";
+  const planLabel = planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium";
 
   const saveUsername = async () => {
     const { error } = await supabase.from("profiles").update({ username }).eq("id", user.id);
@@ -3843,18 +3844,15 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
     } catch(e) { showToast("Failed to upload"); setUploadingAvatar(false); }
   };
 
-  // Load watchlist movies from TMDB when tab opens
+  // Load watchlist — watchlist is already an array of movie objects
   useEffect(() => {
-    if (tab !== "watchlist" || wlMovies.length > 0) return;
-    setLoadingWl(true);
-    Promise.all(watchlist.slice(0,20).map(async id => {
-      try { return await tmdbFetch(`/movie/${id}?language=en-US`).catch(() => tmdbFetch(`/tv/${id}?language=en-US`)); }
-      catch { return null; }
-    })).then(results => {
-      setWlMovies(results.filter(Boolean));
-      setLoadingWl(false);
-    });
-  }, [tab]);
+    if (tab !== "watchlist") return;
+    // watchlist prop contains full movie objects — use directly
+    if (watchlist?.length > 0) {
+      setWlMovies(watchlist.slice(0, 30));
+    }
+    setLoadingWl(false);
+  }, [tab, watchlist]);
 
   // Load user's reviews
   useEffect(() => {
@@ -3872,7 +3870,7 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
     showToast("Review deleted");
   };
 
-  const tabs = ["overview","watchlist","reviews"];
+  const tabs = ["overview"];
 
   return (
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:1100,display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)",animation:"fadeIn .2s"}}>
@@ -6416,6 +6414,7 @@ export default function StreamHub() {
   }, []);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [tier, setTier] = useState("free");
+  const [planType, setPlanType] = useState(null); // "monthly" | "annual" | "lifetime"
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
@@ -6577,8 +6576,10 @@ export default function StreamHub() {
       const upgradeUser = async () => {
         const { data:{ session } } = await supabase.auth.getSession();
         if (session?.user) {
-          await supabase.from("profiles").update({ tier:"premium" }).eq("id", session.user.id);
+          const planFromUrl = params.get("plan") || "monthly";
+          await supabase.from("profiles").update({ tier:"premium", plan_type: planFromUrl }).eq("id", session.user.id);
           setTier("premium");
+          setPlanType(planFromUrl);
           showToast("🎉 Welcome to Premium! All features unlocked.");
         } else {
           // Store flag so we can upgrade after they sign in
@@ -6617,6 +6618,7 @@ export default function StreamHub() {
     }
     setProfile(prof);
     setTier(prof.tier||"free");
+    if (prof.plan_type) setPlanType(prof.plan_type);
     // Load prediction stats from profile (cloud wins over localStorage)
     if (prof.pred_total > 0) {
       const cloudStats = {
@@ -7172,7 +7174,7 @@ export default function StreamHub() {
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7224,7 +7226,16 @@ export default function StreamHub() {
             </div>
             <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
               {tier==="premium"
-                ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
+                ?<button onClick={()=>setShowProfile(true)} style={{
+                    background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",
+                    color:planType==="annual"?"#000":"#fff",
+                    fontSize:11,fontWeight:800,padding:"5px 14px",borderRadius:99,
+                    fontFamily:"var(--font-head)",border:"none",cursor:"pointer",
+                    boxShadow:planType==="lifetime"?"0 0 12px rgba(16,185,129,.5)":planType==="annual"?"0 0 12px rgba(245,158,11,.5)":"0 0 12px rgba(139,92,246,.5)",
+                    whiteSpace:"nowrap",letterSpacing:.3,
+                  }}>
+                    {planType==="lifetime"?"👑 Lifetime Premium":planType==="annual"?"🌟 Annual Premium":"💜 Monthly Premium"}
+                  </button>
                 :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.35)",cursor:"pointer"}}>Upgrade ✦</button>
               }
               {!user
@@ -7488,7 +7499,7 @@ export default function StreamHub() {
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
       {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7861,7 +7872,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-            {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
+            {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} planType={planType} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
