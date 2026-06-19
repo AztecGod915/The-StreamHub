@@ -6858,6 +6858,8 @@ export default function StreamHub() {
         </div>
 
         
+        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
+
         {/* Search status */}
         {search.trim() && (
           <div style={{padding:"12px 14px 0",fontSize:13,color:"var(--muted)"}}>
@@ -7093,6 +7095,8 @@ export default function StreamHub() {
           </div>
 
         </header>
+
+        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
 
         {/* Tablet Hero with Trailer */}
 
@@ -7375,7 +7379,9 @@ export default function StreamHub() {
                 </div>
               </div>
 
-              {/* Sports Hub card */}
+    
+        {!user && view==="home" && !search.trim() && <WelcomeBanner />}
+          {/* Sports Hub card */}
               <div onClick={()=>{setView("sports");setSearch("");}}
                 style={{
                   background:"linear-gradient(135deg,#030f03 0%,#0a2010 60%,#031208 100%)",
