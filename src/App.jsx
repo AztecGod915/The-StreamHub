@@ -4655,6 +4655,7 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
     {id:"movies",    icon:"🎬", label:"Movies",  color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",      color:"#A78BFA", anim:"tvFlicker"},
     {id:"sports",    icon:"🏆", label:"Sports",  color:"#10B981", anim:"trophyBounce"},
+    {id:"docs",      icon:"🎞️", label:"Docs",    color:"#8B5CF6", anim:null},
     {id:"watchlist", icon:"❤️", label:"Saved",   color:"#ef4444", anim:null},
     {id:"stats",     icon:"📊", label:"Stats",   color:"#10B981", anim:null},
   ];
@@ -6281,7 +6282,7 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], tvShows:[], docs:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -7022,7 +7023,7 @@ export default function StreamHub() {
               {title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
-              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
+              {title:"Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
@@ -7064,6 +7065,14 @@ export default function StreamHub() {
             <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
             <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
           </div>
+        ) : view==="docs" ? (
+          <div style={{padding:"12px 14px 100px"}}>
+            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🎞️ Documentaries</div>
+            <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Top-rated docs across all streaming services</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+              {featuredRows.docs.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={openMovie} onToggleWatchlist={toggleWatchlist}/>)}
+            </div>
+          </div>
         ) : (
           /* Regular grid */
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
@@ -7076,33 +7085,36 @@ export default function StreamHub() {
           </div>
         )}
 
-
         {/* Mobile Footer */}
-        {view === "home" && !search.trim() && (
+        {view==="home" && !search.trim() && (
           <div style={{
-            padding:"24px 20px 28px",
-            borderTop:"1px solid rgba(245,158,11,.15)",
-            background:"linear-gradient(180deg,rgba(9,7,15,0),rgba(9,7,15,.95))",
+            margin:"8px 14px 16px",
+            padding:"20px",
+            borderRadius:18,
+            background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",
+            border:"1px solid rgba(245,158,11,.12)",
             textAlign:"center",
-            marginBottom:4,
           }}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:8}}>
-              <img src="/logo-clean.png" alt="" style={{height:28,width:"auto",filter:"drop-shadow(0 0 6px rgba(245,158,11,.4))"}} loading="lazy"/>
-              <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16}}>
-                <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
+              <img src="/logo-clean.png" alt="" style={{height:32,width:32,borderRadius:8,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,158,11,.5))"}} loading="lazy"/>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,lineHeight:1.1}}>
+                  <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
+                </div>
+                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1.2}}>AI STREAMING ASSISTANT</div>
               </div>
             </div>
-            <div style={{fontSize:10,color:"rgba(240,240,250,.25)",letterSpacing:.5,marginBottom:10}}>
-              YOUR AI STREAMING ASSISTANT
-            </div>
             <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:6,marginBottom:12}}>
-              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","ESPN+"].map(s=>(
-                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.2)",letterSpacing:.3}}>{s}</span>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","Crunchyroll","ESPN+","Fubo"].map(s=>(
+                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.18)",padding:"2px 6px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
               ))}
             </div>
-            <div style={{fontSize:10,color:"rgba(240,240,250,.2)"}}>© 2026 StreamHub · Not affiliated with any streaming service</div>
+            <div style={{fontSize:9,color:"rgba(240,240,250,.2)",lineHeight:1.6}}>
+              © 2026 The StreamHub<br/>Not affiliated with any streaming service
+            </div>
           </div>
         )}
+
 
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
@@ -7347,7 +7359,7 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
@@ -7406,29 +7418,32 @@ export default function StreamHub() {
 
 
         {/* Tablet Footer */}
-        {view === "home" && !search.trim() && (
+        {view==="home" && !search.trim() && (
           <div style={{
-            padding:"28px 32px",
-            borderTop:"1px solid rgba(245,158,11,.15)",
-            background:"linear-gradient(180deg,rgba(9,7,15,0),rgba(9,7,15,.95))",
+            margin:"8px 20px 16px",
+            padding:"24px 28px",
+            borderRadius:20,
+            background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",
+            border:"1px solid rgba(245,158,11,.12)",
             display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,
-            marginBottom:4,
           }}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <img src="/logo-clean.png" alt="" style={{height:32,width:"auto",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}} loading="lazy"/>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <img src="/logo-clean.png" alt="" style={{height:40,width:40,borderRadius:10,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))"}} loading="lazy"/>
               <div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:17}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18}}>
                   <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
                 </div>
-                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1}}>YOUR AI STREAMING ASSISTANT</div>
+                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1.2}}>YOUR AI STREAMING ASSISTANT</div>
               </div>
             </div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
-              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime Video","Peacock","Crunchyroll","ESPN+","DAZN"].map(s=>(
-                <span key={s} style={{fontSize:10,color:"rgba(240,240,250,.2)",letterSpacing:.3}}>{s}</span>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}}>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime Video","Peacock","Crunchyroll","ESPN+","Fubo","DAZN"].map(s=>(
+                <span key={s} style={{fontSize:10,color:"rgba(240,240,250,.2)",padding:"2px 8px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
               ))}
             </div>
-            <div style={{fontSize:10,color:"rgba(240,240,250,.2)"}}>© 2026 StreamHub · Not affiliated with any streaming service</div>
+            <div style={{fontSize:10,color:"rgba(240,240,250,.2)",textAlign:"right"}}>
+              © 2026 The StreamHub<br/>Not affiliated with any streaming service
+            </div>
           </div>
         )}
 
@@ -7727,7 +7742,7 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="🎞️ Documentaries" icon="🎞️" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
