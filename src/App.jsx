@@ -4655,7 +4655,6 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
     {id:"movies",    icon:"🎬", label:"Movies",  color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",      color:"#A78BFA", anim:"tvFlicker"},
     {id:"sports",    icon:"🏆", label:"Sports",  color:"#10B981", anim:"trophyBounce"},
-    {id:"docs",      icon:"🎞️", label:"Docs",    color:"#8B5CF6", anim:null},
     {id:"watchlist", icon:"❤️", label:"Saved",   color:"#ef4444", anim:null},
     {id:"stats",     icon:"📊", label:"Stats",   color:"#10B981", anim:null},
   ];
@@ -6282,7 +6281,7 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], tvShows:[], docs:[], sports:[] });
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -6831,7 +6830,7 @@ export default function StreamHub() {
               />
             </div>
             {tier==="premium"
-              ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
+              ?<button onClick={()=>setShowProfile(true)} style={{background:planType==="lifetime"?"linear-gradient(135deg,#10B981,#06B6D4)":planType==="annual"?"linear-gradient(135deg,#F59E0B,#EF4444)":"linear-gradient(135deg,#8B5CF6,#6366f1)",color:planType==="annual"?"#000":"#fff",fontSize:9,fontWeight:800,padding:"3px 10px",borderRadius:99,fontFamily:"var(--font-head)",border:"none",cursor:"pointer",whiteSpace:"nowrap"}}>{planType==="lifetime"?"👑 Lifetime":planType==="annual"?"🌟 Annual":"💜 Monthly"}</button>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
             <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
@@ -6983,7 +6982,7 @@ export default function StreamHub() {
 
         {/* Mobile Premium Tools Strip */}
         <div style={{padding:"0 14px 16px"}}>
-          <button onClick={()=>setShowUpgrade(true)} style={{
+          <button onClick={()=>tier==="premium"?setShowProfile(true):setShowUpgrade(true)} style={{
   display:"flex",alignItems:"center",justifyContent:"space-between",
   width:"100%",background:"rgba(245,158,11,.08)",
   border:"1px solid rgba(245,158,11,.25)",borderRadius:10,
@@ -6991,7 +6990,10 @@ export default function StreamHub() {
   fontFamily:"var(--font-head)",
 }}>
   <span style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1.2}}>✦ PREMIUM TOOLS</span>
-  <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>$7.99/mo →</span>
+  {tier==="premium"
+    ? <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>{planType==="lifetime"?"👑 Lifetime":planType==="annual"?"🌟 Annual":"💜 Monthly"}</span>
+    : <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>from $4.99/mo →</span>
+  }
 </button>
           <div style={{display:"flex",gap:10,overflowX:"auto",scrollbarWidth:"none",paddingBottom:4}}>
             {[
@@ -7023,7 +7025,7 @@ export default function StreamHub() {
               {title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},
               {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
-              {title:"Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
@@ -7065,14 +7067,6 @@ export default function StreamHub() {
             <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
             <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
           </div>
-        ) : view==="docs" ? (
-          <div style={{padding:"12px 14px 100px"}}>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🎞️ Documentaries</div>
-            <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Top-rated docs across all streaming services</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-              {featuredRows.docs.map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={openMovie} onToggleWatchlist={toggleWatchlist}/>)}
-            </div>
-          </div>
         ) : (
           /* Regular grid */
           <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,padding:"12px 14px"}}>
@@ -7085,43 +7079,31 @@ export default function StreamHub() {
           </div>
         )}
 
-        {/* Mobile Footer */}
-        {view==="home" && !search.trim() && (
-          <div style={{
-            margin:"8px 14px 16px",
-            padding:"20px",
-            borderRadius:18,
-            background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",
-            border:"1px solid rgba(245,158,11,.12)",
-            textAlign:"center",
-          }}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
-              <img src="/logo-clean.png" alt="" style={{height:32,width:32,borderRadius:8,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,158,11,.5))"}} loading="lazy"/>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16,lineHeight:1.1}}>
-                  <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
-                </div>
-                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1.2}}>AI STREAMING ASSISTANT</div>
-              </div>
-            </div>
-            <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:6,marginBottom:12}}>
-              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","Crunchyroll","ESPN+","Fubo"].map(s=>(
-                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.18)",padding:"2px 6px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
-              ))}
-            </div>
-            <div style={{fontSize:9,color:"rgba(240,240,250,.2)",lineHeight:1.6}}>
-              © 2026 The StreamHub<br/>Not affiliated with any streaming service
-            </div>
-          </div>
-        )}
-
-
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
 
-        {/* Spacer so content scrolls fully above bottom nav + tagline */}
-        <div style={{height:160}} />
+
+        {/* Mobile Footer */}
+        {view==="home" && !search.trim() && (
+          <div style={{margin:"4px 14px 12px",padding:"20px",borderRadius:18,background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",border:"1px solid rgba(245,158,11,.12)",textAlign:"center"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
+              <img src="/logo-clean.png" alt="" style={{height:30,width:30,borderRadius:8,objectFit:"contain",filter:"drop-shadow(0 0 6px rgba(245,158,11,.4))"}} loading="lazy"/>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:15}}><span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span></div>
+                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1}}>AI STREAMING ASSISTANT</div>
+              </div>
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:5,marginBottom:10}}>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","Crunchyroll","ESPN+","Fubo"].map(s=>(
+                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.18)",padding:"1px 5px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
+              ))}
+            </div>
+            <div style={{fontSize:9,color:"rgba(240,240,250,.18)"}}>© 2026 The StreamHub · Not affiliated with any streaming service</div>
+          </div>
+        )}
+        {/* Spacer */}
+        <div style={{height:80}} />
 
       </div>
 
@@ -7328,7 +7310,7 @@ export default function StreamHub() {
                 <span style={{color:"rgba(16,185,129,.6)",fontSize:18}}>›</span>
               </div>
             </button>
-            <button onClick={()=>setShowUpgrade(true)} style={{
+            <button onClick={()=>tier==="premium"?setShowProfile(true):setShowUpgrade(true)} style={{
   display:"flex",alignItems:"center",justifyContent:"space-between",
   width:"100%",background:"rgba(245,158,11,.08)",
   border:"1px solid rgba(245,158,11,.25)",borderRadius:10,
@@ -7336,7 +7318,10 @@ export default function StreamHub() {
   fontFamily:"var(--font-head)",
 }}>
   <span style={{fontSize:10,fontWeight:800,color:"var(--gold)",letterSpacing:1.2}}>✦ PREMIUM TOOLS</span>
-  <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>$7.99/mo →</span>
+  {tier==="premium"
+    ? <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>{planType==="lifetime"?"👑 Lifetime":planType==="annual"?"🌟 Annual":"💜 Monthly"}</span>
+    : <span style={{fontSize:11,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.15)",border:"1px solid rgba(245,158,11,.3)",borderRadius:6,padding:"2px 8px"}}>from $4.99/mo →</span>
+  }
 </button>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
               {[
@@ -7359,7 +7344,7 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"}].map(row=>(
+              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
@@ -7419,36 +7404,24 @@ export default function StreamHub() {
 
         {/* Tablet Footer */}
         {view==="home" && !search.trim() && (
-          <div style={{
-            margin:"8px 20px 16px",
-            padding:"24px 28px",
-            borderRadius:20,
-            background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",
-            border:"1px solid rgba(245,158,11,.12)",
-            display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,
-          }}>
+          <div style={{margin:"8px 20px 12px",padding:"22px 28px",borderRadius:18,background:"linear-gradient(135deg,rgba(139,92,246,.08),rgba(245,158,11,.05))",border:"1px solid rgba(245,158,11,.12)",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:14}}>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <img src="/logo-clean.png" alt="" style={{height:40,width:40,borderRadius:10,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5))"}} loading="lazy"/>
+              <img src="/logo-clean.png" alt="" style={{height:36,width:36,borderRadius:10,objectFit:"contain",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}} loading="lazy"/>
               <div>
-                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18}}>
-                  <span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span>
-                </div>
-                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1.2}}>YOUR AI STREAMING ASSISTANT</div>
+                <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:16}}><span style={{color:"#F59E0B"}}>The Stream</span><span style={{color:"#8B5CF6"}}>Hub</span></div>
+                <div style={{fontSize:9,color:"rgba(240,240,250,.3)",letterSpacing:1}}>YOUR AI STREAMING ASSISTANT</div>
               </div>
             </div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:6,justifyContent:"center"}}>
-              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime Video","Peacock","Crunchyroll","ESPN+","Fubo","DAZN"].map(s=>(
-                <span key={s} style={{fontSize:10,color:"rgba(240,240,250,.2)",padding:"2px 8px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5,justifyContent:"center"}}>
+              {["Netflix","Disney+","Max","Hulu","Apple TV+","Prime","Peacock","Crunchyroll","ESPN+","DAZN"].map(s=>(
+                <span key={s} style={{fontSize:9,color:"rgba(240,240,250,.18)",padding:"2px 7px",background:"rgba(255,255,255,.04)",borderRadius:4}}>{s}</span>
               ))}
             </div>
-            <div style={{fontSize:10,color:"rgba(240,240,250,.2)",textAlign:"right"}}>
-              © 2026 The StreamHub<br/>Not affiliated with any streaming service
-            </div>
+            <div style={{fontSize:9,color:"rgba(240,240,250,.18)"}}>© 2026 The StreamHub<br/>Not affiliated with any streaming service</div>
           </div>
         )}
-
-        {/* Spacer so content scrolls above bottom nav */}
-        <div style={{height:100}} />
+        {/* Spacer */}
+        <div style={{height:80}} />
 
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
@@ -7742,7 +7715,7 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="🎞️ Documentaries" icon="🎞️" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
@@ -7810,7 +7783,7 @@ export default function StreamHub() {
               {/* Sports Hub Button */}
               {/* Mood Search & Sports Hub are featured below the banner — not duplicated here */}
               {view==="home"&&<>
-              <div style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,marginBottom:10,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><span style={{fontSize:10,fontWeight:700,color:"var(--gold)",letterSpacing:1.2,fontFamily:"var(--font-head)"}}>✦ PREMIUM TOOLS</span>{tier==="premium"&&<span style={{fontSize:10,fontWeight:800,color:"var(--gold)",background:"rgba(245,158,11,.12)",border:"1px solid rgba(245,158,11,.25)",borderRadius:6,padding:"1px 8px"}}>{planType==="lifetime"?"👑 Lifetime":planType==="annual"?"🌟 Annual":"💜 Monthly"}</span>}</div>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {[
                   {icon:"💰",label:"Cost Report",  sub:"AI analyzes which services to keep or cut",onClick:()=>setShowCostCalc(true),color:"#10B981",grad:"rgba(16,185,129,.07)"},
