@@ -6275,6 +6275,8 @@ export default function StreamHub() {
   const [view, setView] = useState("home");
   const [search, setSearch] = useState("");
   const [searchPlaceholder, setSearchPlaceholder] = useState("Search by title, genre or mood…");
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [showReferral, setShowReferral] = useState(false);
 
   useEffect(() => {
     const placeholders = [
@@ -6298,6 +6300,28 @@ export default function StreamHub() {
     }, 3500);
     return () => clearInterval(interval);
   }, [search]);
+
+  // PWA install prompt — native beforeinstallprompt on Android/Chrome
+  useEffect(() => {
+    const dismissed = localStorage.getItem("streamhub_install_dismissed");
+    if (dismissed) return;
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+      setTimeout(() => setShowInstallPrompt(true), 8000);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone === true;
+    let timer;
+    if (isIOS && !isStandalone) {
+      timer = setTimeout(() => setShowInstallPrompt(true), 90000);
+    }
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
@@ -7076,6 +7100,7 @@ export default function StreamHub() {
       {/* Modals */}
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
@@ -7089,7 +7114,7 @@ export default function StreamHub() {
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
       {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
-            {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+            {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
@@ -7391,6 +7416,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
+      {showReferral&&<ReferralModal onClose={()=>setShowReferral(false)} user={user} profile={profile} showToast={showToast}/>}
       {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
@@ -7403,7 +7429,7 @@ export default function StreamHub() {
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
-            {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+            {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
@@ -7764,7 +7790,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak}/>}
+            {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onInvite={()=>setShowReferral(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7776,7 +7802,7 @@ export default function StreamHub() {
       {showPersonalizedRecs&&<PersonalizedRecsModal onClose={()=>setShowPersonalizedRecs(false)} user={user} tier={tier} onUpgrade={()=>setShowUpgrade(true)} watchlist={watchlist} userRatings={userRatings} onResults={(q)=>setSearch(q)}/>}
       {showSignupPrompt&&!user&&<SignupPrompt onSignup={()=>{setShowSignupPrompt(false);setShowAuth(true);}} onDismiss={()=>{setShowSignupPrompt(false);localStorage.setItem("streamhub_signup_dismissed","true");}} searchesUsed={searchesUsed}/>}
       {showSearchLimit&&!user&&<SearchLimitWall onSignup={()=>{setShowSearchLimit(false);setShowAuth(true);}} onDismiss={()=>setShowSearchLimit(false)}/>}
-      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}}/>}
+      {showInstallPrompt&&<InstallPrompt onDismiss={()=>{setShowInstallPrompt(false);localStorage.setItem("streamhub_install_dismissed","true");}} deferredPrompt={deferredInstallPrompt}/>}
       {shareContent&&<ShareModal title={shareContent.title} text={shareContent.text} url={shareContent.url} onClose={()=>setShareContent(null)}/>}
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
       {predCelebration&&<PredictionCelebrationModal streak={predCelebration.streak} points={predCelebration.points} milestone={predCelebration.milestone} onClose={()=>setPredCelebration(null)}/>}
