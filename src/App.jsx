@@ -147,7 +147,15 @@ const GlobalStyles = () => {
       @keyframes flameDance { 0%,100%{transform:scale(1) rotate(-8deg)} 25%{transform:scale(1.3) rotate(8deg)} 50%{transform:scale(0.9) rotate(-5deg)} 75%{transform:scale(1.2) rotate(6deg)} }
       @keyframes swordSwing { 0%,100%{transform:rotate(-20deg) scale(1)} 50%{transform:rotate(20deg) scale(1.1)} }
       @keyframes tvFlicker { 0%,88%,92%,100%{opacity:1} 90%{opacity:0.4} }
-      @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+      @keyframes iconPulse {
+  0%,100% { transform:scale(1); box-shadow:0 0 10px var(--pulse-color,rgba(245,158,11,.2)); }
+  50% { transform:scale(1.12); box-shadow:0 0 18px var(--pulse-color,rgba(245,158,11,.4)); }
+}
+@keyframes titleShimmer {
+  0% { background-position:0% center; }
+  100% { background-position:200% center; }
+}
+@keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
       @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
       @keyframes badgePop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
       @keyframes trophyBounce { 0%,100%{transform:translateY(0) rotate(-5deg)} 40%{transform:translateY(-6px) rotate(5deg)} 70%{transform:translateY(-3px) rotate(-3deg)} }
@@ -2106,37 +2114,10 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
     if (!sport) { setLoading(false); return; }
-    const isWorldCup = sportQuery?.toLowerCase().includes("world")||sportQuery?.toLowerCase().includes("fifa")||sportQuery?.toLowerCase().includes("soccer");
-    const fetchEvents = async () => {
-      let rawEvents = [];
-      if (isWorldCup) {
-        // Fetch 90 days: 30 past + 60 future — covers full World Cup tournament
-        const today = new Date();
-        const dates = Array.from({length:90},(_,i)=>{
-          const d = new Date(today); d.setDate(today.getDate()-30+i);
-          return d.toISOString().slice(0,10).replace(/-/g,"");
-        });
-        // Batch fetch in groups of 10 to avoid rate limiting
-        for (let i=0; i<dates.length; i+=10) {
-          const batch = dates.slice(i,i+10);
-          const results = await Promise.all(batch.map(dt=>
-            fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard?dates=${dt}`)
-              .then(r=>r.ok?r.json():null).catch(()=>null)
-          ));
-          results.forEach(d=>{ if(d?.events) rawEvents.push(...d.events); });
-        }
-        // Deduplicate by event ID
-        const seen = new Set();
-        rawEvents = rawEvents.filter(e=>{ if(seen.has(e.id)) return false; seen.add(e.id); return true; });
-      } else {
-        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`);
-        const data = r.ok ? await r.json() : {};
-        rawEvents = data.events||[];
-      }
-      return rawEvents;
-    };
-    fetchEvents().then(rawEvents=>{
-      const evts = rawEvents.map(evt=>{
+    fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport.path}/scoreboard`)
+      .then(r=>r.json())
+      .then(data=>{
+        const evts = (data.events||[]).map(evt=>{
           const comp = evt.competitions?.[0];
           const home = comp?.competitors?.find(c=>c.homeAway==="home")||comp?.competitors?.[0];
           const away = comp?.competitors?.find(c=>c.homeAway==="away")||comp?.competitors?.[1];
@@ -2163,7 +2144,8 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
         setEvents(evts);
         setGrouped(g);
         setLoading(false);
-      }).catch(()=>setLoading(false));
+      })
+      .catch(()=>setLoading(false));
   },[sportQuery]);
 
   const upcoming = events.filter(e=>!e.isOver).length;
@@ -4635,9 +4617,28 @@ function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, on
   return (
     <div style={{marginBottom:36}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",marginBottom:14}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:18}}>{icon}</span>
-          <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color}}>{title}</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{
+            width:34,height:34,borderRadius:10,
+            background:`linear-gradient(135deg,${color}22,${color}08)`,
+            border:`1.5px solid ${color}44`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:17,animation:"iconPulse 3s ease-in-out infinite",
+            boxShadow:`0 0 10px ${color}22`,
+          }}>{icon}</div>
+          <div style={{
+            fontFamily:"var(--font-head)",fontWeight:900,fontSize:17,
+            background:`linear-gradient(90deg,${color},${color}99,${color})`,
+            backgroundSize:"200% auto",
+            WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+            animation:"titleShimmer 4s linear infinite",
+          }}>{title}</div>
+          <div style={{
+            width:28,height:28,borderRadius:8,
+            background:`${color}10`,border:`1px solid ${color}25`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:13,opacity:0.45,
+          }}>{icon}</div>
         </div>
         <div style={{display:"flex",gap:6}}>
           <button onClick={()=>scroll(-1)} style={{background:"rgba(255,255,255,.07)",border:"1px solid var(--border)",borderRadius:8,color:"var(--text)",width:30,height:30,fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
@@ -4682,7 +4683,6 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
     {id:"movies",    icon:"🎬", label:"Movies",  color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",      color:"#A78BFA", anim:"tvFlicker"},
     {id:"sports",    icon:"🏆", label:"Sports",  color:"#10B981", anim:"trophyBounce"},
-    {id:"docs",      icon:"🎞️", label:"Docs",    color:"#8B5CF6", anim:null},
     {id:"watchlist", icon:"❤️", label:"Saved",   color:"#ef4444", anim:null},
     {id:"stats",     icon:"📊", label:"Stats",   color:"#10B981", anim:null},
   ];
@@ -7053,10 +7053,10 @@ export default function StreamHub() {
           <div>
             {/* Other featured rows */}
             {[
-              {title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},
-              {title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},
-              {title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},
-              {title:"🎞️ Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"},
+              {title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},
+              {title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},
+              {title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
@@ -7097,17 +7097,6 @@ export default function StreamHub() {
             <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:20,marginBottom:2}}>📊 My Stats</div>
             <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Your streaming activity at a glance</div>
             <AdvancedStats user={user} watchlist={watchlist} userRatings={userRatings} watchHistory={watchHistory} onOpenHistory={()=>setShowWatchHistory(true)} onOpenWatchlist={()=>handleSetView("watchlist")}/>
-          </div>
-        ) : view==="docs" ? (
-          <div style={{padding:"12px 14px 20px"}}>
-            <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:18,marginBottom:2}}>🎞️ Documentaries</div>
-            <div style={{fontSize:12,color:"var(--muted)",marginBottom:16}}>Top-rated docs across all streaming services</div>
-            {featuredRows.docs?.length===0
-              ? <div style={{textAlign:"center",padding:"60px 0",color:"var(--muted)"}}>Loading…</div>
-              : <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-                  {(featuredRows.docs||[]).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={openMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                </div>
-            }
           </div>
         ) : (
           /* Regular grid */
@@ -7386,7 +7375,7 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"🆕",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"⭐",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"✦",key:"anime",color:"var(--anime)"},{title:"🎞️ Documentaries",icon:"🎞️",key:"docs",color:"#8B5CF6"}].map(row=>(
+              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
@@ -7429,16 +7418,7 @@ export default function StreamHub() {
                 {search.trim() ? (searching?"Searching…":`${searchResults.length} results for "${search}"`) : CATEGORY_TABS.find(t=>t.id===view)?.icon+" "+CATEGORY_TABS.find(t=>t.id===view)?.label}
                 {!search&&!loading&&<span style={{fontWeight:400,fontSize:14,color:"var(--muted)",marginLeft:10}}>{filtered.length} titles</span>}
               </div>
-              {view==="docs" && !search.trim() ? (
-                <div>
-                  {(featuredRows.docs||[]).length===0
-                    ? <div style={{textAlign:"center",padding:"60px 0",color:"var(--muted)"}}>Loading documentaries…</div>
-                    : <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
-                        {(featuredRows.docs||[]).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={openMovie} onToggleWatchlist={toggleWatchlist}/>)}
-                      </div>
-                  }
-                </div>
-              ) : loading&&!search
+              {loading&&!search
                 ?<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>{Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}</div>
                 :filtered.length===0
                   ?<div style={{textAlign:"center",color:"var(--muted)",padding:"80px 0",fontSize:15}}>{view==="watchlist"?"Your watchlist is empty!":"No results found."}</div>
@@ -7480,7 +7460,6 @@ export default function StreamHub() {
                     {id:"movies",  icon:"🎬",label:"Movies",  color:"#06B6D4",anim:null},
             {id:"tv",      icon:"📺",label:"TV",      color:"#A78BFA",anim:"tvFlicker"},
             {id:"anime",   icon:"✦", label:"Anime",   color:"#FF6B9D",anim:"swordSwing"},
-            {id:"docs",    icon:"🎞️",label:"Docs",    color:"#8B5CF6",anim:null},
             {id:"watchlist",icon:"♥",label:"Watchlist",color:"#F59E0B",anim:null},
             {id:"stats",    icon:"📊",label:"Stats",    color:"#10B981",anim:null},
           ].map(t=>{
@@ -7763,11 +7742,11 @@ export default function StreamHub() {
                 </div>
                 <div style={{paddingTop:24}}>
 
-                  <FeaturedRow title="New on Streaming" icon="🆕" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="#10B981" />
+                  <FeaturedRow title="New on Streaming" icon="✨" movies={featuredRows.newReleases} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="#10B981" />
 
-                  <FeaturedRow title="Top Rated All Time" icon="⭐" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
-                  <FeaturedRow title="Anime" icon="✦" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="🎞️ Documentaries" icon="🎞️" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Top Rated All Time" icon="🏅" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
+                  <FeaturedRow title="Anime" icon="⚡" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
