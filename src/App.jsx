@@ -147,13 +147,13 @@ const GlobalStyles = () => {
       @keyframes flameDance { 0%,100%{transform:scale(1) rotate(-8deg)} 25%{transform:scale(1.3) rotate(8deg)} 50%{transform:scale(0.9) rotate(-5deg)} 75%{transform:scale(1.2) rotate(6deg)} }
       @keyframes swordSwing { 0%,100%{transform:rotate(-20deg) scale(1)} 50%{transform:rotate(20deg) scale(1.1)} }
       @keyframes tvFlicker { 0%,88%,92%,100%{opacity:1} 90%{opacity:0.4} }
-      @keyframes iconPulse {
-  0%,100% { transform:scale(1); box-shadow:0 0 10px var(--pulse-color,rgba(245,158,11,.2)); }
-  50% { transform:scale(1.12); box-shadow:0 0 18px var(--pulse-color,rgba(245,158,11,.4)); }
+      @keyframes iconGlow {
+  0%,100% { transform:scale(1); box-shadow:inherit; }
+  50% { transform:scale(1.18); filter:brightness(1.3); }
 }
-@keyframes titleShimmer {
-  0% { background-position:0% center; }
-  100% { background-position:200% center; }
+@keyframes textGlow {
+  0%,100% { opacity:1; }
+  50% { opacity:0.82; }
 }
 @keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
       @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
@@ -4618,36 +4618,34 @@ function FeaturedRow({ title, icon, movies, watchlist, userRatings, userSubs, on
     <div style={{marginBottom:36}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 24px",marginBottom:14}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          {/* Left icon badge — isolated so webkit clip doesn't bleed */}
+          {/* Left icon — glowing pulse */}
           <div style={{
             width:34,height:34,borderRadius:10,flexShrink:0,
-            background:`linear-gradient(135deg,${color}22,${color}08)`,
-            border:`1.5px solid ${color}44`,
+            background:`linear-gradient(135deg,${color}30,${color}10)`,
+            border:`1.5px solid ${color}60`,
             display:"flex",alignItems:"center",justifyContent:"center",
-            animation:"iconPulse 3s ease-in-out infinite",
-            boxShadow:`0 0 10px ${color}22`,
+            animation:"iconGlow 2.5s ease-in-out infinite",
+            boxShadow:`0 0 14px ${color}55`,
           }}>
-            <span style={{fontSize:17,lineHeight:1}}>{icon}</span>
+            <span style={{fontSize:18,lineHeight:1,filter:`drop-shadow(0 0 5px ${color})`}}>{icon}</span>
           </div>
-          {/* Shimmer title — isolated in its own stacking context */}
-          <div style={{position:"relative",overflow:"hidden"}}>
-            <div style={{
-              fontFamily:"var(--font-head)",fontWeight:900,fontSize:17,
-              background:`linear-gradient(90deg,${color},${color}99,${color})`,
-              backgroundSize:"200% auto",
-              WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-              animation:"titleShimmer 4s linear infinite",
-              isolation:"isolate",
-            }}>{title}</div>
-          </div>
-          {/* Right icon badge */}
+          {/* Title — solid color with text-shadow glow */}
           <div style={{
-            width:26,height:26,borderRadius:7,flexShrink:0,
-            background:`${color}10`,border:`1px solid ${color}25`,
+            fontFamily:"var(--font-head)",fontWeight:900,fontSize:17,
+            color:color,
+            textShadow:`0 0 14px ${color}99, 0 0 28px ${color}55`,
+            animation:"textGlow 2.5s ease-in-out infinite",
+          }}>{title}</div>
+          {/* Right icon — offset phase */}
+          <div style={{
+            width:30,height:30,borderRadius:9,flexShrink:0,
+            background:`linear-gradient(135deg,${color}20,${color}08)`,
+            border:`1px solid ${color}45`,
             display:"flex",alignItems:"center",justifyContent:"center",
-            opacity:0.4,
+            animation:"iconGlow 2.5s ease-in-out infinite 1.25s",
+            boxShadow:`0 0 10px ${color}33`,
           }}>
-            <span style={{fontSize:12,lineHeight:1}}>{icon}</span>
+            <span style={{fontSize:14,lineHeight:1,filter:`drop-shadow(0 0 4px ${color})`}}>{icon}</span>
           </div>
         </div>
         <div style={{display:"flex",gap:6}}>
@@ -6319,7 +6317,7 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], tvShows:[], docs:[], sports:[] });
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -7066,7 +7064,7 @@ export default function StreamHub() {
               {title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},
               {title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},
-              {title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
@@ -7385,7 +7383,7 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"}].map(row=>(
+              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
                     <span style={{fontSize:18}}>{row.icon}</span>
@@ -7756,7 +7754,7 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="🏅" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="⚡" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Documentaries" icon="🎬" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
