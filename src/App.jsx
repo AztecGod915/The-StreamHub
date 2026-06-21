@@ -6317,7 +6317,7 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], tvShows:[], docs:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -7064,12 +7064,17 @@ export default function StreamHub() {
               {title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},
               {title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},
-              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
+              {title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
-                <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
-                  <span>{row.icon}</span>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:row.color}}>{row.title}</div>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"0 14px",marginBottom:10}}>
+                  <div style={{width:28,height:28,borderRadius:8,flexShrink:0,background:`linear-gradient(135deg,${row.color}30,${row.color}10)`,border:`1.5px solid ${row.color}60`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite",boxShadow:`0 0 10px ${row.color}44`}}>
+                    <span style={{fontSize:14,lineHeight:1,filter:`drop-shadow(0 0 4px ${row.color})`}}>{row.icon}</span>
+                  </div>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:15,color:row.color,textShadow:`0 0 12px ${row.color}88`,animation:"textGlow 2.5s ease-in-out infinite"}}>{row.title}</div>
+                  <div style={{width:22,height:22,borderRadius:6,flexShrink:0,background:`${row.color}15`,border:`1px solid ${row.color}35`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite 1.25s"}}>
+                    <span style={{fontSize:11,lineHeight:1,filter:`drop-shadow(0 0 3px ${row.color})`}}>{row.icon}</span>
+                  </div>
                 </div>
                 <div style={{display:"flex",flexWrap:"nowrap",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
                   {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
@@ -7383,11 +7388,12 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
+              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
-                    <span style={{fontSize:18}}>{row.icon}</span>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                    <div style={{width:32,height:32,borderRadius:9,flexShrink:0,background:`linear-gradient(135deg,${row.color}30,${row.color}10)`,border:`1.5px solid ${row.color}60`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite",boxShadow:`0 0 12px ${row.color}44`}}><span style={{fontSize:16,lineHeight:1,filter:`drop-shadow(0 0 5px ${row.color})`}}>{row.icon}</span></div>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:17,color:row.color,textShadow:`0 0 14px ${row.color}88`,animation:"textGlow 2.5s ease-in-out infinite"}}>{row.title}</div>
+                    <div style={{width:26,height:26,borderRadius:7,flexShrink:0,background:`${row.color}15`,border:`1px solid ${row.color}35`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite 1.25s"}}><span style={{fontSize:12,lineHeight:1,filter:`drop-shadow(0 0 3px ${row.color})`}}>{row.icon}</span></div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
                     {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
@@ -7754,7 +7760,7 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="🏅" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="⚡" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Documentaries" icon="🎬" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
