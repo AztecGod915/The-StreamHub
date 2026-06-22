@@ -2110,6 +2110,7 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [grouped, setGrouped] = useState({});
+  const [activeDay, setActiveDay] = useState("all"); // "yesterday"|"today"|"tomorrow"|"all"
 
   useEffect(() => {
     const sport = getEspnSport(sportQuery);
@@ -2179,27 +2180,42 @@ function WeeklyScheduleModal({ sportQuery, sportDisplay, onClose }) {
           </div>
         </div>
 
+        {/* Day filter tabs */}
+        <div style={{display:"flex",gap:6,padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,.06)",flexShrink:0,overflowX:"auto",scrollbarWidth:"none"}}>
+          {[{id:"yesterday",label:"Yesterday"},{id:"today",label:"Today 🔴"},{id:"tomorrow",label:"Tomorrow"},{id:"all",label:"All Games"}].map(d=>(
+            <button key={d.id} onClick={()=>setActiveDay(d.id)} style={{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700,whiteSpace:"nowrap",background:activeDay===d.id?"var(--gold)":"rgba(255,255,255,.06)",color:activeDay===d.id?"#000":"var(--muted)",border:activeDay===d.id?"none":"1px solid rgba(255,255,255,.1)",cursor:"pointer",flexShrink:0}}>{d.label}</button>
+          ))}
+        </div>
+
         <div style={{overflowY:"auto",flex:1}}>
           {loading ? (
             <div style={{padding:20,display:"flex",flexDirection:"column",gap:8}}>
               {[1,2,3,4,5].map(i=><div key={i} className="skeleton" style={{height:72,borderRadius:12}}/>)}
             </div>
           ) : events.length===0 ? (
-            <div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)",fontSize:14}}>No games scheduled right now</div>
-          ) : (
-            Object.entries(grouped).map(([day,dayEvts])=>(
-              <div key={day}>
-                <div style={{padding:"12px 20px 8px",fontSize:10,fontWeight:800,color:"var(--muted)",letterSpacing:1.5,background:"rgba(255,255,255,.02)",borderBottom:"1px solid rgba(255,255,255,.04)",display:"flex",alignItems:"center",gap:8}}>
-                  {dayEvts.some(e=>e.isLive)&&<span style={{color:"#ef4444"}}>🔴</span>}
-                  {day.toUpperCase()}
-                  <span style={{color:"rgba(255,255,255,.2)",fontWeight:400}}>({dayEvts.length} game{dayEvts.length!==1?"s":""})</span>
+            <div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)",fontSize:14}}>No games scheduled.</div>
+          ) : (() => {
+              const now = new Date();
+              const fmt = d=>d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"});
+              const yday = new Date(now); yday.setDate(now.getDate()-1);
+              const tmrw = new Date(now); tmrw.setDate(now.getDate()+1);
+              const dayMap = {today:fmt(now),yesterday:fmt(yday),tomorrow:fmt(tmrw)};
+              const show = activeDay==="all" ? grouped : Object.fromEntries(Object.entries(grouped).filter(([d])=>d===dayMap[activeDay]));
+              if (!Object.keys(show).length) return <div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)",fontSize:14}}>No games {activeDay==="today"?"today":activeDay==="tomorrow"?"tomorrow":"yesterday"}.</div>;
+              return Object.entries(show).map(([day,dayEvts])=>(
+                <div key={day}>
+                  <div style={{padding:"12px 20px 8px",fontSize:10,fontWeight:800,color:"var(--muted)",letterSpacing:1.5,background:"rgba(255,255,255,.02)",borderBottom:"1px solid rgba(255,255,255,.04)",display:"flex",alignItems:"center",gap:6}}>
+                    {dayEvts.some(e=>e.isLive)&&<span style={{color:"#ef4444"}}>🔴</span>}
+                    {day.toUpperCase()}
+                    <span style={{color:"rgba(255,255,255,.2)",fontWeight:400}}>({dayEvts.length} game{dayEvts.length!==1?"s":""})</span>
+                  </div>
+                  {dayEvts.map((evt,idx)=>(
+                    <ScheduleGameRow key={evt.id} evt={evt} isLast={idx===dayEvts.length-1}/>
+                  ))}
                 </div>
-                {dayEvts.map((evt,i)=>(
-                  <ScheduleGameRow key={evt.id} evt={evt} isLast={i===dayEvts.length-1}/>
-                ))}
-              </div>
-            ))
-          )}
+              ));
+            })()
+          }
           <div style={{height:20}}/>
         </div>
       </div>
@@ -2487,6 +2503,8 @@ function TeamNextGameSearch({ favoriteTeams }) {
               const d = await r.json();
               events = d.events||[];
             }
+            // Find all matching games, then pick the next upcoming one
+            const matchingGames = [];
             for (const evt of events) {
               const comp = evt.competitions?.[0];
               const home = comp?.competitors?.find(c=>c.homeAway==="home");
@@ -2497,7 +2515,7 @@ function TeamNextGameSearch({ favoriteTeams }) {
                 const st = evt.status?.type;
                 const isOver = st?.completed;
                 const isLive = !isOver && ["STATUS_IN_PROGRESS","STATUS_HALFTIME","STATUS_EXTRA_TIME_IN_PROGRESS","STATUS_SHOOTOUT_IN_PROGRESS"].includes(st?.name);
-                return {
+                matchingGames.push({
                   sport: sp.label,
                   name: evt.shortName||evt.name||"",
                   date: new Date(evt.date),
@@ -2510,11 +2528,19 @@ function TeamNextGameSearch({ favoriteTeams }) {
                   broadcast: comp?.broadcasts?.[0]?.names?.join(", ")||"",
                   isLive, isOver,
                   period: st?.shortDetail||"",
-                };
+                });
               }
             }
+            // Pick next upcoming, or live, or most recent past
+            if (matchingGames.length > 0) {
+              const now = new Date();
+              const live = matchingGames.filter(g=>g.isLive);
+              const upcoming = matchingGames.filter(g=>!g.isOver&&!g.isLive&&g.date>=now).sort((a,b)=>a.date-b.date);
+              const past = matchingGames.filter(g=>g.isOver).sort((a,b)=>b.date-a.date);
+              return live[0]||upcoming[0]||past[0]||null;
+            }
+            return null;
           } catch { return null; }
-          return null;
         })
       );
 
@@ -6317,7 +6343,7 @@ export default function StreamHub() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [movies, setMovies] = useState([]);
-  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], tvShows:[], docs:[], sports:[] });
+  const [featuredRows, setFeaturedRows] = useState({ trending:[], newReleases:[], topRated:[], anime:[], sports:[] });
   const [loading, setLoading] = useState(true);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
@@ -7064,17 +7090,12 @@ export default function StreamHub() {
               {title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},
               {title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},
               {title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},
-              {title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"},
+              {title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"},
             ].map(row=>(
               <div key={row.title} style={{marginBottom:24}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"0 14px",marginBottom:10}}>
-                  <div style={{width:28,height:28,borderRadius:8,flexShrink:0,background:`linear-gradient(135deg,${row.color}30,${row.color}10)`,border:`1.5px solid ${row.color}60`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite",boxShadow:`0 0 10px ${row.color}44`}}>
-                    <span style={{fontSize:14,lineHeight:1,filter:`drop-shadow(0 0 4px ${row.color})`}}>{row.icon}</span>
-                  </div>
-                  <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:15,color:row.color,textShadow:`0 0 12px ${row.color}88`,animation:"textGlow 2.5s ease-in-out infinite"}}>{row.title}</div>
-                  <div style={{width:22,height:22,borderRadius:6,flexShrink:0,background:`${row.color}15`,border:`1px solid ${row.color}35`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite 1.25s"}}>
-                    <span style={{fontSize:11,lineHeight:1,filter:`drop-shadow(0 0 3px ${row.color})`}}>{row.icon}</span>
-                  </div>
+                <div style={{display:"flex",alignItems:"center",gap:6,padding:"0 14px",marginBottom:10}}>
+                  <span>{row.icon}</span>
+                  <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:15,color:row.color}}>{row.title}</div>
                 </div>
                 <div style={{display:"flex",flexWrap:"nowrap",gap:10,overflowX:"auto",padding:"2px 14px 4px",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
                   {(featuredRows[row.key]||[]).slice(0,10).map(m=>(
@@ -7388,12 +7409,11 @@ export default function StreamHub() {
           </div>}
           {view==="home"&&!search.trim() ? (
             <div>
-              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Documentaries",icon:"🎬",key:"docs",color:"#8B5CF6"}].map(row=>(
+              {[{title:"New on Streaming",icon:"✨",key:"newReleases",color:"#10B981"},{title:"Top Rated",icon:"🏅",key:"topRated",color:"var(--purple)"},{title:"Anime",icon:"⚡",key:"anime",color:"var(--anime)"},{title:"Sports & Docs",icon:"🏆",key:"sports",color:"var(--sports)"}].map(row=>(
                 <div key={row.title} style={{marginBottom:32}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-                    <div style={{width:32,height:32,borderRadius:9,flexShrink:0,background:`linear-gradient(135deg,${row.color}30,${row.color}10)`,border:`1.5px solid ${row.color}60`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite",boxShadow:`0 0 12px ${row.color}44`}}><span style={{fontSize:16,lineHeight:1,filter:`drop-shadow(0 0 5px ${row.color})`}}>{row.icon}</span></div>
-                    <div style={{fontFamily:"var(--font-head)",fontWeight:900,fontSize:17,color:row.color,textShadow:`0 0 14px ${row.color}88`,animation:"textGlow 2.5s ease-in-out infinite"}}>{row.title}</div>
-                    <div style={{width:26,height:26,borderRadius:7,flexShrink:0,background:`${row.color}15`,border:`1px solid ${row.color}35`,display:"flex",alignItems:"center",justifyContent:"center",animation:"iconGlow 2.5s ease-in-out infinite 1.25s"}}><span style={{fontSize:12,lineHeight:1,filter:`drop-shadow(0 0 3px ${row.color})`}}>{row.icon}</span></div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+                    <span style={{fontSize:18}}>{row.icon}</span>
+                    <div style={{fontFamily:"var(--font-head)",fontWeight:800,fontSize:17,color:row.color}}>{row.title}</div>
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
                     {(featuredRows[row.key]||[]).slice(0,8).map(m=><MovieCard key={m.id} movie={m} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist}/>)}
@@ -7760,7 +7780,7 @@ export default function StreamHub() {
 
                   <FeaturedRow title="Top Rated All Time" icon="🏅" movies={featuredRows.topRated} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--purple)" />
                   <FeaturedRow title="Anime" icon="⚡" movies={featuredRows.anime} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--anime)" />
-                  <FeaturedRow title="Documentaries" icon="🎬" movies={featuredRows.docs} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
+                  <FeaturedRow title="Sports & Docs" icon="🏆" movies={featuredRows.sports} watchlist={watchlist} userRatings={userRatings} userSubs={userSubs} onSelect={handleSelectMovie} onToggleWatchlist={toggleWatchlist} color="var(--sports)" />
                 </div>
               </div>
             ) : view==="sports" ? (
