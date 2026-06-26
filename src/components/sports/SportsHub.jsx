@@ -4029,19 +4029,34 @@ function MobileBottomNav({ view, setView, watchlist, onProfile, tier }) {
   const tabs=[
     {id:"movies",    icon:"🎬", label:"Movies",  color:"#06B6D4", anim:null},
     {id:"tv",        icon:"📺", label:"TV",      color:"#A78BFA", anim:"tvFlicker"},
+    {id:"home",      icon:"🏠", label:"Home",    color:"#F59E0B", anim:null, isHome:true},
     {id:"sports",    icon:"🏆", label:"Sports",  color:"#10B981", anim:"trophyBounce"},
     {id:"watchlist", icon:"❤️", label:"Saved",   color:"#ef4444", anim:null},
-    {id:"stats",     icon:"📊", label:"Stats",   color:"#10B981", anim:null},
   ];
   return (
-    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"flex-end",backdropFilter:"blur(20px)",paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
-        const active = view===t.id;
+        const active = t.isHome ? view==="home" : view===t.id;
         const count = t.id==="watchlist"&&watchlist.length>0 ? watchlist.length : 0;
+        if (t.isHome) return (
+          <button key="home" onClick={()=>setView("home")}
+            style={{flex:1.3,background:"none",border:"none",padding:"4px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",position:"relative"}}>
+            <div style={{
+              width:48,height:48,borderRadius:14,
+              background:active?"rgba(245,158,11,.18)":"rgba(255,255,255,.08)",
+              border:`2px solid ${active?"#F59E0B":"rgba(255,255,255,.18)"}`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:22,
+              boxShadow:active?"0 0 18px rgba(245,158,11,.5)":"0 2px 12px rgba(0,0,0,.4)",
+              transform:"translateY(-10px)",
+              transition:"all .2s",
+            }}>🏠</div>
+            <span style={{fontSize:9,fontWeight:800,fontFamily:"var(--font-head)",color:active?"#F59E0B":"rgba(240,240,250,.38)",marginTop:-4,letterSpacing:.3}}>Home</span>
+          </button>
+        );
         return (
           <button key={t.id} onClick={()=>setView(t.id)}
             style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?t.color:"rgba(240,240,250,.38)",position:"relative",transition:"color .2s",cursor:"pointer"}}>
-            {/* Active background pill */}
             {active && <div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:40,height:32,borderRadius:10,background:`${t.color}14`,pointerEvents:"none"}}/>}
             <span style={{
               fontSize:21, lineHeight:1,
@@ -6040,37 +6055,38 @@ export default function StreamHub() {
         <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.1)",paddingTop:"env(safe-area-inset-top)"}}>
           {/* Top row - logo + buttons */}
           <div style={{display:"flex",alignItems:"center",padding:"10px 14px 8px",gap:10}}>
-            {/* Home button + Logo */}
-            <div style={{flex:1,display:"flex",alignItems:"center",gap:0}}>
-              <button onClick={()=>{setView("home");setSearch("");}}
-                style={{background:view==="home"&&!search.trim()?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search.trim()?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search.trim()?"var(--gold)":"var(--muted)",width:34,height:34,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginRight:10}}>
-                🏠
-              </button>
-              <div style={{width:"1px",height:28,background:"rgba(255,255,255,.1)",flexShrink:0,marginRight:10}}/>
+            {/* Logo flush left — home is in bottom nav */}
+            <div style={{flex:1,display:"flex",alignItems:"center"}}>
               <img
                 src="/logo-clean.png"
                 alt="The StreamHub"
                 onClick={()=>{setView("home");setSearch("");}}
                 onError={e=>e.target.style.display="none"}
                 style={{
-                  height:52, width:"auto", maxWidth:160,
+                  height:44, width:"auto", maxWidth:180,
                   objectFit:"contain", cursor:"pointer",
                   filter:"drop-shadow(0 0 10px rgba(245,158,11,.5)) drop-shadow(0 0 20px rgba(139,92,246,.3))",
                   animation:"logoPulse 2.5s ease-in-out infinite, logoFloat 3s ease-in-out infinite",
                 }}
               />
             </div>
+            {/* Stats shortcut */}
+            <button onClick={()=>{setView("stats");setSearch("");}}
+              style={{background:view==="stats"?"rgba(16,185,129,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="stats"?"rgba(16,185,129,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="stats"?"#10B981":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              📊
+            </button>
             {tier==="premium"
               ?<span style={{background:"var(--gold)",color:"#000",fontSize:9,fontWeight:800,padding:"3px 8px",borderRadius:99,fontFamily:"var(--font-head)",flexShrink:0}}>✦ PRO</span>
               :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"var(--gold)",border:"none",borderRadius:9,color:"#000",padding:"7px 12px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:11,whiteSpace:"nowrap",flexShrink:0}}>Upgrade ✦</button>
             }
+            {/* Profile avatar — bigger */}
             <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
-                width:36,height:36,borderRadius:"50%",
+                width:42,height:42,borderRadius:"50%",
                 background:"var(--purple)",
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,
                 border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
-                boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
+                boxShadow:tier==="premium"?"0 0 14px rgba(245,158,11,.6)":"none",
                 color:"#fff",flexShrink:0,cursor:"pointer",
                 overflow:"hidden",padding:0,
                 transition:"all .3s",
@@ -6341,10 +6357,16 @@ export default function StreamHub() {
         <header style={{position:"sticky",top:0,zIndex:100,background:"rgba(9,7,15,.97)",backdropFilter:"blur(20px)",borderBottom:"1px solid rgba(245,158,11,.15)",paddingTop:"env(safe-area-inset-top)"}}>
           <div style={{display:"flex",alignItems:"center",padding:"10px 20px",gap:12,height:64}}>
 
-            {/* Logo — flush left, no home button (home is in bottom nav now) */}
-            <img src="/logo-clean.png" alt="StreamHub" onClick={()=>{setView("home");setSearch("");}}
-              onError={e=>e.target.style.display="none"}
-              style={{height:44,width:"auto",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 10px rgba(245,158,11,.5)) drop-shadow(0 0 20px rgba(139,92,246,.3))",flexShrink:0}}/>
+            {/* Home button + Logo */}
+            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <button onClick={()=>{setView("home");setSearch("");}}
+                style={{background:view==="home"&&!search?"rgba(245,158,11,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="home"&&!search?"rgba(245,158,11,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="home"&&!search?"var(--gold)":"var(--muted)",width:36,height:36,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                🏠
+              </button>
+              <img src="/logo-clean.png" alt="StreamHub" onClick={()=>{setView("home");setSearch("");}}
+                onError={e=>e.target.style.display="none"}
+                style={{height:36,width:"auto",objectFit:"contain",cursor:"pointer",filter:"drop-shadow(0 0 8px rgba(245,158,11,.4))"}}/>
+            </div>
 
             <div style={{flex:1,position:"relative",maxWidth:380}}>
               <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
@@ -6354,12 +6376,7 @@ export default function StreamHub() {
                 onBlur={e=>{e.target.style.border="2px solid rgba(245,158,11,.45)";e.target.style.boxShadow="0 0 16px rgba(245,158,11,.12)";}}
               />
             </div>
-            <div style={{display:"flex",gap:8,marginLeft:"auto",alignItems:"center"}}>
-              {/* Stats in header */}
-              <button onClick={()=>{setView("stats");setSearch("");}}
-                style={{background:view==="stats"?"rgba(16,185,129,.15)":"rgba(255,255,255,.06)",border:`1px solid ${view==="stats"?"rgba(16,185,129,.4)":"rgba(255,255,255,.1)"}`,borderRadius:10,color:view==="stats"?"#10B981":"var(--muted)",padding:"7px 12px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--font-head)",display:"flex",alignItems:"center",gap:5}}>
-                📊 Stats
-              </button>
+            <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
               {tier==="premium"
                 ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
                 :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.35)",cursor:"pointer"}}>Upgrade ✦</button>
@@ -6367,14 +6384,47 @@ export default function StreamHub() {
               {!user
                 ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#8B5CF6,#7C3AED)",border:"1px solid rgba(139,92,246,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(139,92,246,.35)",cursor:"pointer"}}>👤 Sign In</button>
                 :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
-                  width:46,height:46,borderRadius:"50%",
+                  width:36,height:36,borderRadius:"50%",
                   background:"var(--purple)",
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  fontFamily:"var(--font-head)",fontWeight:700,fontSize:16,
+                  fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
                   border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
-                  boxShadow:tier==="premium"?"0 0 14px rgba(245,158,11,.6)":"none",
-                  color:"#fff",flexShrink:0,cursor:"pointer",
-                  overflow:"hidden",padding:0,transition:"all .3s",
+                  boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
+                  color:"#fff",flexShrink:0,cursor:"pointer",overflow:"hidden",padding:0,transition:"all .3s",
+                }}>
+                  {user && profile?.avatar_url
+                    ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    : user?(profile?.username||user.email||"U")[0].toUpperCase():"?"
+                  }
+                </button>
+              }
+            </div>
+          </div>
+        </header>
+
+            <div style={{flex:1,position:"relative",maxWidth:380}}>
+              <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"var(--gold)",fontSize:15}}>🔍</span>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by title, genre or mood…"
+                style={{width:"100%",background:"rgba(255,255,255,.07)",border:"2px solid rgba(245,158,11,.45)",borderRadius:12,color:"var(--text)",padding:"9px 14px 9px 38px",fontSize:14,outline:"none",boxShadow:"0 0 16px rgba(245,158,11,.12)"}}
+                onFocus={e=>{e.target.style.border="2px solid #F59E0B";e.target.style.boxShadow="0 0 24px rgba(245,158,11,.3)";}}
+                onBlur={e=>{e.target.style.border="2px solid rgba(245,158,11,.45)";e.target.style.boxShadow="0 0 16px rgba(245,158,11,.12)";}}
+              />
+            </div>
+            <div style={{display:"flex",gap:8,marginLeft:"auto"}}>
+              {tier==="premium"
+                ?<span style={{background:"var(--gold)",color:"#000",fontSize:11,fontWeight:800,padding:"5px 12px",borderRadius:99,fontFamily:"var(--font-head)"}}>✦ PREMIUM</span>
+                :<button onClick={()=>{setShowUpgrade(true);track("upgrade_click");}} style={{background:"linear-gradient(135deg,#F59E0B,#f59e0b)",border:"none",borderRadius:10,color:"#000",padding:"9px 16px",fontFamily:"var(--font-head)",fontWeight:800,fontSize:13,boxShadow:"0 0 16px rgba(245,158,11,.35)",cursor:"pointer"}}>Upgrade ✦</button>
+              }
+              {!user
+                ?<button onClick={()=>{setShowAuth(true);track("sign_in_click");}} style={{background:"linear-gradient(135deg,#8B5CF6,#7C3AED)",border:"1px solid rgba(139,92,246,.4)",borderRadius:10,color:"#fff",padding:"9px 16px",fontWeight:800,fontSize:13,fontFamily:"var(--font-head)",boxShadow:"0 0 16px rgba(139,92,246,.35)",cursor:"pointer"}}>👤 Sign In</button>
+                :<button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{
+                  width:36,height:36,borderRadius:"50%",
+                  background:"var(--purple)",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontFamily:"var(--font-head)",fontWeight:700,fontSize:14,
+                  border:tier==="premium"?"2.5px solid #F59E0B":"2px solid rgba(139,92,246,.4)",
+                  boxShadow:tier==="premium"?"0 0 12px rgba(245,158,11,.5)":"none",
+                  color:"#fff",flexShrink:0,cursor:"pointer",overflow:"hidden",padding:0,transition:"all .3s",
                 }}>
                   {user && profile?.avatar_url
                     ? <img src={profile.avatar_url} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
@@ -6582,41 +6632,24 @@ export default function StreamHub() {
         {/* Tablet Bottom Nav */}
         <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,background:"rgba(9,7,15,.98)",borderTop:"1px solid rgba(245,158,11,.1)",display:"flex",backdropFilter:"blur(20px)"}}>
           {[
-            {id:"movies",   icon:"🎬", label:"Movies",  color:"#06B6D4"},
-            {id:"tv",       icon:"📺", label:"TV",      color:"#A78BFA"},
-            {id:"home",     icon:"🏠", label:"Home",    color:"#F59E0B", isHome:true},
-            {id:"sports",   icon:"🏆", label:"Sports",  color:"#10B981"},
-            {id:"watchlist",icon:"❤️", label:"Saved",   color:"#ef4444"},
+            {id:"movies",   icon:"🎬",label:"Movies",   color:"#06B6D4",anim:null},
+            {id:"tv",       icon:"📺",label:"TV",       color:"#A78BFA",anim:"tvFlicker"},
+            {id:"anime",    icon:"✦", label:"Anime",    color:"#FF6B9D",anim:"swordSwing"},
+            {id:"watchlist",icon:"♥", label:"Watchlist",color:"#F59E0B",anim:null},
+            {id:"stats",    icon:"📊",label:"Stats",    color:"#10B981",anim:null},
           ].map(t=>{
-            const active = t.isHome ? view==="home" : view===t.id;
-            const count = t.id==="watchlist"&&watchlist.length>0 ? watchlist.length : 0;
-            if (t.isHome) return (
-              <button key="home" onClick={()=>{setView("home");setSearch("");}}
-                style={{flex:1.4,background:"none",border:"none",padding:"4px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",position:"relative"}}>
-                <div style={{
-                  width:50,height:50,borderRadius:15,
-                  background:active?"rgba(245,158,11,.18)":"rgba(255,255,255,.07)",
-                  border:`2px solid ${active?"#F59E0B":"rgba(255,255,255,.15)"}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:24,
-                  boxShadow:active?"0 0 20px rgba(245,158,11,.45)":"none",
-                  transform:"translateY(-10px)",
-                  transition:"all .2s",
-                }}>🏠</div>
-                <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)",color:active?"#F59E0B":"rgba(240,240,250,.35)",marginTop:-6}}>Home</span>
-              </button>
-            );
-            return (
-              <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
-                style={{flex:1,background:"none",border:"none",padding:"10px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",transition:"color .2s",cursor:"pointer"}}>
-                {active&&<div style={{position:"absolute",top:4,left:"50%",transform:"translateX(-50%)",width:38,height:30,borderRadius:10,background:`${t.color}14`,pointerEvents:"none"}}/>}
-                <span style={{fontSize:22,lineHeight:1,filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",display:"inline-block"}}>{t.icon}</span>
-                {count>0&&<div style={{position:"absolute",top:6,right:"18%",background:"#ef4444",color:"#fff",borderRadius:99,fontSize:8,fontWeight:800,padding:"1px 4px",minWidth:14,textAlign:"center"}}>{count}</div>}
-                <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>{t.label}</span>
-                {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:36,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
-              </button>
-            );
+            const active=view===t.id;
+            return <button key={t.id} onClick={()=>{setView(t.id);setSearch("");}}
+              style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:active?t.color:"rgba(240,240,250,.35)",position:"relative",cursor:"pointer"}}>
+              <span style={{fontSize:22,lineHeight:1,filter:active?`drop-shadow(0 0 8px ${t.color}cc)`:"none",display:"inline-block",animation:active&&t.anim?`${t.anim} 1.5s ease-in-out infinite`:"none"}}>{t.icon}</span>
+              <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)",color:active?t.color:"rgba(240,240,250,.35)"}}>{t.label}</span>
+              {active&&<span style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:36,height:2.5,background:t.color,borderRadius:99,boxShadow:`0 0 8px ${t.color}`}}/>}
+            </button>;
           })}
+          <button onClick={()=>user?setShowProfile(true):setShowAuth(true)} style={{flex:1,background:"none",border:"none",padding:"10px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,color:"rgba(240,240,250,.35)",cursor:"pointer"}}>
+            <span style={{fontSize:22}}>👤</span>
+            <span style={{fontSize:10,fontWeight:800,fontFamily:"var(--font-head)"}}>Profile</span>
+          </button>
         </div>
       </div>
 
