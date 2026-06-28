@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Main app -->
   <url>
     <loc>https://thestreamhub.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- App views -->
   <url>
     <loc>https://thestreamhub.app/?view=movies</loc>
     <changefreq>daily</changefreq>
@@ -20,4 +24,39 @@
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://thestreamhub.app/?view=anime</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- SEO landing pages -->
+  <url>
+    <loc>https://thestreamhub.app/world-cup-2026.html</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://thestreamhub.app/streaming-guide.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://thestreamhub.app/landing.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Legal -->
+  <url>
+    <loc>https://thestreamhub.app/privacy.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://thestreamhub.app/terms.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
 </urlset>
