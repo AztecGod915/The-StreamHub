@@ -694,50 +694,97 @@ function getBroadcastLink(broadcast) {
 }
 
 // ─── SPORTS NEWS TICKER ──────────────────────────────────────────────────────
+const FALLBACK_HEADLINES = [
+  "🏆 FIFA World Cup 2026 — Group Stage in full swing across USA, Canada & Mexico",
+  "⚽ Live scores, schedules, and where to watch every World Cup game — Sports Hub",
+  "🔮 Predict match winners and build your streak in the StreamHub Sports Hub",
+  "🎭 Try Mood Search — tell the AI your vibe and find what to watch tonight",
+  "🌙 Watch Tonight — AI picks one perfect thing for you to watch right now",
+  "⚽ Follow your favorite team and get notified before every match",
+  "🏆 World Cup 2026 runs through July 19 — catch every game in the Sports Hub",
+  "📊 Track your streaming stats, ratings, and watchlist all in one place",
+  "🚨 Get Leaving Soon alerts — know what's leaving your services before it's gone",
+  "💰 AI Cost Report — find out which streaming services are worth keeping",
+];
+
 function SportsNewsTicker() {
-  const [headlines, setHeadlines] = useState([]);
+  const [headlines, setHeadlines] = useState(FALLBACK_HEADLINES);
   const CACHE_KEY = "sh_sports_news";
+
   useEffect(() => {
+    // Try to get cached news first
     try {
       const c = JSON.parse(localStorage.getItem(CACHE_KEY)||"{}");
-      if (c.items?.length && Date.now()-c.ts < 24*60*60*1000) { setHeadlines(c.items); return; }
+      if (c.items?.length && Date.now()-c.ts < 24*60*60*1000) {
+        setHeadlines(c.items.map(i=>i.text));
+        return;
+      }
     } catch {}
-    fetch("https://site.api.espn.com/apis/site/v2/sports/news?limit=25")
-      .then(r=>r.json()).then(d=>{
-        const items = (d.articles||[]).slice(0,20).map(a=>({
-          id:a.id,
-          text:a.headline,
-          breaking:(a.type||"").toLowerCase().includes("break")||a.premium,
-        })).filter(a=>a.text);
-        setHeadlines(items);
-        localStorage.setItem(CACHE_KEY, JSON.stringify({items, ts:Date.now()}));
-      }).catch(()=>{});
+    // Try ESPN API — fall back to static if it fails
+    fetch("https://site.api.espn.com/apis/site/v2/sports/news?limit=20")
+      .then(r=>r.json())
+      .then(d=>{
+        const items = (d.articles||[]).slice(0,15).map(a=>a.headline).filter(Boolean);
+        if (items.length > 0) {
+          setHeadlines(items);
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            items: items.map(text=>({text})),
+            ts: Date.now()
+          }));
+        }
+      }).catch(()=>{}); // silently keep fallback
   }, []);
-  if (!headlines.length) return null;
-  const doubled = [...headlines,...headlines];
-  const dur = headlines.length * 4;
+
+  const doubled = [...headlines, ...headlines];
+  const dur = headlines.length * 5;
+
   return (
-    <div style={{background:"rgba(0,0,0,.4)",borderBottom:"1px solid rgba(239,68,68,.2)",padding:"0",overflow:"hidden",position:"relative",height:36,display:"flex",alignItems:"center"}}>
+    <div style={{
+      background:"rgba(239,68,68,.08)",
+      border:"1px solid rgba(239,68,68,.2)",
+      borderRadius:10,
+      overflow:"hidden",
+      marginBottom:12,
+      display:"flex",
+      alignItems:"center",
+      height:36,
+    }}>
       {/* Label */}
-      <div style={{flexShrink:0,background:"#ef4444",color:"#fff",fontSize:9,fontWeight:900,letterSpacing:1,padding:"0 10px",height:"100%",display:"flex",alignItems:"center",whiteSpace:"nowrap",zIndex:2}}>
-        📰 SPORTS NEWS
+      <div style={{
+        flexShrink:0,
+        background:"#ef4444",
+        color:"#fff",
+        fontSize:9,
+        fontWeight:900,
+        letterSpacing:1,
+        padding:"0 12px",
+        height:"100%",
+        display:"flex",
+        alignItems:"center",
+        whiteSpace:"nowrap",
+        gap:5,
+      }}>
+        📰 NEWS
       </div>
       {/* Scrolling track */}
-      <div style={{overflow:"hidden",flex:1,position:"relative"}}>
+      <div style={{overflow:"hidden",flex:1}}>
         <div style={{
-          display:"flex",alignItems:"center",gap:20,
+          display:"flex",
+          alignItems:"center",
+          gap:24,
           animation:`sportsTicker ${dur}s linear infinite`,
-          whiteSpace:"nowrap",paddingLeft:16,
+          whiteSpace:"nowrap",
+          paddingLeft:16,
         }}>
           {doubled.map((h,i)=>(
             <span key={i} style={{
-              display:"inline-flex",alignItems:"center",gap:6,
-              fontSize:11,fontWeight:600,color:"rgba(240,240,250,.8)",
+              fontSize:11,
+              fontWeight:600,
+              color:"rgba(240,240,250,.75)",
               flexShrink:0,
             }}>
-              {h.breaking&&<span style={{background:"#ef4444",color:"#fff",fontSize:8,fontWeight:900,borderRadius:4,padding:"1px 5px",letterSpacing:.5}}>BREAKING</span>}
-              {h.text}
-              <span style={{color:"rgba(255,255,255,.2)",marginLeft:4}}>•</span>
+              {h}
+              <span style={{color:"rgba(255,255,255,.2)",marginLeft:12}}>•</span>
             </span>
           ))}
         </div>
@@ -3523,7 +3570,7 @@ function SubscriptionManagerPanel({ userSubs: initialSubs=[], onToggle, onDone }
   );
 }
 
-function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak, onSaveSubs }) {
+function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[], onClose, onSignOut, onUpgrade, showToast, onEditSubs, onSelectMovie, notifPermission, onRequestNotif, streak, onSaveSubs, onPrivacy, onTerms }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username||user?.email?.split("@")[0]||"User");
   const [tab, setTab] = useState("overview");
@@ -3665,6 +3712,11 @@ function ProfileModal({ user, profile, tier, watchlist, userRatings, userSubs=[]
             <span>📤</span>
             Share My Profile
           </button>
+          <div style={{display:"flex",gap:16,justifyContent:"center",marginTop:10}}>
+            <button onClick={onPrivacy} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,textDecoration:"underline",fontFamily:"inherit"}}>Privacy Policy</button>
+            <span style={{color:"var(--muted)",fontSize:11,opacity:.4}}>·</span>
+            <button onClick={onTerms} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,textDecoration:"underline",fontFamily:"inherit"}}>Terms of Service</button>
+          </div>
         </div>
 
         {/* Tabs — named, bold, visible on all screen sizes */}
@@ -6763,18 +6815,16 @@ export default function StreamHub() {
         )}
 
 
-{/* Footer — visible at bottom of home scroll */}
-        {view==="home"&&!search.trim()&&(
-          <div style={{textAlign:"center",padding:"20px 14px 12px",borderTop:"1px solid var(--border)",marginTop:8}}>
-            <div style={{fontSize:11,color:"var(--muted)",display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-              <button onClick={()=>setShowPrivacy(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>Privacy Policy</button>
-              <span style={{opacity:.3}}>·</span>
-              <button onClick={()=>setShowTerms(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>Terms of Service</button>
-              <span style={{opacity:.3}}>·</span>
-              <span style={{fontSize:11}}>© 2026 The StreamHub</span>
-            </div>
+{/* Footer — always visible */}
+        <div style={{textAlign:"center",padding:"20px 14px 24px",borderTop:"1px solid var(--border)",marginTop:8}}>
+          <div style={{fontSize:11,color:"var(--muted)",display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+            <button onClick={()=>setShowPrivacy(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,fontFamily:"inherit",textDecoration:"underline"}}>Privacy Policy</button>
+            <span style={{opacity:.3}}>·</span>
+            <button onClick={()=>setShowTerms(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:11,fontFamily:"inherit",textDecoration:"underline"}}>Terms of Service</button>
+            <span style={{opacity:.3}}>·</span>
+            <span style={{fontSize:11}}>© 2026 The StreamHub</span>
           </div>
-        )}
+        </div>
         <MobileBottomNav view={view} setView={v=>{handleSetView(v);setSearch("");}} watchlist={watchlist} tier={tier} onProfile={()=>user?setShowProfile(true):setShowAuth(true)} />
 
         {/* Advanced Stats Section */}
@@ -6787,7 +6837,7 @@ export default function StreamHub() {
       {/* Modals */}
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} />}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7102,7 +7152,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} />}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
@@ -7549,7 +7599,7 @@ export default function StreamHub() {
 
       {selectedMovie&&<MovieModal movie={selectedMovie} watchlist={watchlist} userRatings={userRatings} myVotes={{}} user={user} onClose={()=>setSelectedMovie(null)} onRate={handleRate} onToggleWatchlist={toggleWatchlist} onVote={()=>{}} showToast={showToast} onSelectSimilar={(m)=>setSelectedMovie({...m,providers:[],category:'movie'})}/>}
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} showToast={showToast}/>}
-      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} />}
+      {showProfile&&user&&<ProfileModal user={user} profile={profile} tier={tier} watchlist={watchlist} userRatings={userRatings} onClose={()=>setShowProfile(false)} onSignOut={signOut} onUpgrade={()=>setShowUpgrade(true)} showToast={showToast} userSubs={userSubs} onEditSubs={()=>{setShowProfile(false);setShowSetup(true);}} onSelectMovie={(m)=>{setSelectedMovie(m);setShowProfile(false);}} notifPermission={notifPermission} onRequestNotif={requestNotifications} streak={streak} onSaveSubs={async (subs)=>{setUserSubs(subs);localStorage.setItem("streamhub_subs",JSON.stringify(subs));if(user){await supabase.from("profiles").update({subscriptions:JSON.stringify(subs)}).eq("id",user.id);}}} onPrivacy={()=>setShowPrivacy(true)} onTerms={()=>setShowTerms(true)}/>}
       {showUpgrade&&<UpgradeModal onClose={()=>setShowUpgrade(false)} onComplete={()=>setTier("premium")}/>}
       {showOnboarding&&<OnboardingModal onFinish={()=>{setShowOnboarding(false);setShowSetup(true);}}/>}
       {showSetup&&<SetupModal userSubs={userSubs} onSave={handleSaveUserSubs} onClose={()=>setShowSetup(false)} isFirst={!localStorage.getItem("streamhub_setup_done")}/>}
